@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Deploy COLLABO
 
 on:
   push:
@@ -32,3 +32,18 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/deushomo1st/collabo-app:latest
+
+  deploy-to-vps:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/collabo
+            docker compose pull backend
+            docker compose up -d --force-recreate backend
