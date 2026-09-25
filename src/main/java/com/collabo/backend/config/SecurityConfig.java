@@ -14,14 +14,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for now (we will secure this later for production)
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users").permitAll() // Allow anyone to register
-                        .anyRequest().authenticated() // Lock down everything else
+                        .requestMatchers("/api/users").permitAll()
+                        // Allow public access to the registration page and static assets
+                        .requestMatchers("/", "/index.html", "/register.html", "/**/*.css", "/**/*.js").permitAll()
+                        .anyRequest().authenticated()
                 );
         return http.build();
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(); // This is the industry standard for hashing
