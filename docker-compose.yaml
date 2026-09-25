@@ -16,7 +16,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - .env  # <-- This explicitly tells Docker to read the .env file
     depends_on:
       - db
     restart: always
