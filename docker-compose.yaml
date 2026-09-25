@@ -19,6 +19,7 @@ services:
       SPRING_DATASOURCE_USERNAME: collabo_user
       SPRING_DATASOURCE_PASSWORD: collabo_password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      RESEND_API_KEY: ${RESEND_API_KEY}
     depends_on:
       - db
 
