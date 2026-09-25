@@ -39,7 +39,9 @@ public class UserController {
         user.setEmail(dto.getEmail());
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRole(Role.valueOf(dto.getRole().toUpperCase()));
+        // Public registration is ALWAYS a plain USER — the dto role is ignored so
+        // nobody can self-register as ADMIN. Role elevation happens via /api/admin only.
+        user.setRole(Role.USER);
 
         // 3. Save it to the database
         User savedUser = userRepository.save(user);
