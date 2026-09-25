@@ -33,11 +33,7 @@ jobs:
           push: true
           tags: ghcr.io/deushomo1st/collabo-app:latest
 
-  deploy-to-vps:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to VPS via SSH
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -45,5 +41,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /opt/collabo
+            git pull origin main          # <-- ADD THIS LINE
             docker compose pull backend
             docker compose up -d --force-recreate backend

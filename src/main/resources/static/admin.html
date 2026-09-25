@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f1113;
+    color: #d4d7da;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+
+  /* ---------- Gate ---------- */
+  #gate-view {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .gate-card {
+    background: #181b1e;
+    border: 1px solid #2a2e33;
+    border-radius: 6px;
+    padding: 28px;
+    width: 320px;
+  }
+  .gate-card h1 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .gate-card input { width: 100%; margin-bottom: 12px; }
+  .gate-card button { width: 100%; }
+  #gate-error { color: #dc2626; font-size: 12px; margin-top: 10px; min-height: 14px; }
+
+  /* ---------- Panel ---------- */
+  #panel-view { display: none; max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+  header.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #2a2e33;
+    margin-bottom: 20px;
+  }
+  header.topbar h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.04em; }
+  header.topbar .actions { display: flex; gap: 8px; }
+
+  section {
+    background: #181b1e;
+    border: 1px solid #2a2e33;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  section h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #9aa0a6; margin-bottom: 12px; }
+
+  /* ---------- Forms & controls ---------- */
+  input, select, button {
+    background: #0f1113;
+    border: 1px solid #2a2e33;
+    border-radius: 4px;
+    color: #d4d7da;
+    font-size: 13px;
+    padding: 6px 9px;
+  }
+  input:focus, select:focus { outline: none; border-color: #3b82f6; }
+  button { cursor: pointer; background: #1f2328; }
+  button:hover:not(:disabled) { border-color: #3b82f6; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  button.primary { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+  button.primary:hover:not(:disabled) { background: #2f6fd6; }
+  button.danger { color: #dc2626; background: transparent; border-color: transparent; padding: 3px 7px; }
+  button.danger:hover:not(:disabled) { border-color: #dc2626; }
+
+  #create-user { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  #create-user input, #create-user select { flex: 1 1 160px; min-width: 0; }
+  #create-user button { flex: 0 0 auto; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid #2a2e33; }
+  th { color: #9aa0a6; font-weight: 600; font-size: 12px; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .empty-row td { color: #6b7280; text-align: center; padding: 18px; }
+
+  /* ---------- Toast ---------- */
+  #toast-wrap { position: fixed; top: 14px; right: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+  .toast {
+    background: #181b1e;
+    border: 1px solid #2a2e33;
+    border-left: 3px solid #3b82f6;
+    border-radius: 4px;
+    padding: 9px 13px;
+    font-size: 13px;
+    max-width: 340px;
+  }
+  .toast.err { border-left-color: #dc2626; }
+
+  /* ---------- Confirm modal ---------- */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    align-items: center;
+    justify-content: center;
+    z-index: 90;
+  }
+  .modal {
+    background: #181b1e;
+    border: 1px solid #2a2e33;
+    border-radius: 6px;
+    padding: 22px;
+    width: 380px;
+  }
+  .modal h3 { font-size: 14px; margin-bottom: 10px; }
+  .modal p { font-size: 13px; color: #9aa0a6; margin-bottom: 12px; }
+  .modal input { width: 100%; margin-bottom: 14px; }
+  .modal .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+</style>
+</head>
+<body>
+
+<div id="gate-view">
+  <div class="gate-card">
+    <h1>Admin Access</h1>
+    <input id="gate-key" type="password" placeholder="Admin key" autocomplete="off" autofocus>
+    <button id="gate-unlock" class="primary" type="button">Unlock</button>
+    <div id="gate-error"></div>
+  </div>
+</div>
+
+<div id="panel-view">
+  <header class="topbar">
+    <h1>COLLABO &middot; Admin</h1>
+    <div class="actions">
+      <button id="btn-refresh" type="button">Refresh</button>
+      <button id="btn-logout" type="button">Logout</button>
+    </div>
+  </header>
+
+  <section id="users">
+    <h2>Users</h2>
+    <form id="create-user" autocomplete="off">
+      <input id="cu-email" type="email" placeholder="Email" required>
+      <input id="cu-username" type="text" placeholder="Username" required>
+      <input id="cu-password" type="password" placeholder="Password" autocomplete="new-password" required>
+      <select id="cu-role">
+        <option value="USER">USER</option>
+        <option value="ADMIN">ADMIN</option>
+      </select>
+      <button class="primary" type="submit">Create</button>
+    </form>
+    <table id="users-table">
+      <thead>
+        <tr><th>Email</th><th>Username</th><th>Role</th><th>Created</th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="database">
+    <h2>Database</h2>
+    <table id="db-table">
+      <thead>
+        <tr><th>Table</th><th style="text-align:right">Rows</th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</div>
+
+<div id="toast-wrap"></div>
+
+<div id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-prompt"></p>
+    <input id="modal-input" type="text" autocomplete="off" spellcheck="false">
+    <div class="modal-actions">
+      <button id="modal-cancel" type="button">Cancel</button>
+      <button id="modal-confirm" class="primary" type="button" disabled>Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var S = { key: sessionStorage.getItem('adminKey') };
+
+  var gateView = document.getElementById('gate-view');
+  var panelView = document.getElementById('panel-view');
+  var gateKey = document.getElementById('gate-key');
+  var gateError = document.getElementById('gate-error');
+  var usersTbody = document.querySelector('#users-table tbody');
+  var dbTbody = document.querySelector('#db-table tbody');
+  var toastWrap = document.getElementById('toast-wrap');
+  var overlay = document.getElementById('modal-overlay');
+  var modalTitle = document.getElementById('modal-title');
+  var modalPrompt = document.getElementById('modal-prompt');
+  var modalInput = document.getElementById('modal-input');
+  var modalConfirm = document.getElementById('modal-confirm');
+  var modalCancel = document.getElementById('modal-cancel');
+
+  // ---------- toast ----------
+  function toast(msg, isErr) {
+    var el = document.createElement('div');
+    el.className = 'toast' + (isErr ? ' err' : '');
+    el.textContent = msg;
+    toastWrap.appendChild(el);
+    setTimeout(function () { el.remove(); }, 3000);
+  }
+
+  // ---------- views ----------
+  function showGate(msg) {
+    panelView.style.display = 'none';
+    gateView.style.display = 'flex';
+    gateError.textContent = msg || '';
+    gateKey.value = '';
+    gateKey.focus();
+  }
+
+  function showPanel() {
+    gateView.style.display = 'none';
+    panelView.style.display = 'block';
+    refreshAll();
+  }
+
+  // ---------- central API wrapper ----------
+  function api(path, opts) {
+    opts = opts || {};
+    return fetch('/api/admin' + path, {
+      method: opts.method || 'GET',
+      body: opts.body,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Key': S.key || ''
+      }
+    }).then(function (res) {
+      if (res.status === 403) {
+        sessionStorage.removeItem('adminKey');
+        S.key = null;
+        showGate('Wrong key.');
+        throw new Error('forbidden');
+      }
+      if (res.status === 503) {
+        showGate('Admin key not configured on server.');
+        throw new Error('unconfigured');
+      }
+      if (!res.ok) {
+        return res.text().then(function (t) {
+          throw new Error(t || ('HTTP ' + res.status));
+        });
+      }
+      if (res.status === 204) return null;
+      return res.json();
+    });
+  }
+
+  // ---------- typed-confirm modal ----------
+  function askTypedConfirm(title, promptText, expected, onConfirm) {
+    modalTitle.textContent = title;
+    modalPrompt.textContent = promptText;
+    modalInput.value = '';
+    modalConfirm.disabled = true;
+    overlay.style.display = 'flex';
+    modalInput.focus();
+
+    function cleanup() {
+      overlay.style.display = 'none';
+      modalInput.removeEventListener('input', onInput);
+      modalConfirm.removeEventListener('click', onOk);
+      modalCancel.removeEventListener('click', onNo);
+      overlay.removeEventListener('click', onOverlay);
+    }
+    function onInput() {
+      modalConfirm.disabled = modalInput.value !== expected;
+    }
+    function onOk() {
+      if (modalInput.value !== expected) return;
+      cleanup();
+      onConfirm();
+    }
+    function onNo() { cleanup(); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(); }
+
+    modalInput.addEventListener('input', onInput);
+    modalConfirm.addEventListener('click', onOk);
+    modalCancel.addEventListener('click', onNo);
+    overlay.addEventListener('click', onOverlay);
+  }
+
+  // ---------- users ----------
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d.getTime()) ? String(iso) : d.toLocaleString();
+  }
+
+  function emptyRow(tbody, colspan, msg) {
+    var tr = document.createElement('tr');
+    tr.className = 'empty-row';
+    var td = document.createElement('td');
+    td.colSpan = colspan;
+    td.textContent = msg;
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+
+  function loadUsers() {
+    return api('/users').then(function (users) {
+      usersTbody.textContent = '';
+      if (!users || !users.length) {
+        emptyRow(usersTbody, 5, 'No users');
+        return;
+      }
+      var adminCount = users.filter(function (u) { return u.role === 'ADMIN'; }).length;
+      users.forEach(function (u) {
+        var tr = document.createElement('tr');
+
+        var tdEmail = document.createElement('td');
+        tdEmail.textContent = u.email;
+        tr.appendChild(tdEmail);
+
+        var tdName = document.createElement('td');
+        tdName.textContent = u.username;
+        tr.appendChild(tdName);
+
+        var tdRole = document.createElement('td');
+        var sel = document.createElement('select');
+        ['USER', 'ADMIN'].forEach(function (r) {
+          var opt = document.createElement('option');
+          opt.value = r;
+          opt.textContent = r;
+          if (u.role === r) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        sel.addEventListener('change', function () {
+          var newRole = sel.value;
+          var oldRole = u.role;
+          if (newRole === oldRole) return;
+          if (newRole === 'ADMIN' &&
+              !window.confirm('Promote ' + u.email + ' to ADMIN?')) {
+            sel.value = oldRole;
+            return;
+          }
+          if (oldRole === 'ADMIN' && adminCount <= 1) {
+            toast('Cannot demote the only ADMIN.', true);
+            sel.value = oldRole;
+            return;
+          }
+          sel.disabled = true;
+          api('/users/' + u.id + '/role', {
+            method: 'PATCH',
+            body: JSON.stringify({ role: newRole })
+          }).then(function () {
+            toast('Role updated.');
+            loadUsers();
+          }).catch(function (e) {
+            if (e.message !== 'forbidden' && e.message !== 'unconfigured') {
+              toast('Role change failed: ' + e.message, true);
+            }
+            sel.value = oldRole;
+          }).finally(function () {
+            sel.disabled = false;
+          });
+        });
+        tdRole.appendChild(sel);
+        tr.appendChild(tdRole);
+
+        var tdCreated = document.createElement('td');
+        tdCreated.textContent = fmtDate(u.createdAt);
+        tr.appendChild(tdCreated);
+
+        var tdDel = document.createElement('td');
+        var btn = document.createElement('button');
+        btn.className = 'danger';
+        btn.type = 'button';
+        btn.textContent = 'Delete';
+        btn.addEventListener('click', function () {
+          if (u.role === 'ADMIN' && adminCount <= 1) {
+            toast('Cannot delete the only ADMIN.', true);
+            return;
+          }
+          if (!window.confirm('Delete user ' + u.email + '?')) return;
+          btn.disabled = true;
+          api('/users/' + u.id, { method: 'DELETE' }).then(function () {
+            toast('User deleted.');
+            loadUsers();
+          }).catch(function (e) {
+            if (e.message !== 'forbidden' && e.message !== 'unconfigured') {
+              toast('Delete failed: ' + e.message, true);
+            }
+          }).finally(function () {
+            btn.disabled = false;
+          });
+        });
+        tdDel.appendChild(btn);
+        tr.appendChild(tdDel);
+
+        usersTbody.appendChild(tr);
+      });
+    }).catch(function (e) {
+      if (e.message !== 'forbidden' && e.message !== 'unconfigured') {
+        toast('Failed to load users: ' + e.message, true);
+      }
+    });
+  }
+
+  // ---------- database ----------
+  function loadTables() {
+    return api('/db/tables').then(function (tables) {
+      dbTbody.textContent = '';
+      if (!tables || !tables.length) {
+        emptyRow(dbTbody, 3, 'No tables');
+        return;
+      }
+      tables.forEach(function (t) {
+        var tr = document.createElement('tr');
+
+        var tdName = document.createElement('td');
+        tdName.className = 'mono';
+        tdName.textContent = t.name;
+        tr.appendChild(tdName);
+
+        var tdRows = document.createElement('td');
+        tdRows.className = 'num';
+        tdRows.textContent = String(t.rowCount);
+        tr.appendChild(tdRows);
+
+        var tdAct = document.createElement('td');
+        var btn = document.createElement('button');
+        btn.className = 'danger';
+        btn.type = 'button';
+        btn.textContent = 'Clean';
+        btn.addEventListener('click', function () {
+          askTypedConfirm(
+            'Truncate table',
+            'This deletes ALL rows. Type the table name "' + t.name + '" to confirm.',
+            t.name,
+            function () {
+              btn.disabled = true;
+              api('/db/tables/' + encodeURIComponent(t.name) + '/truncate', {
+                method: 'POST'
+              }).then(function () {
+                toast('Table ' + t.name + ' truncated.');
+                loadTables();
+              }).catch(function (e) {
+                if (e.message !== 'forbidden' && e.message !== 'unconfigured') {
+                  toast('Truncate failed: ' + e.message, true);
+                }
+              }).finally(function () {
+                btn.disabled = false;
+              });
+            }
+          );
+        });
+        tdAct.appendChild(btn);
+        tr.appendChild(tdAct);
+
+        dbTbody.appendChild(tr);
+      });
+    }).catch(function (e) {
+      if (e.message !== 'forbidden' && e.message !== 'unconfigured') {
+        toast('Failed to load tables: ' + e.message, true);
+      }
+    });
+  }
+
+  function refreshAll() {
+    loadUsers();
+    loadTables();
+  }
+
+  // ---------- wiring ----------
+  function gateSubmit() {
+    var k = gateKey.value.trim();
+    if (!k) {
+      gateError.textContent = 'Key required.';
+      return;
+    }
+    S.key = k;
+    sessionStorage.setItem('adminKey', k);
+    gateError.textContent = '';
+    showPanel();
+  }
+
+  document.getElementById('gate-unlock').addEventListener('click', gateSubmit);
+  gateKey.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') gateSubmit();
+  });
+
+  document.getElementById('btn-logout').addEventListener('click', function () {
+    sessionStorage.removeItem('adminKey');
+    S.key = null;
+    showGate();
+  });
+
+  document.getElementById('btn-refresh').addEventListener('click', refreshAll);
+
+  document.getElementById('create-user').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.target;
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var body = {
+      email: document.getElementById('cu-email').value.trim(),
+      username: document.getElementById('cu-username').value.trim(),
+      password: document.getElementById('cu-password').value,
+      role: document.getElementById('cu-role').value
+    };
+    submitBtn.disabled = true;
+    api('/users', { method: 'POST', body: JSON.stringify(body) }).then(function () {
+      toast('User created.');
+      form.reset();
+      loadUsers();
+    }).catch(function (err) {
+      if (err.message !== 'forbidden' && err.message !== 'unconfigured') {
+        toast('Create failed: ' + err.message, true);
+      }
+    }).finally(function () {
+      submitBtn.disabled = false;
+    });
+  });
+
+  // ---------- boot ----------
+  if (S.key) {
+    showPanel();
+  } else {
+    showGate();
+  }
+})();
+</script>
+</body>
+</html>
