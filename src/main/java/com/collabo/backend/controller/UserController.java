@@ -29,24 +29,25 @@ public class UserController {
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody UserDto dto) {
 
-        // Convert the DTO into a real User entity
+        // 1. Check if the email is already taken
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            return ResponseEntity.badRequest().body("Error: This email is already registered.");
+        }
+
+        // 2. Convert the DTO into a real User entity
         User user = new User();
         user.setEmail(dto.getEmail());
         user.setUsername(dto.getUsername());
-
-        // Hash the password before saving!
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-
-        // Convert the text "USER" or "ADMIN" into our Role Enum
         user.setRole(Role.valueOf(dto.getRole().toUpperCase()));
 
-        // Save it to the database
+        // 3. Save it to the database
         User savedUser = userRepository.save(user);
 
-        // Send the welcome email
+        // 4. Send the welcome email
         emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername());
 
-        // Send the response back to the client
+        // 5. Send the response back
         return ResponseEntity.ok(savedUser);
     }
 }
