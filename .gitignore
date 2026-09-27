@@ -35,3 +35,6 @@ build/
 
 # Generated docs artifacts (regenerate with docs/make_guide.py)
 docs/*.pdf
+
+# Local-only AI instruction file (project docs, deploy details — not for git)
+AGENTS.md
