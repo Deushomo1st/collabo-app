@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Tightened: only the registration POST is public, not every method on /api/users
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users/verify", "/api/users/resend-otp").permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         // Allow public access to the registration/admin pages and static assets
                         .requestMatchers("/", "/index.html", "/admin.html", "/HTML-pages/**", "/**/*.css", "/**/*.js").permitAll()

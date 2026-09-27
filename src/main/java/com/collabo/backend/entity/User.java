@@ -30,6 +30,17 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // Wrapper (nullable) so Hibernate can add the column to a table that already
+    // has rows without a NOT NULL failure; null is treated as unverified.
+    @Column
+    private Boolean verified = false;
+
+    @Column(name = "otp_hash")
+    private String otpHash;
+
+    @Column(name = "otp_expires_at")
+    private LocalDateTime otpExpiresAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -53,4 +64,14 @@ public class User {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    // null-safe: a legacy row (created before verification existed) reads as unverified.
+    public boolean isVerified() { return Boolean.TRUE.equals(verified); }
+    public void setVerified(boolean verified) { this.verified = verified; }
+
+    public String getOtpHash() { return otpHash; }
+    public void setOtpHash(String otpHash) { this.otpHash = otpHash; }
+
+    public LocalDateTime getOtpExpiresAt() { return otpExpiresAt; }
+    public void setOtpExpiresAt(LocalDateTime otpExpiresAt) { this.otpExpiresAt = otpExpiresAt; }
 }

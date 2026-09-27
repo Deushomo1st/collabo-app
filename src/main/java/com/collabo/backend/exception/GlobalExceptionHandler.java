@@ -3,6 +3,7 @@ package com.collabo.backend.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -31,8 +32,40 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", ex.getMessage()));
     }
 
+    /**
+     * Race-condition guard: two concurrent requests can both pass the
+     * existsByEmail/existsByUsername check before either saves, and the loser
+     * hits the DB unique constraint. Translate that into a clean 409 instead of
+     * the generic 500. (The only unique columns today are email + username, so
+     * any integrity violation here is a duplicate identity.)
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicate(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("message", "Email or username already exists"));
+    }
+
     @ExceptionHandler(PasswordValidationException.class)
     public ResponseEntity<Map<String, String>> handleWeakPassword(PasswordValidationException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+    }
+
+    /** Account exists but is unverified — client should complete OTP confirmation. */
+    @ExceptionHandler(AccountUnverifiedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnverified(AccountUnverifiedException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", ex.getMessage());
+        body.put("requiresVerification", true);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(InvalidOtpException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidOtp(InvalidOtpException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(OtpExpiredException.class)
+    public ResponseEntity<Map<String, String>> handleExpiredOtp(OtpExpiredException ex) {
         return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
     }
 

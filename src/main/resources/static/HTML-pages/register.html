@@ -73,6 +73,19 @@
         #challengeText { color: #92400e; font-weight: 600; }
         #challengeBox input { margin-top: 0.5rem; }
         #challengeBox button { margin-top: 0.5rem; }
+        #verifyBox {
+            background: #eff6ff;
+            border: 1px solid #93c5fd;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        #verifyPrompt { color: #1e40af; font-size: 0.875rem; margin-top: 0; }
+        #verifyBox input { margin-top: 0.5rem; }
+        #verifyBox button { margin-top: 0.5rem; }
+        #resendOtpBtn { background-color: transparent; color: #2563eb; width: auto; margin-left: 0.5rem; }
+        #resendOtpBtn:hover { background-color: #dbeafe; }
     </style>
 </head>
 <body>
@@ -99,6 +112,15 @@
         <button type="submit" id="submitBtn">Create Account</button>
     </form>
 
+    <div id="verifyBox">
+        <p id="verifyPrompt"></p>
+        <input type="text" id="otpCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code">
+        <div>
+            <button type="button" id="verifyOtpBtn">Verify code</button>
+            <button type="button" id="resendOtpBtn">Resend code</button>
+        </div>
+    </div>
+
     <div id="challengeBox">
         <label id="challengeText"></label>
         <input type="text" id="challengeAnswer" inputmode="numeric" autocomplete="off" placeholder="Your answer">
@@ -109,7 +131,7 @@
 </div>
 
 <script type="module">
-    import { registerUser } from '../js/services/api.js';
+    import { registerUser, verifyOtp, resendOtp } from '../js/services/api.js';
 
     const form = document.getElementById('registerForm');
     const submitBtn = document.getElementById('submitBtn');
@@ -118,10 +140,16 @@
     const challengeText = document.getElementById('challengeText');
     const challengeAnswer = document.getElementById('challengeAnswer');
     const verifyBtn = document.getElementById('verifyBtn');
+    const verifyBox = document.getElementById('verifyBox');
+    const verifyPrompt = document.getElementById('verifyPrompt');
+    const otpCode = document.getElementById('otpCode');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
 
-    let pending = null;      // held registration fields across a challenge
-    let pendingToken = null; // challenge token minted by the server
+    let pending = null;       // held registration fields across a challenge
+    let pendingToken = null;  // challenge token minted by the server
     let countdownTimer = null;
+    let registeredEmail = null; // email that needs OTP confirmation
 
     function isSecure(pw) {
         return pw.length >= 8 &&
@@ -138,6 +166,12 @@
     }
 
     function hideMessage() { messageBox.style.display = 'none'; }
+
+    function showVerify(message) {
+        verifyPrompt.textContent = message;
+        otpCode.value = '';
+        verifyBox.style.display = 'block';
+    }
 
     function showChallenge(message, question, token) {
         pendingToken = token;
@@ -177,19 +211,26 @@
         submitBtn.textContent = 'Creating account...';
         try {
             const data = await registerUser(payload);
-            showMessage(`Success! Welcome, ${data.username}. Your ID is ${data.id.substring(0, 8)}...`, false);
-            form.reset();
+            registeredEmail = data.email;
+            form.style.display = 'none';
             challengeBox.style.display = 'none';
             pending = null;
             pendingToken = null;
             submitBtn.disabled = false;
             submitBtn.textContent = 'Create Account';
+            showVerify(`We sent a 6-digit code to ${registeredEmail}. Enter it below to confirm your account.`);
         } catch (error) {
             if (error.challenge) {
                 pending = payload;
                 showChallenge(error.message, error.challenge, error.challengeToken);
             } else if (error.retryAfterSeconds > 0) {
                 startCountdown(error.retryAfterSeconds);
+            } else if (error.requiresVerification) {
+                registeredEmail = payload.email;
+                form.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+                showVerify(error.message);
             } else {
                 showMessage(error.message || 'Something went wrong', true);
                 submitBtn.disabled = false;
@@ -231,6 +272,35 @@
         const answer = challengeAnswer.value.trim();
         if (!answer || !pending) return;
         await attempt({ ...pending, challengeToken: pendingToken, challengeAnswer: answer });
+    });
+
+    verifyOtpBtn.addEventListener('click', async function() {
+        const code = otpCode.value.trim();
+        if (!code || !registeredEmail) return;
+        verifyOtpBtn.disabled = true;
+        try {
+            const data = await verifyOtp(registeredEmail, code);
+            verifyBox.style.display = 'none';
+            showMessage(`Account verified! Welcome, ${data.username}.`, false);
+            form.reset();
+        } catch (error) {
+            showMessage(error.message || 'Verification failed', true);
+        } finally {
+            verifyOtpBtn.disabled = false;
+        }
+    });
+
+    resendOtpBtn.addEventListener('click', async function() {
+        if (!registeredEmail) return;
+        resendOtpBtn.disabled = true;
+        try {
+            await resendOtp(registeredEmail);
+            showMessage('A new code has been sent to your email.', false);
+        } catch (error) {
+            showMessage(error.message || 'Could not resend the code', true);
+        } finally {
+            resendOtpBtn.disabled = false;
+        }
     });
 </script>
 

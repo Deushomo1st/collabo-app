@@ -38,4 +38,26 @@ public class EmailService {
         message.setText(emailBody);
         mailSender.send(message);
     }
+
+    public void sendVerificationEmail(String toEmail, String username, String code) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailConfig.getFromAddress());
+        message.setTo(toEmail);
+        message.setSubject("Verify your COLLABO account");
+
+        String body = String.format(
+                "Hi %s,\n\n" +
+                        "Thanks for joining COLLABO. Your verification code is:\n\n" +
+                        "    %s\n\n" +
+                        "Enter this code to confirm your account. The code expires in 10 minutes.\n\n" +
+                        "If you didn't create this account, you can safely ignore this email.\n\n" +
+                        "Best regards,\n" +
+                        "The COLLABO Team\n" +
+                        "https://collaboapp.pro",
+                username, code
+        );
+
+        message.setText(body);
+        mailSender.send(message);
+    }
 }

@@ -36,15 +36,19 @@ public class UserService {
     }
 
     public AdminUserResponse createUser(AdminCreateUserRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+        // Same normalization as public registration (email case-insensitive, username trimmed).
+        String email = request.email().trim().toLowerCase();
+        String username = request.username().trim();
+
+        if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException();
         }
-        if (userRepository.existsByUsername(request.username())) {
+        if (userRepository.existsByUsername(username)) {
             throw new UsernameAlreadyExistsException();
         }
         User user = new User();
-        user.setEmail(request.email());
-        user.setUsername(request.username());
+        user.setEmail(email);
+        user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(request.role());
         // NOTE: no welcome email for admin-created users (test accounts shouldn't trigger Resend).

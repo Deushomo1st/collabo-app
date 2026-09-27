@@ -1,6 +1,7 @@
 package com.collabo.backend.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -128,6 +129,16 @@ public class RegistrationRateLimiter {
 
     private static long ceilSeconds(long millis) {
         return (millis + 999) / 1000;
+    }
+
+    /**
+     * Periodic eviction so spoofed/abandoned IPs don't grow the map forever.
+     * Runs hourly; removes any entry idle longer than RESET_IDLE_MILLIS (1h).
+     */
+    @Scheduled(fixedDelay = 3_600_000L, initialDelay = 3_600_000L)
+    public void evictStaleEntries() {
+        long now = System.currentTimeMillis();
+        entries.entrySet().removeIf(en -> now - en.getValue().lastSeen > RESET_IDLE_MILLIS);
     }
 
     // ---- result / challenge types ----
