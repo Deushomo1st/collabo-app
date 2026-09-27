@@ -1,0 +1,29 @@
+/* Design tokens shared across the whole app — the single source of truth for
+   colors, spacing, radii, etc. Components and pages read these variables
+   instead of hardcoding values, so a rebrand touches this one file. */
+
+:root {
+    /* Color */
+    --color-bg: #ffffff;
+    --color-surface: #f3f4f6;
+    --color-border: #d1d5db;
+    --color-text: #111827;
+    --color-text-muted: #6b7280;
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-danger: #dc2626;
+    --color-success: #065f46;
+
+    /* Shape */
+    --radius-sm: 4px;
+    --radius: 8px;
+    --radius-lg: 12px;
+
+    /* Spacing */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+}

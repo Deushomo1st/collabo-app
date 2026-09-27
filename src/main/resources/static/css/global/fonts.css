@@ -1,0 +1,17 @@
+/* Global font definitions.
+   Drop font files into fonts/ and declare them here with @font-face,
+   e.g.:
+
+   @font-face {
+       font-family: "Inter";
+       src: url("fonts/Inter.woff2") format("woff2");
+       font-weight: 400;
+       font-display: swap;
+   }
+*/
+
+:root {
+    /* Default system stack — swap for a custom family once one is loaded above. */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Menlo, monospace;
+}

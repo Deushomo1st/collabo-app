@@ -1,0 +1,49 @@
+/* Global base styles — loaded on EVERY page (unlike component CSS, which
+   loads only when its component mounts). Reset + base element styling only.
+   Do NOT put component-specific rules here; those belong in js/components/. */
+
+@import url("fonts.css");
+@import url("variables.css");
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    line-height: 1.5;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0;
+    color: var(--color-text);
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-primary-hover);
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
