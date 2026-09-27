@@ -10,7 +10,12 @@ export async function registerUser(userData) {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(data.message || 'Failed to create account. Please try again.');
+        const err = new Error(data.message || 'Failed to create account. Please try again.');
+        err.status = response.status;
+        err.challenge = data.challenge || null;
+        err.challengeToken = data.challengeToken || null;
+        err.retryAfterSeconds = data.retryAfterSeconds || 0;
+        throw err;
     }
     return data;
 }

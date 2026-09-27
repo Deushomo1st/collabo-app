@@ -22,6 +22,11 @@ public class UserDto {
     // true when the client acknowledged a weak password via "proceed anyway".
     private boolean weakPasswordAccepted;
 
+    // Rate-limit challenge fields (optional — only present when re-submitting
+    // after the server asked the client to prove it is human).
+    private String challengeToken;
+    private String challengeAnswer;
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
@@ -33,4 +38,10 @@ public class UserDto {
 
     public boolean isWeakPasswordAccepted() { return weakPasswordAccepted; }
     public void setWeakPasswordAccepted(boolean weakPasswordAccepted) { this.weakPasswordAccepted = weakPasswordAccepted; }
+
+    public String getChallengeToken() { return challengeToken; }
+    public void setChallengeToken(String challengeToken) { this.challengeToken = challengeToken; }
+
+    public String getChallengeAnswer() { return challengeAnswer; }
+    public void setChallengeAnswer(String challengeAnswer) { this.challengeAnswer = challengeAnswer; }
 }

@@ -62,6 +62,17 @@
         }
         .success { background-color: #d1fae5; color: #065f46; }
         .error { background-color: #fee2e2; color: #991b1b; }
+        #challengeBox {
+            background: #fffbeb;
+            border: 1px solid #fbbf24;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            display: none;
+        }
+        #challengeText { color: #92400e; font-weight: 600; }
+        #challengeBox input { margin-top: 0.5rem; }
+        #challengeBox button { margin-top: 0.5rem; }
     </style>
 </head>
 <body>
@@ -87,11 +98,30 @@
         </div>
         <button type="submit" id="submitBtn">Create Account</button>
     </form>
+
+    <div id="challengeBox">
+        <label id="challengeText"></label>
+        <input type="text" id="challengeAnswer" inputmode="numeric" autocomplete="off" placeholder="Your answer">
+        <button type="button" id="verifyBtn">Verify</button>
+    </div>
+
     <div id="messageBox" class="message"></div>
 </div>
 
 <script type="module">
     import { registerUser } from '../js/services/api.js';
+
+    const form = document.getElementById('registerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const messageBox = document.getElementById('messageBox');
+    const challengeBox = document.getElementById('challengeBox');
+    const challengeText = document.getElementById('challengeText');
+    const challengeAnswer = document.getElementById('challengeAnswer');
+    const verifyBtn = document.getElementById('verifyBtn');
+
+    let pending = null;      // held registration fields across a challenge
+    let pendingToken = null; // challenge token minted by the server
+    let countdownTimer = null;
 
     function isSecure(pw) {
         return pw.length >= 8 &&
@@ -101,11 +131,75 @@
                /[^A-Za-z0-9]/.test(pw);
     }
 
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    function showMessage(msg, isError) {
+        messageBox.textContent = msg;
+        messageBox.className = isError ? 'message error' : 'message success';
+        messageBox.style.display = 'block';
+    }
 
-        const submitBtn = document.getElementById('submitBtn');
-        const messageBox = document.getElementById('messageBox');
+    function hideMessage() { messageBox.style.display = 'none'; }
+
+    function showChallenge(message, question, token) {
+        pendingToken = token;
+        challengeText.textContent = `${message} — ${question}`;
+        challengeAnswer.value = '';
+        challengeBox.style.display = 'block';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Create Account';
+        challengeAnswer.focus();
+    }
+
+    function startCountdown(seconds) {
+        let remaining = seconds;
+        challengeBox.style.display = 'none';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Create Account';
+        const tick = () => {
+            if (remaining <= 0) {
+                clearInterval(countdownTimer);
+                countdownTimer = null;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+                hideMessage();
+                return;
+            }
+            showMessage(`Too many attempts. Try again in ${remaining}s`, true);
+            submitBtn.textContent = `Wait ${remaining}s`;
+            remaining--;
+        };
+        tick();
+        countdownTimer = setInterval(tick, 1000);
+    }
+
+    async function attempt(payload) {
+        hideMessage();
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account...';
+        try {
+            const data = await registerUser(payload);
+            showMessage(`Success! Welcome, ${data.username}. Your ID is ${data.id.substring(0, 8)}...`, false);
+            form.reset();
+            challengeBox.style.display = 'none';
+            pending = null;
+            pendingToken = null;
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Create Account';
+        } catch (error) {
+            if (error.challenge) {
+                pending = payload;
+                showChallenge(error.message, error.challenge, error.challengeToken);
+            } else if (error.retryAfterSeconds > 0) {
+                startCountdown(error.retryAfterSeconds);
+            } else {
+                showMessage(error.message || 'Something went wrong', true);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        }
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
         const email = document.getElementById('email').value;
         const username = document.getElementById('username').value;
@@ -114,9 +208,7 @@
 
         // Confirm-password must match
         if (password !== confirm) {
-            messageBox.textContent = 'Passwords do not match';
-            messageBox.className = 'message error';
-            messageBox.style.display = 'block';
+            showMessage('Passwords do not match', true);
             return;
         }
 
@@ -131,26 +223,14 @@
             weakPasswordAccepted = true;
         }
 
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Creating account...';
-        messageBox.style.display = 'none';
+        pending = { email, username, password, weakPasswordAccepted };
+        await attempt({ ...pending });
+    });
 
-        const payload = { email, username, password, weakPasswordAccepted };
-
-        try {
-            const data = await registerUser(payload);
-            messageBox.textContent = `Success! Welcome, ${data.username}. Your ID is ${data.id.substring(0, 8)}...`;
-            messageBox.className = 'message success';
-            messageBox.style.display = 'block';
-            document.getElementById('registerForm').reset();
-        } catch (error) {
-            messageBox.textContent = error.message;
-            messageBox.className = 'message error';
-            messageBox.style.display = 'block';
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Create Account';
-        }
+    verifyBtn.addEventListener('click', async function() {
+        const answer = challengeAnswer.value.trim();
+        if (!answer || !pending) return;
+        await attempt({ ...pending, challengeToken: pendingToken, challengeAnswer: answer });
     });
 </script>
 

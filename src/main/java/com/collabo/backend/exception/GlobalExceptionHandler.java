@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -38,6 +39,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", ex.getMessage()));
+    }
+
+    /** Registration quota exceeded -> ask the client to prove it is human. */
+    @ExceptionHandler(RateLimitChallengeException.class)
+    public ResponseEntity<Map<String, Object>> handleChallenge(RateLimitChallengeException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", ex.getMessage());
+        body.put("challenge", ex.getChallenge());
+        body.put("challengeToken", ex.getChallengeToken());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
+    }
+
+    /** Locked out -> tell the client how long to wait (live countdown). */
+    @ExceptionHandler(RateLimitedException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimited(RateLimitedException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", ex.getMessage());
+        body.put("retryAfterSeconds", ex.getRetryAfterSeconds());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
     }
 
     /** Bean-validation failures (@Valid on request bodies) -> 400 with the message. */

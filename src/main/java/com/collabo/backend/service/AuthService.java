@@ -6,6 +6,8 @@ import com.collabo.backend.entity.Role;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.EmailAlreadyExistsException;
 import com.collabo.backend.exception.PasswordValidationException;
+import com.collabo.backend.exception.RateLimitChallengeException;
+import com.collabo.backend.exception.RateLimitedException;
 import com.collabo.backend.exception.UsernameAlreadyExistsException;
 import com.collabo.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,16 +22,29 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final RegistrationRateLimiter rateLimiter;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
-                       EmailService emailService) {
+                       EmailService emailService,
+                       RegistrationRateLimiter rateLimiter) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.rateLimiter = rateLimiter;
     }
 
-    public UserResponse register(UserDto dto) {
+    public UserResponse register(UserDto dto, String clientIp) {
+        RegistrationRateLimiter.RateLimitResult rl =
+                rateLimiter.check(clientIp, dto.getChallengeToken(), dto.getChallengeAnswer());
+
+        if (rl.challenge() != null) {
+            throw new RateLimitChallengeException(rl.challenge().question(), rl.challenge().token());
+        }
+        if (rl.retryAfterSeconds() > 0) {
+            throw new RateLimitedException(rl.retryAfterSeconds());
+        }
+
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new EmailAlreadyExistsException();
         }

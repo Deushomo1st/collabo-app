@@ -3,6 +3,8 @@ package com.collabo.backend.controller;
 import com.collabo.backend.dto.UserDto;
 import com.collabo.backend.dto.UserResponse;
 import com.collabo.backend.service.AuthService;
+import com.collabo.backend.util.ClientIpResolver;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,7 +28,8 @@ public class AuthController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserDto dto) {
-        return ResponseEntity.ok(authService.register(dto));
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserDto dto,
+                                                 HttpServletRequest request) {
+        return ResponseEntity.ok(authService.register(dto, ClientIpResolver.resolve(request)));
     }
 }
