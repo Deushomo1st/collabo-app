@@ -37,10 +37,10 @@ public class UserService {
 
     public AdminUserResponse createUser(AdminCreateUserRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new EmailAlreadyExistsException(request.email());
+            throw new EmailAlreadyExistsException();
         }
         if (userRepository.existsByUsername(request.username())) {
-            throw new UsernameAlreadyExistsException(request.username());
+            throw new UsernameAlreadyExistsException();
         }
         User user = new User();
         user.setEmail(request.email());

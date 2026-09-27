@@ -1,11 +1,27 @@
 package com.collabo.backend.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class UserDto {
+
+    @NotBlank(message = "Please set email")
+    @Email(message = "Not a valid email")
     private String email;
+
+    @NotBlank(message = "Choose a username")
+    @Size(min = 3, max = 30, message = "Username must be 3-30 characters")
     private String username;
+
+    // Blank is caught by @NotBlank; the >=6 floor and the "secure" bar are
+    // enforced in AuthService (they have a two-tier bypass flow).
+    @NotBlank(message = "Please set password")
     private String password;
 
-    // Getters and Setters
+    // true when the client acknowledged a weak password via "proceed anyway".
+    private boolean weakPasswordAccepted;
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
@@ -14,4 +30,7 @@ public class UserDto {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public boolean isWeakPasswordAccepted() { return weakPasswordAccepted; }
+    public void setWeakPasswordAccepted(boolean weakPasswordAccepted) { this.weakPasswordAccepted = weakPasswordAccepted; }
 }
