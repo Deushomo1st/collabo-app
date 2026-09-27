@@ -1,25 +1,25 @@
 package com.collabo.backend.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.collabo.backend.config.MailConfig;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
+    private final MailConfig mailConfig;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    public EmailService(JavaMailSender mailSender, MailConfig mailConfig) {
+        this.mailSender = mailSender;
+        this.mailConfig = mailConfig;
+    }
 
     public void sendWelcomeEmail(String toEmail, String username) {
         SimpleMailMessage message = new SimpleMailMessage();
-        // Use an address on your verified domain
-        message.setFrom("Collabo Team <onboarding@collaboapp.pro>");
+        // Sender identity lives in MailConfig (app.mail.from) — must be on the verified domain
+        message.setFrom(mailConfig.getFromAddress());
         message.setTo(toEmail);
         message.setSubject("Welcome to COLLABO! 🚀");
 
