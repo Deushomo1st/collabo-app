@@ -33,7 +33,7 @@ build/
 ### VS Code ###
 .vscode/
 
-# Generated docs artifacts (regenerate with docs/make_guide.py)
+# Local-only generated docs artifacts
 docs/*.pdf
 
 # Local-only AI instruction file (project docs, deploy details — not for git)
