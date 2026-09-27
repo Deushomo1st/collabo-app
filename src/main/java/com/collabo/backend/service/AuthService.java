@@ -1,6 +1,7 @@
 package com.collabo.backend.service;
 
 import com.collabo.backend.dto.UserDto;
+import com.collabo.backend.dto.UserResponse;
 import com.collabo.backend.entity.Role;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.EmailAlreadyExistsException;
@@ -27,7 +28,7 @@ public class AuthService {
         this.emailService = emailService;
     }
 
-    public User register(UserDto dto) {
+    public UserResponse register(UserDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new EmailAlreadyExistsException(dto.getEmail());
         }
@@ -40,6 +41,6 @@ public class AuthService {
 
         User savedUser = userRepository.save(user);
         emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername());
-        return savedUser;
+        return UserResponse.from(savedUser);
     }
 }

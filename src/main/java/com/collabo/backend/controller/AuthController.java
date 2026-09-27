@@ -1,6 +1,7 @@
 package com.collabo.backend.controller;
 
 import com.collabo.backend.dto.UserDto;
+import com.collabo.backend.dto.UserResponse;
 import com.collabo.backend.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +25,7 @@ public class AuthController {
     }
 
     @PostMapping
-    public ResponseEntity<?> register(@RequestBody UserDto dto) {
+    public ResponseEntity<UserResponse> register(@RequestBody UserDto dto) {
         return ResponseEntity.ok(authService.register(dto));
     }
 }
