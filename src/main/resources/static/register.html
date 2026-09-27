@@ -92,13 +92,15 @@
     <div id="messageBox" class="message"></div>
 </div>
 
-<script>
+<script type="module">
+    import { registerUser } from './js/services/api.js';
+
     document.getElementById('registerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const submitBtn = document.getElementById('submitBtn');
         const messageBox = document.getElementById('messageBox');
-        
+
         // Disable button and show loading state
         submitBtn.disabled = true;
         submitBtn.textContent = 'Creating account...';
@@ -113,28 +115,13 @@
         };
 
         try {
-            const response = await fetch('https://collaboapp.pro/api/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                messageBox.textContent = `Success! Welcome, ${data.username}. Your ID is ${data.id.substring(0, 8)}...`;
-                messageBox.className = 'message success';
-                messageBox.style.display = 'block';
-                document.getElementById('registerForm').reset();
-            } else {
-                const errorData = await response.json();
-                messageBox.textContent = `Error: ${errorData.message || 'Failed to create account. Email might be taken.'}`;
-                messageBox.className = 'message error';
-                messageBox.style.display = 'block';
-            }
+            const data = await registerUser(payload);
+            messageBox.textContent = `Success! Welcome, ${data.username}. Your ID is ${data.id.substring(0, 8)}...`;
+            messageBox.className = 'message success';
+            messageBox.style.display = 'block';
+            document.getElementById('registerForm').reset();
         } catch (error) {
-            messageBox.textContent = 'Network error. Please try again.';
+            messageBox.textContent = `Error: ${error.message}`;
             messageBox.className = 'message error';
             messageBox.style.display = 'block';
         } finally {
