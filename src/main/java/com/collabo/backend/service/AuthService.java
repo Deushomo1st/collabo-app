@@ -17,6 +17,8 @@ import com.collabo.backend.exception.UsernameAlreadyExistsException;
 import com.collabo.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,15 +42,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final RegistrationRateLimiter rateLimiter;
+    private final Environment environment;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        EmailService emailService,
-                       RegistrationRateLimiter rateLimiter) {
+                       RegistrationRateLimiter rateLimiter,
+                       Environment environment) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.rateLimiter = rateLimiter;
+        this.environment = environment;
     }
 
     /**
@@ -58,8 +63,10 @@ public class AuthService {
      * working mail sender).
      *
      * <p>When the request marks the account as a test account
-     * ({@code test=true}), it is created verified immediately with test=true:
-     * email-format validation, OTP, and all outbound email are skipped.
+     * ({@code test=true}) AND the {@code dev} profile is active, it is created
+     * verified immediately with test=true: email-format validation, OTP, and
+     * all outbound email are skipped. In any other profile (prod) the flag is
+     * ignored and the account is treated as real.
      */
     @Transactional
     public UserResponse register(UserDto dto, String clientIp) {
@@ -81,9 +88,9 @@ public class AuthService {
         String username = dto.getUsername().trim();
 
         // Test account (test=true in the request): skip the "is this a real
-        // email" check and everything email-related below. Real accounts keep
-        // the format check.
-        boolean testAccount = dto.isTest();
+        // email" check and everything email-related below. Only honored in the
+        // dev profile — in prod the flag is ignored and the account is real.
+        boolean testAccount = dto.isTest() && environment.acceptsProfiles(Profiles.of("dev"));
         if (!testAccount && !isValidEmail(email)) {
             throw new InvalidEmailException();
         }
@@ -123,7 +130,7 @@ public class AuthService {
             user.setTest(true);
             user.setVerified(true);
             User saved = userRepository.save(user);
-            log.info("Registered TEST account {} (skipped email verification)", email);
+            log.info("Registered TEST account {} (dev profile — skipped email verification)", email);
             return UserResponse.from(saved);
         }
 
