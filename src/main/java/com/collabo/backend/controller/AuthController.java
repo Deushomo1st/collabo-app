@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Auth domain: registration now, login / forgot-password later.
- * Thin HTTP shell — all logic lives in AuthService.
+ * Thin HTTP shell — all logic lives in AuthService, all errors are
+ * turned into clean JSON by GlobalExceptionHandler.
  */
 @RestController
 @RequestMapping("/api/users")
@@ -24,9 +25,6 @@ public class AuthController {
 
     @PostMapping
     public ResponseEntity<?> register(@RequestBody UserDto dto) {
-        if (authService.emailExists(dto.getEmail())) {
-            return ResponseEntity.badRequest().body("Error: This email is already registered.");
-        }
         return ResponseEntity.ok(authService.register(dto));
     }
 }

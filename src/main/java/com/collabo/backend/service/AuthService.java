@@ -3,6 +3,7 @@ package com.collabo.backend.service;
 import com.collabo.backend.dto.UserDto;
 import com.collabo.backend.entity.Role;
 import com.collabo.backend.entity.User;
+import com.collabo.backend.exception.EmailAlreadyExistsException;
 import com.collabo.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,11 +27,11 @@ public class AuthService {
         this.emailService = emailService;
     }
 
-    public boolean emailExists(String email) {
-        return userRepository.existsByEmail(email);
-    }
-
     public User register(UserDto dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new EmailAlreadyExistsException(dto.getEmail());
+        }
+
         User user = new User();
         user.setEmail(dto.getEmail());
         user.setUsername(dto.getUsername());

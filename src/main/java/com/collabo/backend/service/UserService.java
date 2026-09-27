@@ -4,12 +4,14 @@ import com.collabo.backend.dto.AdminCreateUserRequest;
 import com.collabo.backend.dto.AdminUserResponse;
 import com.collabo.backend.dto.UpdateRoleRequest;
 import com.collabo.backend.entity.User;
+import com.collabo.backend.exception.EmailAlreadyExistsException;
+import com.collabo.backend.exception.ResourceNotFoundException;
+import com.collabo.backend.exception.UsernameAlreadyExistsException;
 import com.collabo.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -33,15 +35,13 @@ public class UserService {
                 .toList();
     }
 
-    public boolean emailExists(String email) {
-        return userRepository.existsByEmail(email);
-    }
-
-    public boolean usernameExists(String username) {
-        return userRepository.existsByUsername(username);
-    }
-
     public AdminUserResponse createUser(AdminCreateUserRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
+            throw new EmailAlreadyExistsException(request.email());
+        }
+        if (userRepository.existsByUsername(request.username())) {
+            throw new UsernameAlreadyExistsException(request.username());
+        }
         User user = new User();
         user.setEmail(request.email());
         user.setUsername(request.username());
@@ -51,18 +51,17 @@ public class UserService {
         return AdminUserResponse.from(userRepository.save(user));
     }
 
-    public Optional<AdminUserResponse> updateRole(UUID id, UpdateRoleRequest request) {
-        return userRepository.findById(id).map(user -> {
-            user.setRole(request.role());
-            return AdminUserResponse.from(userRepository.save(user));
-        });
+    public AdminUserResponse updateRole(UUID id, UpdateRoleRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        user.setRole(request.role());
+        return AdminUserResponse.from(userRepository.save(user));
     }
 
-    public boolean deleteUser(UUID id) {
+    public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
-            return false;
+            throw new ResourceNotFoundException("User not found: " + id);
         }
         userRepository.deleteById(id);
-        return true;
     }
 }

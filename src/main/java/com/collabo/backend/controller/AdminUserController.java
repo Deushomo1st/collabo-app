@@ -10,14 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
  * Admin user management. Access is gated by AdminKeyFilter (X-Admin-Key header),
  * configured in SecurityConfig — these endpoints never expose the User entity
  * (it carries the BCrypt hash); everything maps through AdminUserResponse.
- * Thin HTTP shell — all logic lives in UserService.
+ * Thin HTTP shell — logic lives in UserService, errors become clean JSON
+ * via GlobalExceptionHandler (409 conflict / 404 not found).
  */
 @RestController
 @RequestMapping("/api/admin/users")
@@ -35,33 +35,19 @@ public class AdminUserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody AdminCreateUserRequest request) {
-        if (userService.emailExists(request.email())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "email already registered"));
-        }
-        if (userService.usernameExists(request.username())) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "username already taken"));
-        }
+    public ResponseEntity<AdminUserResponse> createUser(@Valid @RequestBody AdminCreateUserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
     }
 
     @PatchMapping("/{id}/role")
-    public ResponseEntity<?> updateRole(@PathVariable UUID id,
+    public AdminUserResponse updateRole(@PathVariable UUID id,
                                         @Valid @RequestBody UpdateRoleRequest request) {
-        return userService.updateRole(id, request)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "user not found")));
+        return userService.updateRole(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
-        if (!userService.deleteUser(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "user not found"));
-        }
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        userService.deleteUser(id);
         return ResponseEntity.noContent().build(); // 204
     }
 }
