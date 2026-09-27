@@ -33,8 +33,8 @@ build/
 ### VS Code ###
 .vscode/
 
-# Local-only generated docs artifacts
-docs/*.pdf
+# Local-only docs (admin guide generator + PDF) — never commit
+docs/
 
 # Local-only AI instruction file (project docs, deploy details — not for git)
 AGENTS.md
