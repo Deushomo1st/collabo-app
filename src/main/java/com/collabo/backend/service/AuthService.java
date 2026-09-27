@@ -37,7 +37,9 @@ public class AuthService {
         user.setEmail(dto.getEmail());
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRole(Role.valueOf(dto.getRole().toUpperCase()));
+        // Registration always creates a USER account — the client cannot pick a
+        // role here. ADMIN accounts are created only via the admin panel.
+        user.setRole(Role.USER);
 
         User savedUser = userRepository.save(user);
         emailService.sendWelcomeEmail(savedUser.getEmail(), savedUser.getUsername());
