@@ -6,6 +6,7 @@ import com.collabo.backend.entity.Role;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.AccountUnverifiedException;
 import com.collabo.backend.exception.EmailAlreadyExistsException;
+import com.collabo.backend.exception.InvalidEmailException;
 import com.collabo.backend.exception.InvalidOtpException;
 import com.collabo.backend.exception.OtpExpiredException;
 import com.collabo.backend.exception.PasswordValidationException;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 
 /**
  * Auth domain logic: registration (email-verified via OTP), and later login.
@@ -32,6 +34,7 @@ public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int OTP_EXPIRY_MINUTES = 10;
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -53,6 +56,10 @@ public class AuthService {
      * emailed; the user confirms via {@link #verifyOtp}. Transactional so that
      * a failed email send rolls the user back (registration now REQUIRES a
      * working mail sender).
+     *
+     * <p>When the request marks the account as a test account
+     * ({@code test=true}), it is created verified immediately with test=true:
+     * email-format validation, OTP, and all outbound email are skipped.
      */
     @Transactional
     public UserResponse register(UserDto dto, String clientIp) {
@@ -72,6 +79,14 @@ public class AuthService {
         // normalized value is what gets both checked and persisted.
         String email = dto.getEmail().trim().toLowerCase();
         String username = dto.getUsername().trim();
+
+        // Test account (test=true in the request): skip the "is this a real
+        // email" check and everything email-related below. Real accounts keep
+        // the format check.
+        boolean testAccount = dto.isTest();
+        if (!testAccount && !isValidEmail(email)) {
+            throw new InvalidEmailException();
+        }
 
         userRepository.findByEmail(email).ifPresent(existing -> {
             if (existing.isVerified()) {
@@ -102,8 +117,17 @@ public class AuthService {
         // Registration always creates a USER account — the client cannot pick a
         // role here. ADMIN accounts are created only via the admin panel.
         user.setRole(Role.USER);
-        user.setVerified(false);
 
+        if (testAccount) {
+            // Test account: verified immediately, no OTP, no email send.
+            user.setTest(true);
+            user.setVerified(true);
+            User saved = userRepository.save(user);
+            log.info("Registered TEST account {} (skipped email verification)", email);
+            return UserResponse.from(saved);
+        }
+
+        user.setVerified(false);
         String code = issueOtp(user);
 
         User savedUser = userRepository.save(user);
@@ -188,5 +212,10 @@ public class AuthService {
             else special = true;
         }
         return upper && lower && digit && special;
+    }
+
+    /** Minimal "looks like an email" check — only used when the account is NOT a test account. */
+    private boolean isValidEmail(String email) {
+        return email != null && EMAIL_PATTERN.matcher(email).matches();
     }
 }

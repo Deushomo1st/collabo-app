@@ -109,6 +109,13 @@
             <label for="confirm">Confirm Password</label>
             <input type="password" id="confirm" required placeholder="••••••••">
         </div>
+        <div class="form-group">
+            <label for="accountType">Account type</label>
+            <select id="accountType">
+                <option value="real">Real account</option>
+                <option value="test">Test account</option>
+            </select>
+        </div>
         <button type="submit" id="submitBtn">Create Account</button>
     </form>
 
@@ -211,14 +218,19 @@
         submitBtn.textContent = 'Creating account...';
         try {
             const data = await registerUser(payload);
-            registeredEmail = data.email;
             form.style.display = 'none';
             challengeBox.style.display = 'none';
             pending = null;
             pendingToken = null;
             submitBtn.disabled = false;
             submitBtn.textContent = 'Create Account';
-            showVerify(`We sent a 6-digit code to ${registeredEmail}. Enter it below to confirm your account.`);
+            if (data.verified) {
+                // Pre-verified (test) account — no OTP step needed.
+                showMessage(`Account created${data.test ? ' (test mode)' : ''}. You're good to go, ${data.username}.`, false);
+            } else {
+                registeredEmail = data.email;
+                showVerify(`We sent a 6-digit code to ${registeredEmail}. Enter it below to confirm your account.`);
+            }
         } catch (error) {
             if (error.challenge) {
                 pending = payload;
@@ -246,6 +258,7 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const confirm = document.getElementById('confirm').value;
+        const accountType = document.getElementById('accountType').value;
 
         // Confirm-password must match
         if (password !== confirm) {
@@ -264,7 +277,7 @@
             weakPasswordAccepted = true;
         }
 
-        pending = { email, username, password, weakPasswordAccepted };
+        pending = { email, username, password, weakPasswordAccepted, test: accountType === 'test' };
         await attempt({ ...pending });
     });
 

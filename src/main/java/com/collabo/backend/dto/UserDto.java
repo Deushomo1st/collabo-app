@@ -1,13 +1,13 @@
 package com.collabo.backend.dto;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class UserDto {
 
+    // Only @NotBlank here — the email FORMAT check moved into AuthService so it
+    // can be skipped for test accounts (see AuthService.register).
     @NotBlank(message = "Please set email")
-    @Email(message = "Not a valid email")
     private String email;
 
     @NotBlank(message = "Choose a username")
@@ -18,6 +18,10 @@ public class UserDto {
     // enforced in AuthService (they have a two-tier bypass flow).
     @NotBlank(message = "Please set password")
     private String password;
+
+    // true = create a TEST account: skips email-format validation, OTP, and
+    // email sending; the account is verified immediately with is_test=true.
+    private boolean test;
 
     // true when the client acknowledged a weak password via "proceed anyway".
     private boolean weakPasswordAccepted;
@@ -35,6 +39,9 @@ public class UserDto {
 
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+
+    public boolean isTest() { return test; }
+    public void setTest(boolean test) { this.test = test; }
 
     public boolean isWeakPasswordAccepted() { return weakPasswordAccepted; }
     public void setWeakPasswordAccepted(boolean weakPasswordAccepted) { this.weakPasswordAccepted = weakPasswordAccepted; }

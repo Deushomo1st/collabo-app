@@ -50,6 +50,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
     }
 
+    /** Email format is invalid (only enforced when test mode is off). */
+    @ExceptionHandler(InvalidEmailException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidEmail(InvalidEmailException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+    }
+
     /** Account exists but is unverified — client should complete OTP confirmation. */
     @ExceptionHandler(AccountUnverifiedException.class)
     public ResponseEntity<Map<String, Object>> handleUnverified(AccountUnverifiedException ex) {

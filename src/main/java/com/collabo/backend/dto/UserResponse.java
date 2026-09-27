@@ -16,6 +16,7 @@ public record UserResponse(
         String username,
         Role role,
         boolean verified,
+        boolean test,
         LocalDateTime createdAt
 ) {
     public static UserResponse from(User user) {
@@ -25,6 +26,7 @@ public record UserResponse(
                 user.getUsername(),
                 user.getRole(),
                 user.isVerified(),
+                user.isTest(),
                 user.getCreatedAt()
         );
     }

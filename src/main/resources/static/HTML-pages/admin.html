@@ -157,7 +157,7 @@
     </form>
     <table id="users-table">
       <thead>
-        <tr><th>Email</th><th>Username</th><th>Role</th><th>Created</th><th></th></tr>
+        <tr><th>Email</th><th>Username</th><th>Role</th><th>Test</th><th>Created</th><th></th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -317,7 +317,7 @@
     return api('/users').then(function (users) {
       usersTbody.textContent = '';
       if (!users || !users.length) {
-        emptyRow(usersTbody, 5, 'No users');
+        emptyRow(usersTbody, 6, 'No users');
         return;
       }
       var adminCount = users.filter(function (u) { return u.role === 'ADMIN'; }).length;
@@ -373,6 +373,16 @@
         });
         tdRole.appendChild(sel);
         tr.appendChild(tdRole);
+
+        var tdTest = document.createElement('td');
+        if (u.test) {
+            tdTest.textContent = 'TEST';
+            tdTest.style.color = '#f59e0b';
+            tdTest.style.fontWeight = '600';
+        } else {
+            tdTest.textContent = '—';
+        }
+        tr.appendChild(tdTest);
 
         var tdCreated = document.createElement('td');
         tdCreated.textContent = fmtDate(u.createdAt);

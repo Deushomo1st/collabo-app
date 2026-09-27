@@ -35,6 +35,11 @@ public class User {
     @Column
     private Boolean verified = false;
 
+    // Nullable wrapper (like verified): null reads as false. Marks an account
+    // created while test mode was active — these skip email validation + OTP.
+    @Column(name = "is_test")
+    private Boolean test = false;
+
     @Column(name = "otp_hash")
     private String otpHash;
 
@@ -68,6 +73,10 @@ public class User {
     // null-safe: a legacy row (created before verification existed) reads as unverified.
     public boolean isVerified() { return Boolean.TRUE.equals(verified); }
     public void setVerified(boolean verified) { this.verified = verified; }
+
+    // null-safe: a legacy row reads as not-a-test-account.
+    public boolean isTest() { return Boolean.TRUE.equals(test); }
+    public void setTest(boolean test) { this.test = test; }
 
     public String getOtpHash() { return otpHash; }
     public void setOtpHash(String otpHash) { this.otpHash = otpHash; }
