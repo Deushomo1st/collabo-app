@@ -3,8 +3,8 @@ package com.collabo.backend.util;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * Resolves the real client IP, honouring the reverse-proxy headers nginx sets.
- * Without this, every request behind nginx looks like it comes from localhost
+ * Resolves the real client IP, honouring the reverse-proxy headers Caddy sets.
+ * Without this, every request behind Caddy looks like it comes from localhost
  * and the rate limiter would treat everyone as one IP.
  */
 public final class ClientIpResolver {
