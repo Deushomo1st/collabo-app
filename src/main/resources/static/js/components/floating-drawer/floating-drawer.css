@@ -1,0 +1,155 @@
+/* floating-drawer: macOS-style drawer that hangs from the top-left corner.
+   Ported from SchoolHub app/drawer. Hover peeks the icons; clicking the tab expands the labels.
+
+   Public:  --floating-drawer-{height,line,accent,danger,z}
+   Private: --_fd-* (internal, do not set from outside). */
+
+.floating-drawer {
+    --_fd-height: var(--floating-drawer-height, 440px);
+    --_fd-line: var(--floating-drawer-line, #232b42);
+    --_fd-accent: var(--floating-drawer-accent, #FF9000);
+    --_fd-danger: var(--floating-drawer-danger, #ff4d4d);
+
+    position: fixed;
+    top: 0;
+    left: 16px;
+    z-index: var(--floating-drawer-z, 50);
+    width: 48px;
+    height: 44px;
+    overflow: hidden;
+    background: linear-gradient(180deg,
+        rgba(90, 90, 90, .95) 0%, rgba(61, 61, 61, .92) 15%,
+        rgba(42, 42, 42, .9) 50%, rgba(26, 26, 26, .92) 85%,
+        rgba(17, 17, 17, .95) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .08),
+        inset 0 -1px 0 rgba(0, 0, 0, .3),
+        0 8px 32px rgba(0, 0, 0, .35);
+    transition: width .28s cubic-bezier(.25, .1, .25, 1), height .28s cubic-bezier(.25, .1, .25, 1);
+}
+/* Inside a positioned container instead of the viewport (galleries, previews) */
+.floating-drawer--inline { position: absolute; }
+
+/* Glossy top reflection */
+.floating-drawer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 2px;
+    right: 2px;
+    height: 30%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .1), transparent);
+    border-radius: 14px 14px 0 0;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.floating-drawer__trigger {
+    position: relative;
+    z-index: 6;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, .85);
+    cursor: pointer;
+}
+.floating-drawer__trigger svg { width: 20px; height: 20px; }
+.floating-drawer__trigger:focus-visible { outline: 2px solid var(--_fd-accent); outline-offset: -4px; border-radius: 10px; }
+
+.floating-drawer__body {
+    display: flex;
+    flex-direction: column;
+    height: 0;
+    overflow: hidden;
+    opacity: 0;
+    border-top: 1px solid var(--_fd-line);
+    transition: height .28s cubic-bezier(.25, .1, .25, 1), opacity .22s;
+}
+
+/* Open = icons dropped (hover peek or click); expanded = labels shown too */
+.floating-drawer--open { height: var(--_fd-height); }
+.floating-drawer--open .floating-drawer__body { height: calc(var(--_fd-height) - 44px); opacity: 1; }
+
+.floating-drawer__items {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 48px;
+    padding: 12px 4px 8px;
+    overflow-x: hidden;
+    overflow-y: auto;               /* many items scroll; the footer never does */
+    scrollbar-width: none;
+}
+.floating-drawer__items::-webkit-scrollbar { display: none; }
+
+.floating-drawer__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s;
+}
+.floating-drawer__item:hover { background: rgba(255, 255, 255, .08); outline: 1px solid rgba(255, 255, 255, .15); }
+.floating-drawer__item:focus-visible { outline: 2px solid var(--_fd-accent); outline-offset: -2px; }
+.floating-drawer__item--active { background: rgba(255, 255, 255, .12); outline: 1px solid rgba(255, 255, 255, .25); }
+.floating-drawer__item svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    color: rgba(255, 255, 255, .65);
+    transition: color .2s;
+}
+.floating-drawer__item:hover svg { color: var(--_fd-accent); }
+
+.floating-drawer__label {
+    width: 0;
+    overflow: hidden;
+    opacity: 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, .75);
+    white-space: nowrap;
+    transition: opacity .2s .1s, width 0s .4s;
+}
+.floating-drawer--expanded .floating-drawer__label {
+    width: auto;
+    overflow: visible;
+    opacity: 1;
+    transition: opacity .2s .25s, width 0s 0s;
+}
+
+/* Footer: pinned at the bottom, for destructive actions such as signing out */
+.floating-drawer__footer {
+    flex-shrink: 0;
+    margin: 4px 4px 0;
+    padding: 4px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+.floating-drawer__footer:empty { display: none; }
+.floating-drawer__item--danger svg { color: var(--_fd-danger); opacity: .7; }
+.floating-drawer__item--danger .floating-drawer__label { color: var(--_fd-danger); }
+.floating-drawer__item--danger:hover svg { color: var(--_fd-danger); opacity: 1; }
+.floating-drawer__item--danger:hover .floating-drawer__label { color: color-mix(in srgb, var(--_fd-danger) 75%, #fff); }
+
+@media (prefers-reduced-motion: reduce) {
+    .floating-drawer, .floating-drawer__body, .floating-drawer__label, .floating-drawer__item { transition: none; }
+}
