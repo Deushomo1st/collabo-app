@@ -1,0 +1,56 @@
+/* theme.css: light/dusk switching for collabo components.
+ *
+ * How it works
+ *   Components ship with the dark "dusk" look as their built-in defaults, so dusk
+ *   needs no rules here. This file only overrides each component's PUBLIC
+ *   variables when <html data-theme="light"> is set.
+ *
+ *   <html>                     -> dusk (component defaults)
+ *   <html data-theme="dusk">   -> dusk (explicit)
+ *   <html data-theme="light">  -> light (values below)
+ *
+ * Adding a component
+ *   Only components that expose public variables can be themed. When you port one,
+ *   add its light values in a new block below. Never set a component's private
+ *   --_xyz-* variables from here.
+ *
+ * Scope
+ *   This themes components only. Page backgrounds and page-level text are the
+ *   page's job: style them with :root[data-theme="light"] in the page itself.
+ *
+ * Source: SchoolHub style.css light (:root) palette.
+ */
+
+:root[data-theme="light"] {
+    /* ---- glass-blur-dialog ---- */
+    --glass-blur-dialog-ink: #023047;
+    --glass-blur-dialog-muted: #5b7280;
+    --glass-blur-dialog-line: #d9e7ee;
+    --glass-blur-dialog-brand: #209EBB;
+    --glass-blur-dialog-brand-ink: #ffffff;
+    --glass-blur-dialog-danger: #dc2626;
+    --glass-blur-dialog-bg: color-mix(in srgb, #ffffff 48%, transparent);
+    --glass-blur-dialog-bg-frost: color-mix(in srgb, #ffffff 70%, transparent);
+    --glass-blur-dialog-border: rgba(255, 255, 255, .48);
+    --glass-blur-dialog-sheen: linear-gradient(135deg, rgba(255,255,255,.26), transparent 42%, transparent 72%, rgba(255,255,255,.10));
+    --glass-blur-dialog-sheen-frost2: linear-gradient(135deg, rgba(255,255,255,.18), transparent 42%, transparent 72%, rgba(255,255,255,.06));
+    --glass-blur-dialog-blur: blur(16px) saturate(160%);
+    --glass-blur-dialog-blur-frost: blur(28px) saturate(150%);
+    --glass-blur-dialog-blur-frost2: blur(36px) saturate(130%);
+    --glass-blur-dialog-backdrop-bg: rgba(2, 18, 30, .40);
+    --glass-blur-dialog-backdrop-bg-frost2: rgba(2, 18, 30, .55);
+    --glass-blur-dialog-backdrop-blur: blur(9px) saturate(115%);
+    --glass-blur-dialog-backdrop-blur-frost2: blur(12px) saturate(120%);
+    --glass-blur-dialog-shadow: 0 30px 70px rgba(2,48,71,.26), inset 0 1px 0 rgba(255,255,255,.6);
+
+    /* ---- calendar ---- */
+    --calendar-ink: #023047;
+    --calendar-muted: #5b7280;
+    --calendar-line: #d9e7ee;
+    --calendar-brand: #209EBB;
+    --calendar-brand-ink: #ffffff;
+    --calendar-announcement: #FFB701;
+    --calendar-holiday: #0f9d76;
+    --calendar-exam: #dc2626;
+    /* --calendar-event follows --calendar-brand by default */
+}
