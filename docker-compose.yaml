@@ -16,7 +16,9 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env  # <-- This explicitly tells Docker to read the .env file
+      - .env
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/collabo
     depends_on:
       - db
     restart: always
