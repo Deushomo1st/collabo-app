@@ -119,6 +119,18 @@
     .gallery__demo-result { min-height: 1.3em; margin: 0; color: #d1d5db; font-size: 0.85rem; }
     .gallery__demo-agenda { width: min(380px, 100%); }
     .gallery__demo--tall { min-height: 480px; }
+
+    /* Nav selector demo: a scrollable box, because the nav iconizes on scroll */
+    .gallery__scrollbox { width: 100%; height: 340px; overflow-y: auto; border-radius: 10px; }
+    .gallery__scrollbox-content {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem 3rem;
+        color: #9ca3af;
+        font-size: 0.85rem;
+        line-height: 1.7;
+    }
+    .gallery__scrollbox-content strong { color: #f9fafb; }
     .gallery__demo-bell { padding-top: 28px; }       /* room for the bell's string */
     .gallery__demo-modules {
         display: grid;
@@ -211,8 +223,24 @@
             id: 'nav-selector-fluid-hold',
             title: 'Nav Selector',
             files: ['nav-selector-fluid-hold.html', 'nav-selector-fluid-hold.css', 'nav-selector-fluid-hold.js'],
-            stageClass: 'gallery__stage--transparent',
-            render: async () => { await mountNavSelector('#gallery-stage'); },
+            stageClass: 'gallery__stage--transparent gallery__stage--full',
+            render: async (stage) => {
+                // The nav iconizes when its scroll root scrolls down, so give it one.
+                const box = document.createElement('div');
+                box.className = 'gallery__scrollbox';
+                stage.appendChild(box);
+                const nav = await mountNavSelector(box, { scrollRoot: box });
+
+                const content = document.createElement('div');
+                content.className = 'gallery__scrollbox-content';
+                content.innerHTML = '<p><strong>Scroll down inside this box.</strong> The nav collapses to the active '
+                    + 'section\'s icon. Scroll back up, click the icon, or wait for it to re-collapse after 1.5s idle.</p>'
+                    + Array.from({ length: 10 }, (_, i) =>
+                        `<p>Placeholder paragraph ${i + 1}. Enough content to scroll past the 40px threshold, so the `
+                        + 'collapse and expand behaviour can be tried in both directions.</p>').join('');
+                box.appendChild(content);
+                return nav.destroy;
+            },
         },
 
         {
