@@ -1,142 +1,131 @@
-/* Nav Selector — CSS Anchor Positioning pill nav (Raul Dronke "Rolo" style).
+/* Nav Selector — "fluid hold" collapsible pill nav.
    Scoped under .nav_selector_fluid_hold — only loaded when nav_selector_fluid_hold.js runs.
    Requires a Chromium browser 125+ (CSS anchor positioning + :has()).
+   Single instance per page (anchor names are document-wide idents).
 
-   Note: anchor names (--ns-active/--ns-hover/--ns-nav) are document-wide idents,
-   so this component assumes ONE instance per page (same as navbar/footer). */
+   Settable size variables (apply on the mount target or root):
+   --nav-width        (default: min(92vw, 560px))  max-width of the expanded pill
+   --nav-padding      (default: 6px)               shell padding
+   --nav-link-padding (default: 10px 20px)         per-link padding
+   --nav-font-size    (default: 15px)              link font size */
+
+.nav_selector_fluid_hold_wrap {
+    position: sticky; top: 16px; z-index: 50;
+    display: flex; justify-content: center;
+    padding-top: 24px;
+}
 
 .nav_selector_fluid_hold {
     position: relative;
-    width: var(--nav-width, fit-content);
-    padding: var(--nav-padding, 8px);
+    width: fit-content;
+    max-width: var(--nav-width, min(92vw, 560px));
+    height: 46px;
+    padding: var(--nav-padding, 6px);
     border-radius: 999px;
     background: linear-gradient(145deg, #2a2a2a, #111);
     border: 1px solid #333;
-    box-shadow:
-        inset 0 2px 5px rgba(255, 255, 255, 0.05),
-        inset 0 -5px 15px rgba(0, 0, 0, 0.6),
-        0 10px 30px rgba(0, 0, 0, 0.5);
-}
-
-/* Subtle outer rim glow (sits behind the pill, extends 8px beyond). */
-.nav_selector_fluid_hold::after {
-    content: "";
-    position: absolute;
-    inset: -8px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.5));
-    border-radius: 999px;
-    z-index: -1;
-    filter: blur(12px);
-    opacity: 0.6;
-}
-
-/* The nav doubles as the default anchor for the hover bubble. */
-.nav_selector_fluid_hold__nav {
+    box-shadow: inset 0 2px 5px rgba(255,255,255,0.05), inset 0 -5px 15px rgba(0,0,0,0.6),
+    0 10px 30px rgba(0,0,0,0.5), 0 0 24px rgba(0,0,0,0.45);
     display: flex;
-    position: relative;
-    z-index: 3;
-    anchor-name: --ns-nav;
+    align-items: center;
+    overflow: hidden;
+    transition: max-width .4s cubic-bezier(.25,1,.5,1), padding .4s cubic-bezier(.25,1,.5,1);
+}
+
+/* Iconized mode: collapsed to the single center icon */
+.nav_selector_fluid_hold.iconized { max-width: 46px; padding: 4px; }
+.nav_selector_fluid_hold.iconized .nav_selector_fluid_hold__clip { opacity: 0; transition: opacity .15s; }
+.nav_selector_fluid_hold.iconized .nav_selector_fluid_hold__arrow { opacity: 0 !important; pointer-events: none; }
+.nav_selector_fluid_hold.iconized .nav_selector_fluid_hold__icon { opacity: 1; pointer-events: auto; transform: translate(-50%,-50%) scale(1); }
+
+.nav_selector_fluid_hold__clip {
+    position: relative; flex: 1; min-width: 0; overflow: hidden;
+    opacity: 1; transition: opacity .25s .1s;
+}
+.nav_selector_fluid_hold__clip::before,
+.nav_selector_fluid_hold__clip::after {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 20px;
+    z-index: 4; pointer-events: none; opacity: 0; transition: opacity .2s;
+}
+.nav_selector_fluid_hold__clip::before { left: 0; background: linear-gradient(to right, #181818, transparent); }
+.nav_selector_fluid_hold__clip::after { right: 0; background: linear-gradient(to left, #181818, transparent); }
+.nav_selector_fluid_hold__clip.fade-l::before { opacity: 1; }
+.nav_selector_fluid_hold__clip.fade-r::after { opacity: 1; }
+
+.nav_selector_fluid_hold__viewport {
+    position: relative; overflow-x: auto;
+    scrollbar-width: none; -ms-overflow-style: none;
+    width: 100%; scroll-snap-type: x mandatory;
+}
+.nav_selector_fluid_hold__viewport::-webkit-scrollbar { display: none; }
+
+.nav_selector_fluid_hold__nav {
+    display: flex; width: max-content; position: relative; z-index: 3;
+    anchor-name: --ns-nav; padding-inline: 6px;
 }
 
 .nav_selector_fluid_hold__link {
-    position: relative;
-    display: block;
-    padding: var(--nav-link-padding, 12px 28px);
-    color: #999;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: var(--nav-font-size, 15px);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: color 0.3s ease;
-    font-family: inherit;
+    position: relative; display: flex; align-items: center; gap: 8px;
+    padding: var(--nav-link-padding, 10px 20px);
+    color: #999; text-decoration: none; font-weight: 500;
+    font-size: var(--nav-font-size, 15px); border-radius: 999px;
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    scroll-snap-align: center; scroll-snap-stop: always;
+    transition: color .3s ease;
 }
-
-.nav_selector_fluid_hold__link:hover {
-    color: #fff;
-}
-
-.nav_selector_fluid_hold__link.is-active {
-    color: #111;
-    anchor-name: --ns-active;
-}
-
-/* Invisible pseudo-element = the hover anchor. Keeps hover from overwriting
-   the active link's --ns-active anchor (the "two anchors" trick). */
-.nav_selector_fluid_hold__link::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 999px;
-}
-
-.nav_selector_fluid_hold__link:hover::before {
-    anchor-name: --ns-hover;
-}
+.nav_selector_fluid_hold__link svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nav_selector_fluid_hold__link:hover { color: #fff; }
+.nav_selector_fluid_hold__link.is-active { color: #111; anchor-name: --ns-active; }
+.nav_selector_fluid_hold__link::before { content: ""; position: absolute; inset: 0; border-radius: 999px; }
+.nav_selector_fluid_hold__link:hover::before { anchor-name: --ns-hover; }
 
 .nav_selector_fluid_hold__bubble {
-    position: absolute;
-    border-radius: 999px;
-    transition:
-        top 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-        right 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-        bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-        left 0.4s cubic-bezier(0.25, 1, 0.5, 1),
-        opacity 0.3s ease;
+    position: absolute; border-radius: 999px;
+    transition: top .4s cubic-bezier(.25,1,.5,1), right .4s cubic-bezier(.25,1,.5,1),
+    bottom .4s cubic-bezier(.25,1,.5,1), left .4s cubic-bezier(.25,1,.5,1), opacity .3s ease;
 }
-
-/* Active pill — white, always superior (z-index 2). */
 .nav_selector_fluid_hold__bubble--active {
     background: linear-gradient(145deg, #ffffff, #d4d4d4);
-    box-shadow:
-        inset 0 2px 4px rgba(255, 255, 255, 0.9),
-        inset 0 -3px 6px rgba(0, 0, 0, 0.2),
-        0 6px 12px rgba(0, 0, 0, 0.4);
-    position-anchor: --ns-active;
-    top: anchor(top);
-    right: anchor(right);
-    bottom: anchor(bottom);
-    left: anchor(left);
-    z-index: 2;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -3px 6px rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.4);
+    position-anchor: --ns-active; top: anchor(top); right: anchor(right); bottom: anchor(bottom); left: anchor(left); z-index: 2;
 }
-
-/* Hover pill — grey, subordinate (z-index 1). Defaults to full nav width, hidden. */
 .nav_selector_fluid_hold__bubble--hover {
     background: linear-gradient(145deg, #3d3d3d, #1a1a1a);
-    box-shadow:
-        inset 0 2px 4px rgba(255, 255, 255, 0.05),
-        inset 0 -3px 6px rgba(0, 0, 0, 0.8),
-        0 4px 8px rgba(0, 0, 0, 0.3);
-    position-anchor: --ns-nav;
-    top: anchor(top);
-    right: anchor(right);
-    bottom: anchor(bottom);
-    left: anchor(left);
-    opacity: 0;
-    z-index: 1;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), inset 0 -3px 6px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.3);
+    position-anchor: --ns-nav; top: anchor(top); right: anchor(right); bottom: anchor(bottom); left: anchor(left); opacity: 0; z-index: 1;
 }
-
-/* Show the hover pill only when hovering a NON-active link (white stays superior). */
 .nav_selector_fluid_hold:has(.nav_selector_fluid_hold__link:hover:not(.is-active)) .nav_selector_fluid_hold__bubble--hover {
-    position-anchor: --ns-hover;
-    opacity: 1;
+    position-anchor: --ns-hover; opacity: 1;
 }
 
-/* --- Responsive / Mobile Adjustments --- */
+/* Centered icon button (iconized mode) */
+.nav_selector_fluid_hold__icon {
+    position: absolute; left: 50%; top: 50%;
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(145deg, #ffffff, #d4d4d4);
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -3px 6px rgba(0,0,0,0.2), 0 6px 14px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center; color: #111;
+    border: none; cursor: pointer; z-index: 9;
+    opacity: 0; pointer-events: none; transform: translate(-50%,-50%) scale(.4);
+    transition: opacity .25s ease, transform .25s cubic-bezier(.25,1,.5,1);
+}
+.nav_selector_fluid_hold__icon svg { width: 17px; height: 17px; }
+
+/* Horizontal scroll arrows */
+.nav_selector_fluid_hold__arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(18,18,18,0.9); border: 1px solid #333;
+    color: #ccc; font-size: 15px; line-height: 1; cursor: pointer;
+    z-index: 7; opacity: 0; pointer-events: none; transition: opacity .2s, color .2s;
+}
+.nav_selector_fluid_hold__arrow.on { opacity: 1; pointer-events: auto; }
+.nav_selector_fluid_hold__arrow:hover { color: #fff; }
+.nav_selector_fluid_hold__arrow--left { left: 5px; }
+.nav_selector_fluid_hold__arrow--right { right: 5px; }
+
 @media (max-width: 600px) {
-    .nav_selector_fluid_hold {
-        max-width: 95vw;
-        padding: 6px;
-    }
-
-    .nav_selector_fluid_hold__nav {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 4px;
-    }
-
-    .nav_selector_fluid_hold__link {
-        padding: 10px 16px;
-        font-size: 14px;
-    }
+    .nav_selector_fluid_hold { max-width: var(--nav-width, 94vw); }
+    .nav_selector_fluid_hold__link { padding: 9px 14px; font-size: 14px; }
 }
