@@ -1,9 +1,9 @@
 // Nav Selector component — "fluid hold" collapsible pill nav.
 // Collapses to a centered icon on page scroll-down; expands on scroll-up,
 // on icon click, and re-iconizes after 1.5s idle (configurable).
-// Usage: import { mountNavSelector } from '/js/components/nav_selector_fluid_hold/nav_selector_fluid_hold.js';
-//        mountNavSelector('#nav_selector_fluid_hold');
-//        mountNavSelector('#nav_selector_fluid_hold', { links: ['A','B'], hrefs: ['#a','#b'], activeIndex: 0, idleMs: 1500, onChange: (label, href) => {} });
+// Usage: import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+//        mountNavSelector('#nav-selector-fluid-hold');
+//        mountNavSelector('#nav-selector-fluid-hold', { links: ['A','B'], hrefs: ['#a','#b'], activeIndex: 0, idleMs: 1500, onChange: (label, href) => {} });
 
 const ICONS = [
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
@@ -14,42 +14,42 @@ const ICONS = [
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>'
 ];
 
-export async function mountNavSelector(targetSelector = '#nav_selector_fluid_hold', options = {}) {
+export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hold', options = {}) {
     const target = document.querySelector(targetSelector);
     if (!target) return;
 
-    loadStylesOnce('/js/components/nav_selector_fluid_hold/nav_selector_fluid_hold.css', 'nav_selector_fluid_hold');
+    loadStylesOnce('/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.css', 'nav-selector-fluid-hold');
 
-    const res = await fetch('/js/components/nav_selector_fluid_hold/nav_selector_fluid_hold.html');
+    const res = await fetch('/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.html');
     const wrapper = document.createElement('div');
     wrapper.innerHTML = await res.text();
     const root = wrapper.firstElementChild;
 
     // Optional: swap the default links (icons cycle from ICONS).
     if (Array.isArray(options.links) && options.links.length) {
-        const nav = root.querySelector('.nav_selector_fluid_hold__nav');
+        const nav = root.querySelector('.nav-selector-fluid-hold__nav');
         nav.textContent = '';
         const activeIndex = options.activeIndex ?? 0;
         options.links.forEach((label, i) => {
             const a = document.createElement('a');
             a.href = options.hrefs?.[i] || '#';
-            a.className = 'nav_selector_fluid_hold__link' + (i === activeIndex ? ' is-active' : '');
+            a.className = 'nav-selector-fluid-hold__link' + (i === activeIndex ? ' is-active' : '');
             a.innerHTML = ICONS[i % ICONS.length] + '<span></span>';
             a.querySelector('span').textContent = label;
             nav.appendChild(a);
         });
     }
 
-    const clip = root.querySelector('.nav_selector_fluid_hold__clip');
-    const view = root.querySelector('.nav_selector_fluid_hold__viewport');
-    const arrowL = root.querySelector('.nav_selector_fluid_hold__arrow--left');
-    const arrowR = root.querySelector('.nav_selector_fluid_hold__arrow--right');
-    const navIcon = root.querySelector('.nav_selector_fluid_hold__icon');
-    const getLinks = () => [...root.querySelectorAll('.nav_selector_fluid_hold__link')];
+    const clip = root.querySelector('.nav-selector-fluid-hold__clip');
+    const view = root.querySelector('.nav-selector-fluid-hold__viewport');
+    const arrowL = root.querySelector('.nav-selector-fluid-hold__arrow--left');
+    const arrowR = root.querySelector('.nav-selector-fluid-hold__arrow--right');
+    const navIcon = root.querySelector('.nav-selector-fluid-hold__icon');
+    const getLinks = () => [...root.querySelectorAll('.nav-selector-fluid-hold__link')];
 
     // ---------- icon sync ----------
     function syncIcon() {
-        const active = root.querySelector('.nav_selector_fluid_hold__link.is-active');
+        const active = root.querySelector('.nav-selector-fluid-hold__link.is-active');
         if (!active) return;
         const key = active.textContent.trim();
         if (navIcon.dataset.for !== key) {
@@ -138,7 +138,7 @@ export async function mountNavSelector(targetSelector = '#nav_selector_fluid_hol
 
     // Mount inside a sticky wrapper so the pill stays reachable on long pages.
     const wrap = document.createElement('div');
-    wrap.className = 'nav_selector_fluid_hold_wrap';
+    wrap.className = 'nav-selector-fluid-hold-wrap';
     wrap.appendChild(root);
     target.appendChild(wrap);
     void target.offsetHeight; // force reflow so anchor bubbles measure correctly

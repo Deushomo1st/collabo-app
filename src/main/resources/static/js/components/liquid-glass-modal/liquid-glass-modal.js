@@ -3,9 +3,9 @@ export async function mountLiquidGlassModal(targetSelector = '#liquid-glass-moda
     const target = document.querySelector(targetSelector);
     if (!target) return;
 
-    loadStylesOnce('/js/components/liquid_glass_modal/liquid_glass_modal.css', 'liquid_glass_modal');
+    loadStylesOnce('/js/components/liquid-glass-modal/liquid-glass-modal.css', 'liquid-glass-modal');
 
-    const res = await fetch('/js/components/liquid_glass_modal/liquid_glass_modal.html');
+    const res = await fetch('/js/components/liquid-glass-modal/liquid-glass-modal.html');
     const html = await res.text();
 
     const wrapper = document.createElement('div');

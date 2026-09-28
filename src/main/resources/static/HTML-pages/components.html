@@ -104,23 +104,23 @@
 </div>
 
 <script type="module">
-    import { mountNavSelector } from '/js/components/nav_selector_fluid_hold/nav_selector_fluid_hold.js';
-    import { mountLiquidGlassModal } from '/js/components/liquid_glass_modal/liquid_glass_modal.js';
+    import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+    import { mountLiquidGlassModal } from '/js/components/liquid-glass-modal/liquid-glass-modal.js';
 
     const catalog = [
 
         {
-            id: 'nav_selector_fluid_hold',
+            id: 'nav-selector-fluid-hold',
             title: 'Nav Selector',
-            files: ['nav_selector_fluid_hold.html', 'nav_selector_fluid_hold.css', 'nav_selector_fluid_hold.js'],
+            files: ['nav-selector-fluid-hold.html', 'nav-selector-fluid-hold.css', 'nav-selector-fluid-hold.js'],
             stageClass: 'gallery__stage--transparent',
             render: async () => { await mountNavSelector('#gallery-stage'); },
         },
 
         {
-            id: 'liquid_glass_modal',
+            id: 'liquid-glass-modal',
             title: 'Liquid Glass Modal',
-            files: ['liquid_glass_modal.html', 'liquid_glass_modal.css', 'liquid_glass_modal.js'],
+            files: ['liquid-glass-modal.html', 'liquid-glass-modal.css', 'liquid-glass-modal.js'],
             render: async (stage) => {
                 const wrap = document.createElement('div');
                 wrap.style.cssText = `
