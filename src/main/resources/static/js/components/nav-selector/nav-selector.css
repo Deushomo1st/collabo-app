@@ -1,0 +1,123 @@
+/* Nav Selector — CSS Anchor Positioning pill nav (Raul Dronke "Rolo" style).
+   Scoped under .nav-selector — only loaded when nav-selector.js runs.
+   Requires a Chromium browser 125+ (CSS anchor positioning + :has()).
+
+   Note: anchor names (--ns-active/--ns-hover/--ns-nav) are document-wide idents,
+   so this component assumes ONE instance per page (same as navbar/footer). */
+
+.nav-selector {
+    position: relative;
+    width: fit-content;
+    padding: 8px;
+    border-radius: 999px;
+    background: linear-gradient(145deg, #2a2a2a, #111);
+    border: 1px solid #333;
+    box-shadow:
+        inset 0 2px 5px rgba(255, 255, 255, 0.05),
+        inset 0 -5px 15px rgba(0, 0, 0, 0.6),
+        0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Subtle outer rim glow (sits behind the pill, extends 8px beyond). */
+.nav-selector::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.5));
+    border-radius: 999px;
+    z-index: -1;
+    filter: blur(12px);
+    opacity: 0.6;
+}
+
+/* The nav doubles as the default anchor for the hover bubble. */
+.nav-selector__nav {
+    display: flex;
+    position: relative;
+    z-index: 3;
+    anchor-name: --ns-nav;
+}
+
+.nav-selector__link {
+    position: relative;
+    display: block;
+    padding: 12px 28px;
+    color: #999;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    font-family: inherit;
+}
+
+.nav-selector__link:hover {
+    color: #fff;
+}
+
+.nav-selector__link.is-active {
+    color: #111;
+    anchor-name: --ns-active;
+}
+
+/* Invisible pseudo-element = the hover anchor. Keeps hover from overwriting
+   the active link's --ns-active anchor (the "two anchors" trick). */
+.nav-selector__link::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+}
+
+.nav-selector__link:hover::before {
+    anchor-name: --ns-hover;
+}
+
+.nav-selector__bubble {
+    position: absolute;
+    border-radius: 999px;
+    transition:
+        top 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        right 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        bottom 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        left 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+        opacity 0.3s ease;
+}
+
+/* Active pill — white, always superior (z-index 2). */
+.nav-selector__bubble--active {
+    background: linear-gradient(145deg, #ffffff, #d4d4d4);
+    box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.9),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.2),
+        0 6px 12px rgba(0, 0, 0, 0.4);
+    position-anchor: --ns-active;
+    top: anchor(top);
+    right: anchor(right);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    z-index: 2;
+}
+
+/* Hover pill — grey, subordinate (z-index 1). Defaults to full nav width, hidden. */
+.nav-selector__bubble--hover {
+    background: linear-gradient(145deg, #3d3d3d, #1a1a1a);
+    box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.05),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.8),
+        0 4px 8px rgba(0, 0, 0, 0.3);
+    position-anchor: --ns-nav;
+    top: anchor(top);
+    right: anchor(right);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    opacity: 0;
+    z-index: 1;
+}
+
+/* Show the hover pill only when hovering a NON-active link (white stays superior). */
+.nav-selector:has(.nav-selector__link:hover:not(.is-active)) .nav-selector__bubble--hover {
+    position-anchor: --ns-hover;
+    opacity: 1;
+}

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COLLABO — Component Gallery</title>
+<link rel="stylesheet" href="/css/global/global.css">
+<style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #0f0f0f;
+        color: #f9fafb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1rem;
+    }
+    .gallery { width: min(960px, 100%); }
+    .gallery__header { text-align: center; margin-bottom: 1.5rem; }
+    .gallery__header h1 { font-size: 1.5rem; margin: 0 0 0.25rem; }
+    .gallery__header p { margin: 0; color: #6b7280; font-size: 0.85rem; }
+
+    .gallery__meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    .gallery__count {
+        color: #6b7280;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .gallery__title { font-size: 1.2rem; font-weight: 600; }
+
+    .gallery__files {
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .gallery__stage {
+        border-radius: 14px;
+        border: 1px solid #2a2a2a;
+        background: #1a1a1a;
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        transition: background 0.2s ease;
+    }
+    .gallery__stage--transparent { background: transparent; border: 1px dashed #2a2a2a; }
+    .gallery__stage--light { background: #f5f5f5; border-color: #e5e5e5; }
+    .gallery__stage--full { padding: 0; align-items: stretch; justify-content: stretch; overflow: hidden; }
+    .gallery__stage--full > * { width: 100%; }
+
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .pagination button {
+        min-width: 2.25rem;
+        height: 2.25rem;
+        padding: 0 0.7rem;
+        border-radius: 8px;
+        border: 1px solid #2a2a2a;
+        background: #1a1a1a;
+        color: #d1d5db;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .pagination button:hover:not(:disabled) { background: #2a2a2a; color: #fff; }
+    .pagination button.is-active { background: #ffffff; color: #111; border-color: #ffffff; font-weight: 600; }
+    .pagination button:disabled { opacity: 0.35; cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<div class="gallery">
+    <div class="gallery__header">
+        <h1>COLLABO — Component Gallery</h1>
+        <p>Every self-contained UI component in the project, one page each.</p>
+    </div>
+
+    <div class="gallery__meta">
+        <span class="gallery__count" id="gallery-count"></span>
+        <span class="gallery__title" id="gallery-title"></span>
+    </div>
+
+    <div class="gallery__files" id="gallery-files"></div>
+
+    <div class="gallery__stage" id="gallery-stage"></div>
+
+    <nav class="pagination" id="pagination" aria-label="Component pages"></nav>
+</div>
+
+<script type="module">
+    import { mountNavbar } from '/js/components/navbar/navbar.js';
+    import { mountNavSelector } from '/js/components/nav-selector/nav-selector.js';
+    import { mountFooter } from '/js/components/footer/footer.js';
+    import { createUserCard } from '/js/components/user-card/user-card.js';
+
+    const catalog = [
+        {
+            id: 'navbar',
+            title: 'Navbar',
+            files: ['navbar.html', 'navbar.css', 'navbar.js'],
+            stageClass: 'gallery__stage--full gallery__stage--light',
+            render: async () => { await mountNavbar('#gallery-stage'); },
+        },
+        {
+            id: 'nav-selector',
+            title: 'Nav Selector',
+            files: ['nav-selector.html', 'nav-selector.css', 'nav-selector.js'],
+            stageClass: 'gallery__stage--transparent',
+            render: async () => { await mountNavSelector('#gallery-stage'); },
+        },
+        {
+            id: 'footer',
+            title: 'Footer',
+            files: ['footer.html', 'footer.css', 'footer.js'],
+            stageClass: 'gallery__stage--full gallery__stage--light',
+            render: async () => { await mountFooter('#gallery-stage'); },
+        },
+        {
+            id: 'user-card',
+            title: 'User Card',
+            files: ['user-card.html', 'user-card.css', 'user-card.js'],
+            stageClass: 'gallery__stage--light',
+            render: async (stage) => {
+                const card = await createUserCard({ username: 'Deus', email: 'DeusSA@gmail.com', role: 'ADMIN' });
+                stage.appendChild(card);
+            },
+        },
+    ];
+
+    const stage = document.getElementById('gallery-stage');
+    const countEl = document.getElementById('gallery-count');
+    const titleEl = document.getElementById('gallery-title');
+    const filesEl = document.getElementById('gallery-files');
+    const pagination = document.getElementById('pagination');
+
+    let current = 0;
+
+    async function renderPage(index) {
+        const item = catalog[index];
+        current = index;
+
+        stage.className = 'gallery__stage ' + (item.stageClass || '');
+        stage.textContent = ''; // clear the previous component
+
+        countEl.textContent = `Component ${index + 1} of ${catalog.length}`;
+        titleEl.textContent = item.title;
+        filesEl.textContent = 'js/components/' + item.id + '/  ·  ' + item.files.join('  ·  ');
+
+        await item.render(stage);
+        renderPagination();
+    }
+
+    function renderPagination() {
+        pagination.textContent = '';
+
+        const prev = makeButton('‹ Prev', () => renderPage(current - 1));
+        prev.disabled = current === 0;
+        pagination.appendChild(prev);
+
+        catalog.forEach((_, i) => {
+            const btn = makeButton(String(i + 1), () => renderPage(i));
+            if (i === current) btn.classList.add('is-active');
+            pagination.appendChild(btn);
+        });
+
+        const next = makeButton('Next ›', () => renderPage(current + 1));
+        next.disabled = current === catalog.length - 1;
+        pagination.appendChild(next);
+    }
+
+    function makeButton(label, onClick) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        b.addEventListener('click', onClick);
+        return b;
+    }
+
+    renderPage(0);
+</script>
+
+</body>
+</html>
