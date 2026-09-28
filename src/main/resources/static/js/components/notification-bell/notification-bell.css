@@ -1,0 +1,187 @@
+/* notification-bell: a bell hanging on a string from the top edge, with an unread badge.
+   Clicking opens a glass-blur-dialog panel with search and a date-range filter.
+   Ported from SchoolHub (style.css .notif-*, modal.css .notif-panel, app.js).
+
+   The panel lives in a dialog on <body>, so theme it on :root.
+   Public:  --notification-bell-{bg,fg,shadow,shadow-hover,icon-filter,string,badge-bg,brand,muted,line,
+            item-line,item-hover-bg,item-hover-accent,item-hover-shadow,item-unread-bg,z}
+   Private: --_nb-* (internal, do not set from outside). */
+
+.notification-bell,
+.notification-bell__panel {
+    --_nb-bg: var(--notification-bell-bg, #f5f5f5);
+    --_nb-fg: var(--notification-bell-fg, #1a1a2e);
+    --_nb-shadow: var(--notification-bell-shadow, 0 0 18px rgba(255, 144, 0, .35));
+    --_nb-shadow-hover: var(--notification-bell-shadow-hover, 0 0 28px rgba(255, 144, 0, .5));
+    --_nb-icon-filter: var(--notification-bell-icon-filter, drop-shadow(0 0 8px rgba(255, 144, 0, .6)));
+    --_nb-string: var(--notification-bell-string, #232b42);
+    --_nb-badge-bg: var(--notification-bell-badge-bg, #ff6b5e);
+    --_nb-brand: var(--notification-bell-brand, #FF9000);
+    --_nb-muted: var(--notification-bell-muted, #8a8f9c);
+    --_nb-line: var(--notification-bell-line, #232b42);
+    --_nb-item-line: var(--notification-bell-item-line, rgba(255, 255, 255, .04));
+    --_nb-item-hover-bg: var(--notification-bell-item-hover-bg, rgba(255, 255, 255, .03));
+    --_nb-item-hover-accent: var(--notification-bell-item-hover-accent, #ff6b5e);
+    --_nb-item-hover-shadow: var(--notification-bell-item-hover-shadow, 0 0 16px rgba(239, 68, 68, .25));
+    --_nb-item-unread-bg: var(--notification-bell-item-unread-bg, rgba(255, 144, 0, .06));
+}
+
+/* ---- Bell ---- */
+.notification-bell {
+    position: fixed;
+    top: 28px;
+    right: 32px;
+    z-index: var(--notification-bell-z, 25);
+}
+.notification-bell--inline { position: relative; top: auto; right: auto; }
+
+/* The string it hangs from */
+.notification-bell::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    width: 1px;
+    height: 28px;
+    background: var(--_nb-string);
+}
+
+.notification-bell__button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    background: var(--_nb-bg);
+    color: var(--_nb-fg);
+    box-shadow: var(--_nb-shadow);
+    cursor: pointer;
+    transform-origin: 50% -28px;      /* swings from the top of the string */
+    transition: border-color .2s, box-shadow .2s;
+}
+.notification-bell__button:hover { box-shadow: var(--_nb-shadow-hover); }
+.notification-bell__button:focus-visible { outline: 2px solid var(--_nb-brand); outline-offset: 3px; }
+.notification-bell__button svg { width: 20px; height: 20px; filter: var(--_nb-icon-filter); }
+
+.notification-bell__button--swinging { animation: notification-bell-swing .8s ease-in-out; }
+.notification-bell__button--ringing svg { animation: notification-bell-ring .6s ease-in-out; transform-origin: 12px 2px; }
+
+.notification-bell__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: var(--_nb-badge-bg);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+}
+.notification-bell__badge[hidden] { display: none; }   /* display:flex would otherwise beat [hidden] */
+
+/* Keyframe names are global too, so they carry the prefix */
+@keyframes notification-bell-swing {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-5deg); }
+    40% { transform: rotate(4deg); }
+    60% { transform: rotate(-2deg); }
+    80% { transform: rotate(0); }
+}
+@keyframes notification-bell-ring {
+    0%, 100% { transform: rotate(0); }
+    15% { transform: rotate(8deg); }
+    30% { transform: rotate(-6deg); }
+    45% { transform: rotate(4deg); }
+    60% { transform: rotate(-2deg); }
+    75% { transform: rotate(0); }
+}
+
+/* ---- Panel (inside a glass-blur-dialog) ---- */
+.glass-blur-dialog__panel.notification-bell__panel { width: min(94vw, 440px); padding: 20px 20px 16px; }
+
+.notification-bell__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.glass-blur-dialog__title.notification-bell__title { margin: 0; }
+
+.notification-bell__filter {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid var(--_nb-line);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--_nb-muted);
+    cursor: pointer;
+    transition: color .15s, border-color .15s, background .15s;
+}
+.notification-bell__filter svg { width: 17px; height: 17px; }
+.notification-bell__filter:hover,
+.notification-bell__filter--active { color: var(--_nb-brand); border-color: var(--_nb-brand); }
+.notification-bell__filter--active { background: color-mix(in srgb, var(--_nb-brand) 12%, transparent); }
+.notification-bell__filter:focus-visible { outline: 2px solid var(--_nb-brand); outline-offset: 2px; }
+
+.notification-bell__search { margin-bottom: 12px; }
+
+.notification-bell__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--_nb-brand) 45%, transparent) transparent;
+}
+.notification-bell__list::-webkit-scrollbar { width: 8px; }
+.notification-bell__list::-webkit-scrollbar-track { background: transparent; }
+.notification-bell__list::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--_nb-brand) 42%, transparent);
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+}
+
+.notification-bell__item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    padding: 12px 16px;
+    border: 0;
+    border-bottom: 1px solid var(--_nb-item-line);
+    border-left: 3px solid transparent;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background .15s, box-shadow .15s;
+}
+.notification-bell__item:hover {
+    background: var(--_nb-item-hover-bg);
+    border-left-color: var(--_nb-item-hover-accent);
+    box-shadow: var(--_nb-item-hover-shadow);
+}
+.notification-bell__item:focus-visible { outline: 2px solid var(--_nb-brand); outline-offset: -2px; }
+.notification-bell__item--unread { border-left-color: var(--_nb-brand); background: var(--_nb-item-unread-bg); }
+.notification-bell__item--actionable:hover { background: color-mix(in srgb, var(--_nb-brand) 10%, transparent); }
+.notification-bell__item-title { font-weight: 700; }
+.notification-bell__item-time { margin-top: 2px; font-size: 11px; color: var(--_nb-muted); }
+.notification-bell__empty { margin: 0; font-size: 13px; color: var(--_nb-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+    .notification-bell__button--swinging,
+    .notification-bell__button--ringing svg { animation: none; }
+}
