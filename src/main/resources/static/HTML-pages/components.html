@@ -95,49 +95,24 @@
 
     <div class="gallery__files" id="gallery-files"></div>
 
-    <div class="gallery__stage" id="gallery-stage"></div>
+    <div class="gallery__stage" id="gallery-stage" style="--nav-padding: 4px; --nav-link-padding: 8px 16px; --nav-font-size: 12px;"></div>
 
     <nav class="pagination" id="pagination" aria-label="Component pages"></nav>
 </div>
 
 <script type="module">
-    import { mountNavbar } from '/js/components/navbar/navbar.js';
-    import { mountNavSelector } from '/js/components/nav-selector/nav-selector.js';
-    import { mountFooter } from '/js/components/footer/footer.js';
-    import { createUserCard } from '/js/components/user-card/user-card.js';
+    import { mountNavSelector } from '/js/components/nav_selector_fluid_hold/nav_selector_fluid_hold.js';
 
     const catalog = [
+
         {
-            id: 'navbar',
-            title: 'Navbar',
-            files: ['navbar.html', 'navbar.css', 'navbar.js'],
-            stageClass: 'gallery__stage--full gallery__stage--light',
-            render: async () => { await mountNavbar('#gallery-stage'); },
-        },
-        {
-            id: 'nav-selector',
+            id: 'nav_selector_fluid_hold',
             title: 'Nav Selector',
-            files: ['nav-selector.html', 'nav-selector.css', 'nav-selector.js'],
+            files: ['nav_selector_fluid_hold.html', 'nav_selector_fluid_hold.css', 'nav_selector_fluid_hold.js'],
             stageClass: 'gallery__stage--transparent',
             render: async () => { await mountNavSelector('#gallery-stage'); },
         },
-        {
-            id: 'footer',
-            title: 'Footer',
-            files: ['footer.html', 'footer.css', 'footer.js'],
-            stageClass: 'gallery__stage--full gallery__stage--light',
-            render: async () => { await mountFooter('#gallery-stage'); },
-        },
-        {
-            id: 'user-card',
-            title: 'User Card',
-            files: ['user-card.html', 'user-card.css', 'user-card.js'],
-            stageClass: 'gallery__stage--light',
-            render: async (stage) => {
-                const card = await createUserCard({ username: 'Deus', email: 'DeusSA@gmail.com', role: 'ADMIN' });
-                stage.appendChild(card);
-            },
-        },
+
     ];
 
     const stage = document.getElementById('gallery-stage');
