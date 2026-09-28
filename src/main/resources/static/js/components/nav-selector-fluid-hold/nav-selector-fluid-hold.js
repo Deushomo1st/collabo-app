@@ -1,9 +1,12 @@
 // Nav Selector component — "fluid hold" collapsible pill nav.
-// Collapses to a centered icon on page scroll-down; expands on scroll-up,
+// Collapses to a centered icon on scroll-down; expands on scroll-up,
 // on icon click, and re-iconizes after 1.5s idle (configurable).
 // Usage: import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-//        mountNavSelector('#nav-selector-fluid-hold');
+//        const nav = await mountNavSelector('#nav-selector-fluid-hold');
 //        mountNavSelector('#nav-selector-fluid-hold', { links: ['A','B'], hrefs: ['#a','#b'], activeIndex: 0, idleMs: 1500, onChange: (label, href) => {} });
+//        mountNavSelector(el, { scrollRoot: document.querySelector('main') });   // content scrolls inside <main>
+//        nav.destroy();                                                            // remove listeners + DOM
+// Scrolling is watched on `scrollRoot` (default: the window). If nothing there scrolls, it never iconizes.
 
 const ICONS = [
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
@@ -15,8 +18,15 @@ const ICONS = [
 ];
 
 export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hold', options = {}) {
-    const target = document.querySelector(targetSelector);
+    const target = typeof targetSelector === 'string' ? document.querySelector(targetSelector) : targetSelector;
     if (!target) return;
+
+    // Where scrolling happens: the window (default) or a scrollable element (or its selector).
+    const scrollRoot = typeof options.scrollRoot === 'string'
+        ? document.querySelector(options.scrollRoot)
+        : (options.scrollRoot || window);
+    const getY = () => (scrollRoot === window ? window.scrollY : scrollRoot.scrollTop);
+    const threshold = options.threshold ?? 40;   // px from the top where it always stays expanded
 
     loadStylesOnce('/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.css', 'nav-selector-fluid-hold');
 
@@ -62,7 +72,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     // ---------- iconize / expand state ----------
     let idleTimer = null;
-    let lastY = window.scrollY;
+    let lastY = getY();
 
     const isIconized = () => root.classList.contains('iconized');
     const iconize = () => { clearTimeout(idleTimer); syncIcon(); root.classList.add('iconized'); };
@@ -71,23 +81,24 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     function armIdle() {
         clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
-            if (window.scrollY >= 40 && !root.matches(':hover')) iconize();
-            else if (window.scrollY >= 40) armIdle();
+            if (getY() >= threshold && !root.matches(':hover')) iconize();
+            else if (getY() >= threshold) armIdle();
         }, options.idleMs ?? 1500);
     }
 
-    window.addEventListener('scroll', () => {
-        const y = window.scrollY;
+    function onScroll() {
+        const y = getY();
         const dy = y - lastY;
         lastY = y;
-        if (y < 40) { clearTimeout(idleTimer); expand(); return; }
+        if (y < threshold) { clearTimeout(idleTimer); expand(); return; }
         if (dy > 2) iconize();
         else if (dy < -2) { expand(); armIdle(); }
-    }, { passive: true });
+    }
+    scrollRoot.addEventListener('scroll', onScroll, { passive: true });
 
     navIcon.addEventListener('click', () => { expand(); armIdle(); });
     root.addEventListener('mouseenter', () => clearTimeout(idleTimer));
-    root.addEventListener('mouseleave', () => { if (window.scrollY >= 40 && !isIconized()) armIdle(); });
+    root.addEventListener('mouseleave', () => { if (getY() >= threshold && !isIconized()) armIdle(); });
 
     // ---------- horizontal menu logic ----------
     function update() {
@@ -145,6 +156,16 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     syncIcon();
     update();
+
+    return {
+        element: root,
+        destroy() {
+            clearTimeout(idleTimer);
+            scrollRoot.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', update);
+            wrap.remove();
+        },
+    };
 }
 
 function loadStylesOnce(href, componentName) {
