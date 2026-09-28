@@ -1,0 +1,39 @@
+<div class="liquid-glass-portal" role="presentation">
+    <button type="button" class="glass-backdrop" aria-label="Close liquid glass modal"></button>
+    <section
+        class="liquid-glass"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="liquid-glass-title"
+        aria-describedby="liquid-glass-description"
+    >
+        <div class="liquid-glass__header">
+            <div>
+                <p class="liquid-glass__meta">Material / 01</p>
+                <h2 id="liquid-glass-title" class="liquid-glass__title">Liquid Glass</h2>
+            </div>
+            <button type="button" class="liquid-glass__close" aria-label="Close modal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+        </div>
+        <div id="liquid-glass-description" class="liquid-glass__body">
+            <p>The background behind this modal bends and softens, while the text stays perfectly crisp.</p>
+            <p>
+                Layered transparency, saturation, and an SVG <code class="liquid-glass__code">feDisplacementMap</code> create the optical depth.
+            </p>
+        </div>
+        <div class="liquid-glass__footer">
+            <span class="liquid-glass__status"></span>
+            Refraction active
+        </div>
+    </section>
+</div>
+
+<svg width="0" height="0" class="liquid-glass__filter" aria-hidden="true">
+    <filter id="liquid-glass-filter">
+        <feTurbulence type="fractalNoise" baseFrequency="0.014 0.022" numOctaves="3" seed="4" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="52" xChannelSelector="R" yChannelSelector="G" result="waved" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.05 0.06" numOctaves="2" seed="11" result="ripple" />
+        <feDisplacementMap in="waved" in2="ripple" scale="18" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+</svg>
