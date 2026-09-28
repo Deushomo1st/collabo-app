@@ -81,6 +81,53 @@
     .pagination button:hover:not(:disabled) { background: #2a2a2a; color: #fff; }
     .pagination button.is-active { background: #ffffff; color: #111; border-color: #ffffff; font-weight: 600; }
     .pagination button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* Theme toggle (gallery-only; switches components between dusk and light) */
+    .gallery__theme {
+        margin-top: 0.75rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid #2a2a2a;
+        background: #1a1a1a;
+        color: #d1d5db;
+        font: inherit;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+    .gallery__theme:hover { background: #2a2a2a; color: #fff; }
+    .gallery__theme:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+    /* Demo stage for glass components: a busy background so blur and frost are visible */
+    .gallery__demo {
+        position: relative;
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 2rem 1rem;
+        background:
+            radial-gradient(circle at 18% 28%, #FF9000 0 11%, transparent 12%),
+            radial-gradient(circle at 78% 62%, #209EBB 0 15%, transparent 16%),
+            radial-gradient(circle at 46% 88%, #7fcf9e 0 8%, transparent 9%),
+            #10182b;
+    }
+    .gallery__demo-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; }
+    .gallery__demo-controls button {
+        padding: 0.55rem 0.9rem;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(16, 24, 43, 0.8);
+        color: #f9fafb;
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+    }
+    .gallery__demo-controls button:hover { background: rgba(16, 24, 43, 0.95); border-color: rgba(255, 255, 255, 0.35); }
+    .gallery__demo-controls button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    .gallery__demo-result { min-height: 1.3em; margin: 0; color: #d1d5db; font-size: 0.85rem; }
+    .gallery__demo-agenda { width: min(380px, 100%); }
 </style>
 </head>
 <body>
@@ -89,6 +136,7 @@
     <div class="gallery__header">
         <h1>COLLABO — Component Gallery</h1>
         <p>Every self-contained UI component in the project, one page each.</p>
+        <button type="button" class="gallery__theme" id="gallery-theme" aria-pressed="false"></button>
     </div>
 
     <div class="gallery__meta">
@@ -106,6 +154,41 @@
 <script type="module">
     import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
     import { mountLiquidGlassModal } from '/js/components/liquid-glass-modal/liquid-glass-modal.js';
+    import { openGlassBlurDialog, glassBlurConfirm, glassBlurAlert, preloadGlassBlurDialog }
+        from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
+    import { renderCalendarMonth, openCalendarRange, preloadCalendar }
+        from '/js/components/calendar/calendar.js';
+
+    // Builds a glass-friendly demo area inside the stage.
+    // demos: { 'Button label': async () => 'text to show under the buttons' | undefined }
+    function mountDemo(stage, demos) {
+        const wrap = document.createElement('div');
+        wrap.className = 'gallery__demo';
+        const controls = document.createElement('div');
+        controls.className = 'gallery__demo-controls';
+        const result = document.createElement('p');
+        result.className = 'gallery__demo-result';
+        result.setAttribute('aria-live', 'polite');
+
+        Object.entries(demos).forEach(([label, run]) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = label;
+            b.addEventListener('click', async () => {
+                try {
+                    const text = await run();
+                    if (text) result.textContent = text;
+                } catch (err) {
+                    result.textContent = `Error: ${err.message}`;
+                }
+            });
+            controls.appendChild(b);
+        });
+
+        wrap.append(controls, result);
+        stage.appendChild(wrap);
+        return { wrap, result };
+    }
 
     const catalog = [
 
@@ -173,6 +256,86 @@
             },
         },
 
+        {
+            id: 'glass-blur-dialog',
+            title: 'Glass Blur Dialog',
+            files: ['glass-blur-dialog.html', 'glass-blur-dialog.css', 'glass-blur-dialog.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                preloadGlassBlurDialog();
+                mountDemo(stage, {
+                    'Confirm': async () =>
+                        `Confirm answered: ${await glassBlurConfirm('Publish this timetable to all staff?', { okText: 'Publish' })}`,
+                    'Delete (danger)': async () =>
+                        `Delete answered: ${await glassBlurConfirm('This removes the file for everyone.', { title: 'Delete file?', okText: 'Delete', danger: true })}`,
+                    'Alert': async () => {
+                        await glassBlurAlert('Saved.\nYour changes are live.');
+                        return 'Alert closed';
+                    },
+                    'Form (sm)': async () => {
+                        const dlg = await openGlassBlurDialog({
+                            size: 'sm',
+                            html: '<h2 class="glass-blur-dialog__title">Change password</h2>'
+                                + '<label class="glass-blur-dialog__label" for="gallery-pw">New password</label>'
+                                + '<input class="glass-blur-dialog__input" id="gallery-pw" type="password" autocomplete="new-password">'
+                                + '<div class="glass-blur-dialog__actions" style="margin-top:18px">'
+                                + '<button type="button" class="glass-blur-dialog__btn glass-blur-dialog__btn--ghost" data-action="cancel">Cancel</button>'
+                                + '<button type="button" class="glass-blur-dialog__btn" data-action="save">Save password</button></div>',
+                        });
+                        dlg.panel.querySelector('[data-action="cancel"]').onclick = dlg.close;
+                        dlg.panel.querySelector('[data-action="save"]').onclick = dlg.close;
+                    },
+                    'Stack 3': async () => {
+                        const open = async (n) => {
+                            const dlg = await openGlassBlurDialog({
+                                html: `<h2 class="glass-blur-dialog__title">Dialog ${n}</h2>`
+                                    + '<p class="glass-blur-dialog__text">Each new dialog frosts the one below it. Escape closes the top one.</p>'
+                                    + (n < 3 ? `<div class="glass-blur-dialog__actions"><button type="button" class="glass-blur-dialog__btn" data-next>Open dialog ${n + 1}</button></div>` : ''),
+                            });
+                            const next = dlg.panel.querySelector('[data-next]');
+                            if (next) next.onclick = () => open(n + 1);
+                        };
+                        await open(1);
+                    },
+                    'Clear glass': async () => {
+                        await openGlassBlurDialog({
+                            clear: true,
+                            html: '<h2 class="glass-blur-dialog__title">Clear glass</h2>'
+                                + '<p class="glass-blur-dialog__text">No backdrop darkening. Click outside to close.</p>',
+                        });
+                    },
+                });
+            },
+        },
+
+        {
+            id: 'calendar',
+            title: 'Calendar',
+            files: ['calendar.html', 'calendar.css', 'calendar.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                preloadCalendar();
+                const { wrap, result } = mountDemo(stage, {
+                    'Pick a date range': async () => {
+                        await openCalendarRange({
+                            onApply: (from, to) => { result.textContent = `Range: ${from ?? '…'} to ${to ?? '…'}`; },
+                        });
+                    },
+                });
+
+                const agenda = document.createElement('div');
+                agenda.className = 'gallery__demo-agenda';
+                wrap.appendChild(agenda);
+
+                const now = new Date();
+                const day = (d) => `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                renderCalendarMonth(agenda, {
+                    marks: { [day(3)]: ['event'], [day(12)]: ['exam', 'announcement'], [day(20)]: ['holiday'] },
+                    onPick: (date) => { result.textContent = `Picked ${date.toDateString()}`; },
+                });
+            },
+        },
+
     ];
 
     const stage = document.getElementById('gallery-stage');
@@ -223,6 +386,24 @@
         b.addEventListener('click', onClick);
         return b;
     }
+
+    // ---- Theme toggle (gallery-only) ----
+    // Components default to dusk; data-theme="light" applies css/global/theme.css.
+    const themeBtn = document.getElementById('gallery-theme');
+    function syncThemeButton() {
+        const light = document.documentElement.dataset.theme === 'light';
+        themeBtn.textContent = light ? 'Theme: Light' : 'Theme: Dusk';
+        themeBtn.setAttribute('aria-pressed', String(light));
+    }
+    themeBtn.addEventListener('click', () => {
+        if (document.documentElement.dataset.theme === 'light') {
+            delete document.documentElement.dataset.theme;
+        } else {
+            document.documentElement.dataset.theme = 'light';
+        }
+        syncThemeButton();
+    });
+    syncThemeButton();
 
     renderPage(0);
 </script>
