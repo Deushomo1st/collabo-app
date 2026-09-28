@@ -53,4 +53,32 @@
     --calendar-holiday: #0f9d76;
     --calendar-exam: #dc2626;
     /* --calendar-event follows --calendar-brand by default */
+
+    /* ---- floating-drawer (the drawer itself stays dark metal in both themes) ---- */
+    --floating-drawer-line: #d9e7ee;
+    --floating-drawer-accent: rgba(255, 255, 255, .95);
+
+    /* ---- notification-bell ---- */
+    --notification-bell-bg: #023047;
+    --notification-bell-fg: #ffffff;
+    --notification-bell-shadow: 0 0 14px rgba(255, 255, 255, .2);
+    --notification-bell-shadow-hover: 0 0 14px rgba(255, 255, 255, .2);
+    --notification-bell-icon-filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6));
+    --notification-bell-string: #d9e7ee;
+    --notification-bell-badge-bg: #dc2626;
+    --notification-bell-brand: #209EBB;
+    --notification-bell-muted: #5b7280;
+    --notification-bell-line: #d9e7ee;
+    --notification-bell-item-line: rgba(0, 0, 0, .05);
+    --notification-bell-item-hover-bg: rgba(0, 0, 0, .03);
+    --notification-bell-item-hover-accent: #209EBB;
+    --notification-bell-item-hover-shadow: 0 0 12px rgba(0, 0, 0, .08);
+    --notification-bell-item-unread-bg: rgba(32, 158, 187, .04);
+
+    /* ---- glass-module ---- */
+    --glass-module-blur: blur(16px) saturate(160%);
+    --glass-module-border: rgba(255, 255, 255, .06);
+    --glass-module-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), inset 0 -1px 0 rgba(0, 0, 0, .1);
+
+    /* theme-switcher: styles itself from its own state; nothing to set here */
 }
