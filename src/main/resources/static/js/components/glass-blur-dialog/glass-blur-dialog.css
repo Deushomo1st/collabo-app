@@ -1,0 +1,181 @@
+/* glass-blur-dialog: layered, auto-stacking glass dialogs.
+   Ported from SchoolHub app/modal (dusk-theme values as defaults).
+
+   Theming: dialogs mount on <body>, so override the public variables on :root, e.g.
+     :root { --glass-blur-dialog-brand: #209EBB; }
+   Public:  --glass-blur-dialog-{ink,muted,line,brand,brand-ink,danger,bg,bg-frost,border,
+            sheen,sheen-frost2,blur,blur-frost,blur-frost2,backdrop-bg,backdrop-bg-frost2,
+            backdrop-blur,backdrop-blur-frost2,shadow}
+   Private: --_gbd-* (internal, do not set from outside). */
+
+.glass-blur-dialog {
+    --_gbd-ink: var(--glass-blur-dialog-ink, #F4EDE4);
+    --_gbd-muted: var(--glass-blur-dialog-muted, #8a8f9c);
+    --_gbd-line: var(--glass-blur-dialog-line, #232b42);
+    --_gbd-brand: var(--glass-blur-dialog-brand, #FF9000);
+    --_gbd-brand-ink: var(--glass-blur-dialog-brand-ink, #1a1006);
+    --_gbd-danger: var(--glass-blur-dialog-danger, #ff6b5e);
+    --_gbd-bg: var(--glass-blur-dialog-bg, linear-gradient(135deg, rgba(234,238,246,.17), rgba(150,158,172,.05) 42%, rgba(96,102,116,.12)), color-mix(in srgb, #212634 46%, transparent));
+    --_gbd-bg-frost: var(--glass-blur-dialog-bg-frost, linear-gradient(135deg, rgba(224,230,240,.14), rgba(120,128,142,.06) 45%, rgba(70,76,90,.16)), color-mix(in srgb, #171b26 64%, transparent));
+    --_gbd-border: var(--glass-blur-dialog-border, rgba(214, 221, 233, .34));
+    --_gbd-sheen: var(--glass-blur-dialog-sheen, linear-gradient(135deg, rgba(244,247,253,.28), transparent 40%, transparent 72%, rgba(205,213,227,.14)));
+    --_gbd-sheen-frost2: var(--glass-blur-dialog-sheen-frost2, linear-gradient(135deg, rgba(244,247,253,.20), transparent 40%, transparent 72%, rgba(205,213,227,.08)));
+    --_gbd-blur: var(--glass-blur-dialog-blur, blur(18px) saturate(150%));
+    --_gbd-blur-frost: var(--glass-blur-dialog-blur-frost, blur(30px) saturate(160%));
+    --_gbd-blur-frost2: var(--glass-blur-dialog-blur-frost2, blur(38px) saturate(140%));
+    --_gbd-backdrop-bg: var(--glass-blur-dialog-backdrop-bg, rgba(0, 0, 0, .48));
+    --_gbd-backdrop-bg-frost2: var(--glass-blur-dialog-backdrop-bg-frost2, rgba(0, 0, 0, .62));
+    --_gbd-backdrop-blur: var(--glass-blur-dialog-backdrop-blur, blur(10px) saturate(130%));
+    --_gbd-backdrop-blur-frost2: var(--glass-blur-dialog-backdrop-blur-frost2, blur(14px) saturate(140%));
+    --_gbd-shadow: var(--glass-blur-dialog-shadow, 0 30px 70px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -16px 34px rgba(175,186,208,.10));
+
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: transparent;          /* clear glass: first dialog with opts.clear */
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+.glass-blur-dialog--open { opacity: 1; }
+.glass-blur-dialog--closing { opacity: 0; }
+
+/* Backdrop depth: frost (1st and 2nd dialog), frost-2 (3rd+) */
+.glass-blur-dialog--frost {
+    background: var(--_gbd-backdrop-bg);
+    backdrop-filter: var(--_gbd-backdrop-blur);
+    -webkit-backdrop-filter: var(--_gbd-backdrop-blur);
+}
+.glass-blur-dialog--frost-2 {
+    background: var(--_gbd-backdrop-bg-frost2);
+    backdrop-filter: var(--_gbd-backdrop-blur-frost2);
+    -webkit-backdrop-filter: var(--_gbd-backdrop-blur-frost2);
+}
+
+/* ---- Panel ---- */
+.glass-blur-dialog__panel {
+    --_gbd-width: 440px;
+    position: relative;
+    box-sizing: border-box;
+    min-width: min(280px, 92vw);
+    max-width: min(92vw, var(--_gbd-width));
+    max-height: 85vh;                 /* long content scrolls inside, panel stays put */
+    overflow-y: auto;
+    padding: 26px;
+    border-radius: 22px;
+    color: var(--_gbd-ink);
+    background: var(--_gbd-bg);
+    backdrop-filter: var(--_gbd-blur);
+    -webkit-backdrop-filter: var(--_gbd-blur);
+    border: 1px solid var(--_gbd-border);
+    box-shadow: var(--_gbd-shadow);
+    transform: translateY(8px) scale(.98);
+    transition: transform .22s cubic-bezier(.25, 1, .5, 1);
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--_gbd-brand) 40%, transparent) transparent;
+}
+.glass-blur-dialog__panel:focus { outline: none; }
+.glass-blur-dialog__panel::-webkit-scrollbar { width: 6px; }
+.glass-blur-dialog__panel::-webkit-scrollbar-thumb {
+    background-color: color-mix(in srgb, var(--_gbd-brand) 40%, transparent);
+    border-radius: 999px;
+}
+.glass-blur-dialog__panel::-webkit-scrollbar-track { background: transparent; }
+
+/* Gloss sheen: the diagonal highlight that sells the glass */
+.glass-blur-dialog__panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: var(--_gbd-sheen);
+    mix-blend-mode: screen;
+}
+.glass-blur-dialog--open .glass-blur-dialog__panel { transform: none; }
+
+/* Panel depth follows the backdrop */
+.glass-blur-dialog--frost .glass-blur-dialog__panel {
+    background: var(--_gbd-bg-frost);
+    backdrop-filter: var(--_gbd-blur-frost);
+    -webkit-backdrop-filter: var(--_gbd-blur-frost);
+}
+.glass-blur-dialog--frost-2 .glass-blur-dialog__panel {
+    background: var(--_gbd-bg-frost);
+    backdrop-filter: var(--_gbd-blur-frost2);
+    -webkit-backdrop-filter: var(--_gbd-blur-frost2);
+}
+.glass-blur-dialog--frost-2 .glass-blur-dialog__panel::before { background: var(--_gbd-sheen-frost2); }
+
+/* Sizes: md (default) shrinks to content up to 440px; the others are fixed widths */
+.glass-blur-dialog__panel--sm { --_gbd-width: 380px; width: min(92vw, var(--_gbd-width)); }
+.glass-blur-dialog__panel--lg { --_gbd-width: 600px; width: min(92vw, var(--_gbd-width)); }
+.glass-blur-dialog__panel--xl { --_gbd-width: 700px; width: min(92vw, var(--_gbd-width)); }
+
+/* ---- Content ---- */
+.glass-blur-dialog__title { margin: 0 0 6px; font-size: 1.3rem; font-weight: 700; line-height: 1.25; }
+.glass-blur-dialog__text { margin: 0 0 18px; font-size: 13px; line-height: 1.5; color: var(--_gbd-muted); }
+.glass-blur-dialog__text--pre { white-space: pre-line; }
+.glass-blur-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+/* ---- Buttons ---- */
+.glass-blur-dialog__btn {
+    padding: 9px 18px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--_gbd-brand);
+    color: var(--_gbd-brand-ink);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: filter .15s, color .15s, border-color .15s;
+}
+.glass-blur-dialog__btn:hover { filter: brightness(1.08); }
+.glass-blur-dialog__btn:focus-visible { outline: 2px solid var(--_gbd-brand); outline-offset: 2px; }
+.glass-blur-dialog__btn--ghost {
+    background: transparent;
+    color: var(--_gbd-ink);
+    border-color: var(--_gbd-line);
+}
+.glass-blur-dialog__btn--ghost:hover { filter: none; color: var(--_gbd-brand); border-color: var(--_gbd-brand); }
+.glass-blur-dialog__btn--danger {
+    background: color-mix(in srgb, var(--_gbd-danger) 18%, transparent);
+    color: var(--_gbd-danger);
+}
+
+/* ---- Form fields (e.g. change-password dialogs) ---- */
+.glass-blur-dialog__label {
+    display: block;
+    margin: 12px 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--_gbd-ink);
+}
+.glass-blur-dialog__input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--_gbd-line);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--_gbd-ink) 6%, transparent);
+    color: var(--_gbd-ink);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.3;
+}
+.glass-blur-dialog__input:focus-visible { outline: 2px solid var(--_gbd-brand); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+    .glass-blur-dialog,
+    .glass-blur-dialog__panel { transition: none; }
+}
