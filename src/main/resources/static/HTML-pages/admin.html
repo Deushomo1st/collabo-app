@@ -78,6 +78,8 @@
   #create-user { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
   #create-user input, #create-user select { flex: 1 1 160px; min-width: 0; }
   #create-user button { flex: 0 0 auto; }
+  #create-user .cu-test { display: flex; align-items: center; gap: 6px; color: #9aa0a6; font-size: 13px; white-space: nowrap; }
+  #create-user .cu-test input { flex: 0 0 auto; width: auto; padding: 0; margin: 0; }
 
   /* ---------- Tables ---------- */
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -153,6 +155,7 @@
         <option value="USER">USER</option>
         <option value="ADMIN">ADMIN</option>
       </select>
+      <label class="cu-test"><input id="cu-test" type="checkbox"> Test</label>
       <button class="primary" type="submit">Create</button>
     </form>
     <table id="users-table">
@@ -522,7 +525,8 @@
       email: document.getElementById('cu-email').value.trim(),
       username: document.getElementById('cu-username').value.trim(),
       password: document.getElementById('cu-password').value,
-      role: document.getElementById('cu-role').value
+      role: document.getElementById('cu-role').value,
+      test: document.getElementById('cu-test').checked
     };
     submitBtn.disabled = true;
     api('/users', { method: 'POST', body: JSON.stringify(body) }).then(function () {

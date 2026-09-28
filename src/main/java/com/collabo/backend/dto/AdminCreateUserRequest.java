@@ -10,6 +10,7 @@ public record AdminCreateUserRequest(
         @NotBlank @Email String email,
         @NotBlank String username,
         @NotBlank @Size(min = 8) String password,
-        @NotNull Role role
+        @NotNull Role role,
+        boolean test
 ) {
 }

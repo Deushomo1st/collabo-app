@@ -51,6 +51,7 @@ public class UserService {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(request.role());
+        user.setTest(request.test());
         // NOTE: no welcome email for admin-created users (test accounts shouldn't trigger Resend).
         return AdminUserResponse.from(userRepository.save(user));
     }
