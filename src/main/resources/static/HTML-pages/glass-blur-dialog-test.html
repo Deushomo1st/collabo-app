@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>glass-blur-dialog + calendar test</title>
+    <link rel="stylesheet" href="/css/global/global.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, sans-serif;
+            color: #F4EDE4;
+            /* busy background so the blur and frost depth are visible */
+            background:
+                radial-gradient(circle at 20% 30%, #FF9000 0 12%, transparent 13%),
+                radial-gradient(circle at 75% 60%, #209EBB 0 16%, transparent 17%),
+                radial-gradient(circle at 45% 85%, #7fcf9e 0 9%, transparent 10%),
+                #10182b;
+        }
+        main { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
+        .controls button {
+            padding: 10px 16px; border-radius: 10px; border: 1px solid #232b42;
+            background: rgba(16, 24, 43, .8); color: inherit; font: inherit; cursor: pointer;
+        }
+        #result { min-height: 1.5em; margin-bottom: 24px; color: #8a8f9c; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Dialogs and calendar</h1>
+    <div class="controls">
+        <button type="button" data-test="confirm">Confirm</button>
+        <button type="button" data-test="danger">Delete (danger)</button>
+        <button type="button" data-test="alert">Alert</button>
+        <button type="button" data-test="form">Change password (sm)</button>
+        <button type="button" data-test="stack">Stack 3 dialogs</button>
+        <button type="button" data-test="clear">Clear glass</button>
+        <button type="button" data-test="range">Date range</button>
+    </div>
+    <p id="result" aria-live="polite"></p>
+    <div id="agenda" class="calendar--agenda"></div>
+</main>
+
+<script type="module">
+    import { openGlassBlurDialog, glassBlurConfirm, glassBlurAlert, preloadGlassBlurDialog }
+        from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
+    import { renderCalendarMonth, openCalendarRange, preloadCalendar }
+        from '/js/components/calendar/calendar.js';
+
+    const result = document.querySelector('#result');
+    const show = (text) => { result.textContent = text; };
+
+    // Warm the caches so the first click opens instantly.
+    preloadGlassBlurDialog();
+    preloadCalendar();
+
+    const today = new Date();
+    const isoOf = (d) => d.toISOString().slice(0, 10);
+    renderCalendarMonth(document.querySelector('#agenda'), {
+        marks: {
+            [isoOf(new Date(today.getFullYear(), today.getMonth(), 3, 12))]: ['event'],
+            [isoOf(new Date(today.getFullYear(), today.getMonth(), 12, 12))]: ['exam', 'announcement'],
+            [isoOf(new Date(today.getFullYear(), today.getMonth(), 20, 12))]: ['holiday'],
+        },
+        onPick: (d) => show(`Picked ${d.toDateString()}`),
+    });
+
+    const tests = {
+        confirm: async () => show(`Confirm answered: ${await glassBlurConfirm('Publish this timetable to all staff?', { okText: 'Publish' })}`),
+        danger: async () => show(`Delete answered: ${await glassBlurConfirm('This removes the file for everyone.', { title: 'Delete file?', okText: 'Delete', danger: true })}`),
+        alert: async () => { await glassBlurAlert('Saved.\nYour changes are live.'); show('Alert closed'); },
+        form: async () => {
+            const dlg = await openGlassBlurDialog({
+                size: 'sm',
+                html: '<h2 class="glass-blur-dialog__title">Change password</h2>'
+                    + '<label class="glass-blur-dialog__label" for="pw-now">Current password</label>'
+                    + '<input class="glass-blur-dialog__input" id="pw-now" type="password" autocomplete="current-password">'
+                    + '<label class="glass-blur-dialog__label" for="pw-new">New password</label>'
+                    + '<input class="glass-blur-dialog__input" id="pw-new" type="password" autocomplete="new-password">'
+                    + '<div class="glass-blur-dialog__actions" style="margin-top:18px">'
+                    + '<button type="button" class="glass-blur-dialog__btn glass-blur-dialog__btn--ghost" data-action="cancel">Cancel</button>'
+                    + '<button type="button" class="glass-blur-dialog__btn" data-action="save">Save password</button></div>',
+                onClose: () => show('Form dialog closed'),
+            });
+            dlg.panel.querySelector('[data-action="cancel"]').onclick = dlg.close;
+            dlg.panel.querySelector('[data-action="save"]').onclick = dlg.close;
+        },
+        stack: async () => {
+            const open = (n) => openGlassBlurDialog({
+                html: `<h2 class="glass-blur-dialog__title">Dialog ${n}</h2>`
+                    + '<p class="glass-blur-dialog__text">Each new dialog frosts the one below it. Press Escape to close the top one.</p>'
+                    + (n < 3 ? `<div class="glass-blur-dialog__actions"><button type="button" class="glass-blur-dialog__btn" data-next>Open dialog ${n + 1}</button></div>` : ''),
+            }).then((dlg) => {
+                const next = dlg.panel.querySelector('[data-next]');
+                if (next) next.onclick = () => open(n + 1);
+            });
+            open(1);
+        },
+        clear: () => openGlassBlurDialog({
+            clear: true,
+            html: '<h2 class="glass-blur-dialog__title">Clear glass</h2><p class="glass-blur-dialog__text">No backdrop darkening. Click outside to close.</p>',
+        }),
+        range: () => openCalendarRange({ onApply: (from, to) => show(`Range: ${from} to ${to}`) }),
+    };
+
+    document.querySelectorAll('[data-test]').forEach((btn) => {
+        btn.addEventListener('click', () => tests[btn.dataset.test]().catch((err) => show(`Error: ${err.message}`)));
+    });
+</script>
+</body>
+</html>

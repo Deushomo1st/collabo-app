@@ -1,0 +1,135 @@
+/* calendar: month grid + From/To range picker.
+   Ported from SchoolHub app/calendar (dusk-theme values as defaults).
+
+   Theming: set the public variables on any ancestor (or :root for the range picker,
+   which opens in a glass-blur-dialog on <body>), e.g.  --calendar-brand: #209EBB;
+   Public:  --calendar-{ink,muted,line,brand,brand-ink,event,announcement,holiday,exam}
+   Private: --_cal-* (internal, do not set from outside). */
+
+.calendar {
+    --_cal-ink: var(--calendar-ink, #F4EDE4);
+    --_cal-muted: var(--calendar-muted, #8a8f9c);
+    --_cal-line: var(--calendar-line, #232b42);
+    --_cal-brand: var(--calendar-brand, #FF9000);
+    --_cal-brand-ink: var(--calendar-brand-ink, #1a1006);
+    --_cal-event: var(--calendar-event, var(--_cal-brand));
+    --_cal-announcement: var(--calendar-announcement, #FFB701);
+    --_cal-holiday: var(--calendar-holiday, #7fcf9e);
+    --_cal-exam: var(--calendar-exam, #ff6b5e);
+    color: var(--_cal-ink);
+}
+
+/* Standalone single-month card (the old agenda calendar) */
+.calendar--agenda { max-width: 380px; margin: 0 auto; }
+
+/* ---- Range picker layout ---- */
+.calendar__cols { display: flex; align-items: flex-start; }
+.calendar__col { flex: 1; min-width: 0; }
+.calendar__gap { width: 24px; flex: none; }
+.calendar__label {
+    margin-bottom: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--_cal-brand);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    text-align: center;
+}
+.calendar__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 18px;
+}
+.calendar__range-text { font-size: 13px; font-weight: 600; color: var(--_cal-ink); }
+
+/* ---- Month header ---- */
+.calendar__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.calendar__nav {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--_cal-line);
+    border-radius: 50%;
+    background: none;
+    color: var(--_cal-muted);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    transition: color .15s, border-color .15s;
+}
+.calendar__nav:hover { color: var(--_cal-brand); border-color: var(--_cal-brand); }
+.calendar__title-wrap { display: flex; flex-direction: column; align-items: center; line-height: 1; cursor: ns-resize; }
+.calendar__chev {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--_cal-brand);
+    font-size: 8px;
+    opacity: .8;
+    cursor: pointer;
+    transition: opacity .15s, transform .15s;
+}
+.calendar__chev:hover { opacity: 1; transform: scale(1.2); }
+.calendar__title { margin: 2px 0; font-size: 15px; font-weight: 700; color: var(--_cal-ink); white-space: nowrap; }
+
+/* ---- Grid ---- */
+.calendar__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.calendar__weekday { padding: 4px 0; font-size: 10px; font-weight: 700; color: var(--_cal-muted); text-align: center; }
+.calendar__day {
+    position: relative;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: var(--_cal-ink);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .12s;
+}
+.calendar__day:hover:not(.calendar__day--disabled):not(.calendar__day--outside):not(.calendar__day--selected) {
+    background: color-mix(in srgb, var(--_cal-brand) 16%, transparent);
+}
+.calendar__day:focus-visible { outline: 2px solid var(--_cal-brand); outline-offset: 1px; }
+.calendar__day--selected {
+    background: var(--_cal-brand);
+    color: var(--_cal-brand-ink);
+    font-weight: 700;
+    box-shadow: 0 0 16px color-mix(in srgb, var(--_cal-brand) 60%, transparent);
+}
+.calendar__day--today:not(.calendar__day--selected) { box-shadow: inset 0 0 0 1.5px var(--_cal-brand); }
+.calendar__day--outside { color: color-mix(in srgb, var(--_cal-ink) 28%, transparent); pointer-events: none; }
+.calendar__day--disabled { color: color-mix(in srgb, var(--_cal-ink) 20%, transparent); pointer-events: none; cursor: default; }
+
+/* ---- Event marks ---- */
+.calendar__dots {
+    position: absolute;
+    bottom: 12%;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+    pointer-events: none;
+}
+.calendar__dot { width: 4px; height: 4px; border-radius: 50%; }
+.calendar__dot--event { background: var(--_cal-event); }
+.calendar__dot--announcement { background: var(--_cal-announcement); }
+.calendar__dot--holiday { background: var(--_cal-holiday); }
+.calendar__dot--exam { background: var(--_cal-exam); }
+
+@media (max-width: 560px) {
+    .calendar__cols { flex-direction: column; }
+    .calendar__gap { width: 0; height: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .calendar__nav, .calendar__chev, .calendar__day { transition: none; }
+}
