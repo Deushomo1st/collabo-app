@@ -109,13 +109,6 @@
             <label for="confirm">Confirm Password</label>
             <input type="password" id="confirm" required placeholder="••••••••">
         </div>
-        <div class="form-group">
-            <label for="accountType">Account type</label>
-            <select id="accountType">
-                <option value="real">Real account</option>
-                <option value="test">Test account</option>
-            </select>
-        </div>
         <button type="submit" id="submitBtn">Create Account</button>
     </form>
 
@@ -258,7 +251,6 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const confirm = document.getElementById('confirm').value;
-        const accountType = document.getElementById('accountType').value;
 
         // Confirm-password must match
         if (password !== confirm) {
@@ -277,7 +269,7 @@
             weakPasswordAccepted = true;
         }
 
-        pending = { email, username, password, weakPasswordAccepted, test: accountType === 'test' };
+        pending = { email, username, password, weakPasswordAccepted };
         await attempt({ ...pending });
     });
 

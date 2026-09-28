@@ -17,8 +17,7 @@ import com.collabo.backend.exception.UsernameAlreadyExistsException;
 import com.collabo.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.Profiles;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,18 +41,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final RegistrationRateLimiter rateLimiter;
-    private final Environment environment;
+    private final boolean testAccountsEnabled;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        EmailService emailService,
                        RegistrationRateLimiter rateLimiter,
-                       Environment environment) {
+                       @Value("${app.test-accounts.enabled:false}") boolean testAccountsEnabled) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.rateLimiter = rateLimiter;
-        this.environment = environment;
+        this.testAccountsEnabled = testAccountsEnabled;
     }
 
     /**
@@ -62,11 +61,10 @@ public class AuthService {
      * a failed email send rolls the user back (registration now REQUIRES a
      * working mail sender).
      *
-     * <p>When the request marks the account as a test account
-     * ({@code test=true}) AND the {@code dev} profile is active, it is created
-     * verified immediately with test=true: email-format validation, OTP, and
-     * all outbound email are skipped. In any other profile (prod) the flag is
-     * ignored and the account is treated as real.
+     * <p>When test accounts are enabled ({@code app.test-accounts.enabled=true},
+     * off by default), the account is created verified immediately with
+     * test=true: email-format validation, OTP, and all outbound email are
+     * skipped. This is a global switch meant to be driven by a UI toggle later.
      */
     @Transactional
     public UserResponse register(UserDto dto, String clientIp) {
@@ -87,10 +85,9 @@ public class AuthService {
         String email = dto.getEmail().trim().toLowerCase();
         String username = dto.getUsername().trim();
 
-        // Test account (test=true in the request): skip the "is this a real
-        // email" check and everything email-related below. Only honored in the
-        // dev profile — in prod the flag is ignored and the account is real.
-        boolean testAccount = dto.isTest() && environment.acceptsProfiles(Profiles.of("dev"));
+        // Test mode (global switch, off by default): skip the "is this a real
+        // email" check and everything email-related below.
+        boolean testAccount = testAccountsEnabled;
         if (!testAccount && !isValidEmail(email)) {
             throw new InvalidEmailException();
         }
@@ -130,7 +127,7 @@ public class AuthService {
             user.setTest(true);
             user.setVerified(true);
             User saved = userRepository.save(user);
-            log.info("Registered TEST account {} (dev profile — skipped email verification)", email);
+            log.info("Registered TEST account {} (test mode active — skipped email verification)", email);
             return UserResponse.from(saved);
         }
 

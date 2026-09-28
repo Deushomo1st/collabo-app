@@ -15,8 +15,6 @@ services:
     build: .
     ports:
       - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
     env_file:
       - .env  # <-- This explicitly tells Docker to read the .env file
     depends_on:
