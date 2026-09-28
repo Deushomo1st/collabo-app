@@ -14,10 +14,10 @@ export async function mountLiquidGlassModal(targetSelector = '#liquid-glass-moda
         target.appendChild(wrapper.firstChild);
     }
 
-    const portal = target.querySelector('.liquid-glass-portal');
-    const backdrop = target.querySelector('.glass-backdrop');
-    const closeBtn = target.querySelector('.liquid-glass__close');
-    const modal = target.querySelector('.liquid-glass');
+    const portal = target.querySelector('.liquid-glass-modal__portal');
+    const backdrop = target.querySelector('.liquid-glass-modal__backdrop');
+    const closeBtn = target.querySelector('.liquid-glass-modal__close');
+    const modal = target.querySelector('.liquid-glass-modal');
 
     if (!portal || !modal) return;
 
@@ -28,7 +28,7 @@ export async function mountLiquidGlassModal(targetSelector = '#liquid-glass-moda
 
     function close() {
         portal.remove();
-        target.querySelector('.liquid-glass__filter')?.remove();
+        target.querySelector('.liquid-glass-modal__filter')?.remove();
         document.body.style.overflow = previousOverflow;
         if (typeof options.onClose === 'function') options.onClose();
         else if (options.trigger) options.trigger.focus();
