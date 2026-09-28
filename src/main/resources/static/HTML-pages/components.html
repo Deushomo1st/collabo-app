@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>COLLABO — Component Gallery</title>
 <link rel="stylesheet" href="/css/global/global.css">
+<!-- Apply the saved theme before first paint (see theme-switcher README) -->
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -82,20 +84,8 @@
     .pagination button.is-active { background: #ffffff; color: #111; border-color: #ffffff; font-weight: 600; }
     .pagination button:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    /* Theme toggle (gallery-only; switches components between dusk and light) */
-    .gallery__theme {
-        margin-top: 0.75rem;
-        padding: 0.35rem 0.9rem;
-        border-radius: 999px;
-        border: 1px solid #2a2a2a;
-        background: #1a1a1a;
-        color: #d1d5db;
-        font: inherit;
-        font-size: 0.8rem;
-        cursor: pointer;
-    }
-    .gallery__theme:hover { background: #2a2a2a; color: #fff; }
-    .gallery__theme:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    /* Theme switcher mount point in the header */
+    .gallery__theme { display: flex; justify-content: center; margin-top: 0.75rem; }
 
     /* Demo stage for glass components: a busy background so blur and frost are visible */
     .gallery__demo {
@@ -128,6 +118,17 @@
     .gallery__demo-controls button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     .gallery__demo-result { min-height: 1.3em; margin: 0; color: #d1d5db; font-size: 0.85rem; }
     .gallery__demo-agenda { width: min(380px, 100%); }
+    .gallery__demo--tall { min-height: 480px; }
+    .gallery__demo-bell { padding-top: 28px; }       /* room for the bell's string */
+    .gallery__demo-modules {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        width: min(640px, 100%);
+    }
+    .gallery__demo-modules .glass-module { padding: 1.1rem 1.2rem; }
+    .gallery__demo-modules h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .gallery__demo-modules p { margin: 0; font-size: 0.85rem; color: #d1d5db; }
 </style>
 </head>
 <body>
@@ -136,7 +137,7 @@
     <div class="gallery__header">
         <h1>COLLABO — Component Gallery</h1>
         <p>Every self-contained UI component in the project, one page each.</p>
-        <button type="button" class="gallery__theme" id="gallery-theme" aria-pressed="false"></button>
+        <div class="gallery__theme" id="gallery-theme"></div>
     </div>
 
     <div class="gallery__meta">
@@ -158,6 +159,20 @@
         from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
     import { renderCalendarMonth, openCalendarRange, preloadCalendar }
         from '/js/components/calendar/calendar.js';
+    import { mountFloatingDrawer } from '/js/components/floating-drawer/floating-drawer.js';
+    import { mountNotificationBell } from '/js/components/notification-bell/notification-bell.js';
+    import { loadGlassModule } from '/js/components/glass-module/glass-module.js';
+    import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
+
+    // Lucide icon paths (ISC licence), wrapped as inline SVG for demos.
+    const svg = (paths) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+    const ICON = {
+        home: svg('<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'),
+        calendar: svg('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>'),
+        users: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+        folder: svg('<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>'),
+        power: svg('<path d="M12 7v4"/><path d="M7.998 9.003a5 5 0 1 0 8-.005"/><circle cx="12" cy="12" r="10"/>'),
+    };
 
     // Builds a glass-friendly demo area inside the stage.
     // demos: { 'Button label': async () => 'text to show under the buttons' | undefined }
@@ -336,6 +351,116 @@
             },
         },
 
+        {
+            id: 'floating-drawer',
+            title: 'Floating Drawer',
+            files: ['floating-drawer.html', 'floating-drawer.css', 'floating-drawer.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                const { wrap, result } = mountDemo(stage, {});
+                wrap.classList.add('gallery__demo--tall');
+                result.textContent = 'Hover the tab at the top left to peek. Click it to expand.';
+                const drawer = await mountFloatingDrawer(wrap, {
+                    inline: true,
+                    activeId: 'home',
+                    items: [
+                        { id: 'home', label: 'Home', icon: ICON.home },
+                        { id: 'timetable', label: 'Timetable', icon: ICON.calendar },
+                        { id: 'people', label: 'People', icon: ICON.users },
+                        { id: 'files', label: 'Shared files', icon: ICON.folder },
+                    ],
+                    footer: [{ id: 'logout', label: 'Sign out', icon: ICON.power }],
+                    onSelect: async (item) => {
+                        if (item.id === 'logout') {
+                            const yes = await glassBlurConfirm("You'll need to log in again to get back in.", { title: 'Sign out?', okText: 'Sign out', danger: true });
+                            result.textContent = yes ? 'Signed out (demo)' : 'Stayed signed in';
+                        } else {
+                            result.textContent = `Opened ${item.label}. The tab now shows its icon.`;
+                        }
+                    },
+                });
+                return drawer.destroy;
+            },
+        },
+
+        {
+            id: 'notification-bell',
+            title: 'Notification Bell',
+            files: ['notification-bell.html', 'notification-bell.css', 'notification-bell.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                const now = Date.now();
+                const isoDaysAgo = (d) => new Date(now - d * 86400000).toISOString();
+                const inbox = [
+                    { id: 1, title: 'Timetable published', body: 'Term 1 timetable is live for all classes.', createdAt: isoDaysAgo(0), read: false, link: true },
+                    { id: 2, title: 'Fee reminder', body: 'Three invoices are due this Friday.', createdAt: isoDaysAgo(2), read: false },
+                    { id: 3, title: 'Welcome to Collabo', body: 'Your workspace is ready.', createdAt: isoDaysAgo(9), read: true },
+                ];
+                let nextId = 4;
+
+                let bell;
+                const { wrap, result } = mountDemo(stage, {
+                    'Add a notification': async () => {
+                        inbox.unshift({ id: nextId, title: `New message #${nextId}`, body: 'Arrived just now.', createdAt: new Date().toISOString(), read: false });
+                        nextId++;
+                        await bell.refresh();
+                        return 'Added. The badge counts up and the bell rings.';
+                    },
+                    'Open the panel': async () => { await bell.open(); },
+                });
+                const bellHost = document.createElement('div');
+                bellHost.className = 'gallery__demo-bell';
+                wrap.prepend(bellHost);
+
+                bell = await mountNotificationBell(bellHost, {
+                    inline: true,
+                    pollMs: 0,
+                    loadItems: async () => inbox.map((n) => ({ ...n })),
+                    isActionable: (n) => !!n.link,
+                    onRead: (n) => { const src = inbox.find((x) => x.id === n.id); if (src) src.read = true; },
+                    onSelect: (n) => { result.textContent = `Selected "${n.title}"`; },
+                });
+                return bell.destroy;
+            },
+        },
+
+        {
+            id: 'glass-module',
+            title: 'Glass Module',
+            files: ['glass-module.css', 'glass-module.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                await loadGlassModule();
+                const { wrap, result } = mountDemo(stage, {});
+                result.textContent = 'CSS-only: add class="glass-module" to any container.';
+                const grid = document.createElement('div');
+                grid.className = 'gallery__demo-modules';
+                grid.innerHTML = [
+                    ['Attendance', '96% this week, up 2 points.'],
+                    ['Next exam', 'Mathematics, Thursday 9:00.'],
+                    ['Messages', '4 unread from staff.'],
+                ].map(([h, p]) => `<section class="glass-module"><h3>${h}</h3><p>${p}</p></section>`).join('');
+                wrap.prepend(grid);
+            },
+        },
+
+        {
+            id: 'theme-switcher',
+            title: 'Theme Switcher',
+            files: ['theme-switcher.html', 'theme-switcher.css', 'theme-switcher.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                const { wrap, result } = mountDemo(stage, {});
+                result.textContent = 'This switcher and the one in the header stay in sync.';
+                const sw = await mountThemeSwitcher(wrap, {
+                    inline: true,
+                    onChange: (theme) => { result.textContent = `Theme is now ${theme}. The choice is saved for next time.`; },
+                });
+                wrap.prepend(sw.element);
+                return sw.destroy;
+            },
+        },
+
     ];
 
     const stage = document.getElementById('gallery-stage');
@@ -345,10 +470,12 @@
     const pagination = document.getElementById('pagination');
 
     let current = 0;
+    let cleanup = null;     // a page's render() may return a function that tears it down
 
     async function renderPage(index) {
         const item = catalog[index];
         current = index;
+        if (cleanup) { cleanup(); cleanup = null; }
 
         stage.className = 'gallery__stage ' + (item.stageClass || '');
         stage.textContent = ''; // clear the previous component
@@ -357,7 +484,8 @@
         titleEl.textContent = item.title;
         filesEl.textContent = 'js/components/' + item.id + '/  ·  ' + item.files.join('  ·  ');
 
-        await item.render(stage);
+        const teardown = await item.render(stage);
+        if (typeof teardown === 'function') cleanup = teardown;
         renderPagination();
     }
 
@@ -387,23 +515,8 @@
         return b;
     }
 
-    // ---- Theme toggle (gallery-only) ----
-    // Components default to dusk; data-theme="light" applies css/global/theme.css.
-    const themeBtn = document.getElementById('gallery-theme');
-    function syncThemeButton() {
-        const light = document.documentElement.dataset.theme === 'light';
-        themeBtn.textContent = light ? 'Theme: Light' : 'Theme: Dusk';
-        themeBtn.setAttribute('aria-pressed', String(light));
-    }
-    themeBtn.addEventListener('click', () => {
-        if (document.documentElement.dataset.theme === 'light') {
-            delete document.documentElement.dataset.theme;
-        } else {
-            document.documentElement.dataset.theme = 'light';
-        }
-        syncThemeButton();
-    });
-    syncThemeButton();
+    // Header theme switcher (the theme-switcher component, inline)
+    mountThemeSwitcher('#gallery-theme', { inline: true });
 
     renderPage(0);
 </script>
