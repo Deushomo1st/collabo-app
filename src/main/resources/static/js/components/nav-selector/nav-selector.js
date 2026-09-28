@@ -42,6 +42,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector', options
     });
 
     target.appendChild(root);
+    void target.offsetHeight;
 }
 
 function loadStylesOnce(href, componentName) {

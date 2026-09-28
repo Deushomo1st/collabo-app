@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users/verify", "/api/users/resend-otp").permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
                         // Allow public access to the registration/admin pages and static assets
-                        .requestMatchers("/", "/index.html", "/admin.html", "/HTML-pages/**", "/**/*.css", "/**/*.js").permitAll()
+                        .requestMatchers("/", "/index.html", "/admin.html", "/HTML-pages/**", "/**/*.css", "/**/*.js", "/**/*.html").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
