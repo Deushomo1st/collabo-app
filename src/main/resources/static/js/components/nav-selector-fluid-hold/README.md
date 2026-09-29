@@ -11,7 +11,8 @@ Long link lists scroll sideways with snap, edge fades, and arrow buttons.
 | `nav-selector-fluid-hold.html` | Nav fragment with 6 default links |
 
 **Browser support:** Chromium 125+ (CSS anchor positioning and `:has()`).
-**One per page:** anchor names (`--ns-active`, `--ns-hover`, `--ns-nav`) are document-wide.
+**Several per page:** needs Chromium 131+, where `anchor-scope` keeps each nav's anchors (`--ns-active`,
+`--ns-hover`, `--ns-nav`) inside it. On older browsers, a second nav on the same page steals the first one's bubbles.
 
 ## Quick start
 
@@ -41,9 +42,18 @@ const nav = await mountNavSelector('#nav', {
 | `idleMs` | number | `1500` | After expanding mid-page, re-collapse after this much idle time. |
 | `scrollRoot` | Element \| selector | `window` | **What scrolls.** Set this when your content scrolls inside a container rather than the page. |
 | `threshold` | number | `40` | Within this many px of the top, the nav always stays expanded. |
+| `placement` | `'top'` \| `'bottom'` | `'top'` | `'top'`: sticky at the top of its container. `'bottom'`: fixed to the bottom of the viewport (clears the iPhone home bar). |
+| `align` | `'center'` \| `'start'` | `'center'` | `'start'` pins the pill to the left, so it collapses and expands **left-to-right** instead of from the centre. |
+| `icons` | string[] | built-in 6 | SVG markup per link. Only used together with `links`. Falls back to the built-in icons. |
+| `collapseWhenIdle` | boolean | `false` | Collapse after `idleMs` without interaction **anywhere** on the page, even above `threshold` or when nothing scrolls. Hover and keyboard focus pause the countdown. |
+| `collapsedLabel` | `'icon'` \| `'number'` | `'icon'` | What the collapsed pill shows: the active link's icon, or its position (1, 2, 3…). |
 
-**Handle:** `destroy()` removes the nav and its scroll/resize listeners. Call it when removing the nav,
-or listeners pile up each time you remount it.
+**Handle:**
+
+- `setActive(index)` selects a link from code (moves the bubble, updates the collapsed icon) **without**
+  calling `onChange`. Returns `false` for an index that doesn't exist.
+- `destroy()` removes the nav and its scroll/resize listeners. Call it when removing the nav,
+  or listeners pile up each time you remount it.
 
 ## When does it collapse?
 
@@ -84,8 +94,9 @@ Rules that keep it safe to change:
 - **Variables:** only the four sizing variables (`--nav-width`, `--nav-padding`, `--nav-link-padding`,
   `--nav-font-size`) are public. Its colours are hard-coded, so it doesn't respond to the theme yet
   (see the recolour recipe below).
-- **One per page:** the anchor names (`--ns-active`, `--ns-hover`, `--ns-nav`) are document-wide. Don't reuse them
-  in another component.
+- **Anchor names are scoped, not unique.** `anchor-scope` on `.nav-selector-fluid-hold` confines `--ns-active`,
+  `--ns-hover` and `--ns-nav` to each nav. If you add another anchor name, add it to that `anchor-scope` list too,
+  or two navs on one page will fight over it.
 - **Test in the gallery** (`/HTML-pages/components.html`, page 1) in both themes, then hard-refresh (Ctrl+Shift+R)
   after every change, since browsers cache the CSS and JS.
 
@@ -99,13 +110,25 @@ await mountNavSelector('#nav', { scrollRoot: document.querySelector('main') });
 ```
 Run `el.scrollHeight - el.clientHeight` on the container in the Console: it must be more than `threshold` (40).
 
-### Use your own icons
+### Use it as a bottom page switcher (as the gallery does)
 
-Icons come from the `ICONS` array in `nav-selector-fluid-hold.js`, cycling by position. To choose them per link:
-
-1. Accept `options.icons` (an array of SVG strings) and use `options.icons?.[i] ?? ICONS[i % ICONS.length]`
-   in the `links` loop.
-2. Document `icons` in the API table above.
+```js
+const pages = [{ id: 'home', title: 'Home', icon: '<svg …>' }, /* … */];
+const nav = await mountNavSelector('#page-nav', {
+    placement: 'bottom',
+    align: 'start',                                   // pinned left, grows to the right
+    links: pages.map((p) => p.title),
+    hrefs: pages.map((p) => '#' + p.id),
+    icons: pages.map((p) => p.icon),
+    collapseWhenIdle: true,                           // tuck away after 3s idle, even at the top
+    idleMs: 3000,
+    collapsedLabel: 'number',                         // collapsed pill shows "4" instead of the icon
+    onChange: (label, href) => showPage(href),
+});
+nav.setActive(3);                                     // e.g. after a keyboard shortcut
+```
+Give the page bottom padding (about `46px + 32px + env(safe-area-inset-bottom)`) so the last content isn't hidden
+behind the bar. **Verify:** the gallery itself: its bottom bar is this recipe.
 
 ### Collapse sooner or later, or never re-collapse on idle
 
