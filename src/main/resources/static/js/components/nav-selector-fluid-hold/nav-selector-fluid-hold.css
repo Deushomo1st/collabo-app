@@ -1,7 +1,7 @@
 /* Nav Selector — "fluid hold" collapsible pill nav.
    Scoped under .nav-selector-fluid-hold — only loaded when nav-selector-fluid-hold.js runs.
    Requires a Chromium browser 125+ (CSS anchor positioning + :has()).
-   Single instance per page (anchor names are document-wide idents).
+   Several instances per page need 131+ (anchor-scope keeps each nav's anchors to itself).
 
    Settable size variables (apply on the mount target or root):
    --nav-width        (default: min(92vw, 560px))  max-width of the expanded pill
@@ -14,6 +14,19 @@
     display: flex; justify-content: center;
     padding-top: 24px;
 }
+
+/* placement: 'bottom' — docked to the bottom of the viewport (respects the iPhone home bar).
+   The full-width wrapper ignores clicks so it never blocks the page; only the pill takes them. */
+.nav-selector-fluid-hold-wrap--bottom {
+    position: fixed; top: auto; left: 0; right: 0;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+    pointer-events: none;
+}
+.nav-selector-fluid-hold-wrap--bottom > .nav-selector-fluid-hold { pointer-events: auto; }
+
+/* align: 'start' — the pill sits on the left, so collapsing and expanding happen left-to-right */
+.nav-selector-fluid-hold-wrap--start { justify-content: flex-start; }
 
 .nav-selector-fluid-hold {
     position: relative;
@@ -30,6 +43,7 @@
     align-items: center;
     overflow: hidden;
     transition: max-width .4s cubic-bezier(.25,1,.5,1), padding .4s cubic-bezier(.25,1,.5,1);
+    anchor-scope: --ns-active, --ns-hover, --ns-nav;   /* several navs per page don't steal each other's bubbles */
 }
 
 /* Iconized mode: collapsed to the single center icon */
@@ -110,6 +124,11 @@
     transition: opacity .25s ease, transform .25s cubic-bezier(.25,1,.5,1);
 }
 .nav-selector-fluid-hold__icon svg { width: 17px; height: 17px; }
+/* collapsedLabel: 'number' */
+.nav-selector-fluid-hold__number {
+    font-size: 15px; font-weight: 700; line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
 
 /* Horizontal scroll arrows */
 .nav-selector-fluid-hold__arrow {

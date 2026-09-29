@@ -5,6 +5,10 @@
 //        const nav = await mountNavSelector('#nav-selector-fluid-hold');
 //        mountNavSelector('#nav-selector-fluid-hold', { links: ['A','B'], hrefs: ['#a','#b'], activeIndex: 0, idleMs: 1500, onChange: (label, href) => {} });
 //        mountNavSelector(el, { scrollRoot: document.querySelector('main') });   // content scrolls inside <main>
+//        mountNavSelector(el, { placement: 'bottom', align: 'start' });           // docked bottom-left, grows rightwards
+//        mountNavSelector(el, { collapseWhenIdle: true, idleMs: 3000 });          // collapse after 3s idle, even at the top
+//        mountNavSelector(el, { collapsedLabel: 'number' });                      // collapsed pill shows "3" instead of the icon
+//        nav.setActive(2);                                                         // select a link from code (no onChange)
 //        nav.destroy();                                                            // remove listeners + DOM
 // Scrolling is watched on `scrollRoot` (default: the window). If nothing there scrolls, it never iconizes.
 
@@ -44,7 +48,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             const a = document.createElement('a');
             a.href = options.hrefs?.[i] || '#';
             a.className = 'nav-selector-fluid-hold__link' + (i === activeIndex ? ' is-active' : '');
-            a.innerHTML = ICONS[i % ICONS.length] + '<span></span>';
+            a.innerHTML = (options.icons?.[i] ?? ICONS[i % ICONS.length]) + '<span></span>';
             a.querySelector('span').textContent = label;
             nav.appendChild(a);
         });
@@ -64,9 +68,17 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         const key = active.textContent.trim();
         if (navIcon.dataset.for !== key) {
             navIcon.textContent = '';
-            const svg = active.querySelector('svg');
-            if (svg) navIcon.appendChild(svg.cloneNode(true));
+            if (options.collapsedLabel === 'number') {
+                const num = document.createElement('span');
+                num.className = 'nav-selector-fluid-hold__number';
+                num.textContent = String(getLinks().indexOf(active) + 1);
+                navIcon.appendChild(num);
+            } else {
+                const svg = active.querySelector('svg');
+                if (svg) navIcon.appendChild(svg.cloneNode(true));
+            }
             navIcon.dataset.for = key;
+            navIcon.setAttribute('aria-label', `Show navigation (current: ${key})`);
         }
     }
 
@@ -78,11 +90,18 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     const iconize = () => { clearTimeout(idleTimer); syncIcon(); root.classList.add('iconized'); };
     const expand = () => root.classList.remove('iconized');
 
+    // collapseWhenIdle: collapse after idleMs anywhere on the page, not only below `threshold`.
+    const idleAnywhere = options.collapseWhenIdle === true;
+    const canIdleCollapse = () => idleAnywhere || getY() >= threshold;
+    // Busy = pointer over it, or keyboard focus inside it (a mouse click's leftover focus doesn't count).
+    const isBusy = () => root.matches(':hover') || !!root.querySelector(':focus-visible');
+
     function armIdle() {
         clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
-            if (getY() >= threshold && !root.matches(':hover')) iconize();
-            else if (getY() >= threshold) armIdle();
+            if (!canIdleCollapse() || isIconized()) return;
+            if (isBusy()) armIdle();           // still in use: check again later
+            else iconize();
         }, options.idleMs ?? 1500);
     }
 
@@ -90,7 +109,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         const y = getY();
         const dy = y - lastY;
         lastY = y;
-        if (y < threshold) { clearTimeout(idleTimer); expand(); return; }
+        if (y < threshold) { expand(); if (idleAnywhere) armIdle(); else clearTimeout(idleTimer); return; }
         if (dy > 2) iconize();
         else if (dy < -2) { expand(); armIdle(); }
     }
@@ -98,7 +117,11 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     navIcon.addEventListener('click', () => { expand(); armIdle(); });
     root.addEventListener('mouseenter', () => clearTimeout(idleTimer));
-    root.addEventListener('mouseleave', () => { if (getY() >= threshold && !isIconized()) armIdle(); });
+    root.addEventListener('mouseleave', () => { if (canIdleCollapse() && !isIconized()) armIdle(); });
+    // Keyboard: leaving the nav with Tab restarts the countdown.
+    root.addEventListener('focusout', (e) => {
+        if (!root.contains(e.relatedTarget) && canIdleCollapse() && !isIconized()) armIdle();
+    });
 
     // ---------- horizontal menu logic ----------
     function update() {
@@ -120,6 +143,19 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             if (d < bd) { bd = d; best = i; }
         });
         return best;
+    }
+
+    // Select a link from code: same visual result as a click, but without onChange.
+    function setActive(i) {
+        const links = getLinks();
+        const link = links[i];
+        if (!link) return false;
+        links.forEach(l => l.classList.remove('is-active'));
+        link.classList.add('is-active');
+        link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
+        syncIcon();
+        setTimeout(update, 50);
+        return true;
     }
 
     function goTo(i) {
@@ -149,16 +185,20 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     // Mount inside a sticky wrapper so the pill stays reachable on long pages.
     const wrap = document.createElement('div');
-    wrap.className = 'nav-selector-fluid-hold-wrap';
+    wrap.className = 'nav-selector-fluid-hold-wrap'
+        + (options.placement === 'bottom' ? ' nav-selector-fluid-hold-wrap--bottom' : '')
+        + (options.align === 'start' ? ' nav-selector-fluid-hold-wrap--start' : '');
     wrap.appendChild(root);
     target.appendChild(wrap);
     void target.offsetHeight; // force reflow so anchor bubbles measure correctly
 
     syncIcon();
     update();
+    if (idleAnywhere) armIdle();               // start the countdown straight away
 
     return {
         element: root,
+        setActive,
         destroy() {
             clearTimeout(idleTimer);
             scrollRoot.removeEventListener('scroll', onScroll);
