@@ -1,0 +1,134 @@
+/* tilt-stack: a side-scrolling row of overlapping 3D-tilted 4:3 cards (people, items).
+   Hover/focus raises a card, straightens it and floats its name above.
+   Ported from SchoolHub app/tiltstack (dusk values as defaults).
+
+   Shared with avatar (unprefixed on purpose, so both stay at the same angle):
+     --card-tilt        (default rotateY(34deg) rotateX(8deg))
+     --card-tilt-hover  (default rotateY(14deg) rotateX(3deg))
+   Public:  --tilt-stack-{brand,card,ink,muted,shadow,shadow-raised,name-shadow,card-width,overlap}
+   Private: --_ts-* (internal, do not set from outside). */
+
+.tilt-stack {
+    --_ts-brand: var(--tilt-stack-brand, #FF9000);
+    --_ts-card: var(--tilt-stack-card, #212634);
+    --_ts-ink: var(--tilt-stack-ink, #F4EDE4);
+    --_ts-muted: var(--tilt-stack-muted, #8a8f9c);
+    --_ts-shadow: var(--tilt-stack-shadow, 0 22px 44px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08));
+    --_ts-shadow-raised: var(--tilt-stack-shadow-raised, 0 30px 54px rgba(0,0,0,.6));
+    --_ts-name-shadow: var(--tilt-stack-name-shadow, 0 1px 8px rgba(0,0,0,.85));
+    --_ts-width: var(--tilt-stack-card-width, 190px);
+    --_ts-overlap: var(--tilt-stack-overlap, -74px);
+    --_ts-tilt: var(--card-tilt, rotateY(34deg) rotateX(8deg));
+    --_ts-tilt-raised: var(--card-tilt-hover, rotateY(14deg) rotateX(3deg));
+
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    perspective: 820px;
+    padding: 60px 70px 44px;          /* room for the raised card and its floating name */
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    cursor: grab;
+}
+.tilt-stack::-webkit-scrollbar { display: none; }
+.tilt-stack--dragging { cursor: grabbing; scroll-snap-type: none; }
+.tilt-stack--empty { justify-content: center; padding: 30px; cursor: default; }
+.tilt-stack__empty { margin: 0; color: var(--_ts-muted); text-align: center; }
+
+.tilt-stack__card {
+    position: relative;
+    flex: 0 0 auto;
+    margin-right: var(--_ts-overlap);  /* heavy overlap so the cards stack */
+    scroll-snap-align: center;
+    transform-style: preserve-3d;
+    outline: none;
+}
+.tilt-stack__card:last-child { margin-right: 0; }
+
+.tilt-stack__face {
+    position: relative;
+    width: var(--_ts-width);
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--_ts-brand) 12%, var(--_ts-card));
+    box-shadow: var(--_ts-shadow);
+    transform: var(--_ts-tilt);
+    transform-origin: center;
+    transition: transform .3s cubic-bezier(.25, 1, .5, 1), box-shadow .3s;
+}
+.tilt-stack__img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.tilt-stack__fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--_ts-brand) 10%, var(--_ts-card));
+    color: var(--_ts-brand);
+    font-size: 40px;
+    font-weight: 700;
+}
+
+.tilt-stack__status {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .55);
+    color: #f4f4f5;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.tilt-stack__status--ok { color: #7fcf9e; }
+.tilt-stack__status--warn { color: #FFB701; }
+.tilt-stack__status--danger { color: #ff6b5e; }
+
+/* Name: bare text floating above the card, revealed when raised */
+.tilt-stack__name {
+    position: absolute;
+    top: -52px;
+    left: 50%;
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--_ts-ink);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: var(--_ts-name-shadow);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0) var(--_ts-tilt-raised);
+    transform-origin: center bottom;
+    transition: opacity .25s, transform .25s;
+}
+.tilt-stack__sub { font-size: 10px; font-weight: 500; color: var(--_ts-muted); }
+
+/* Raised: hover, keyboard focus, or spotlighted from code */
+.tilt-stack__card:hover,
+.tilt-stack__card:focus-visible,
+.tilt-stack__card--spotlight { z-index: 5; }
+.tilt-stack__card:hover .tilt-stack__face,
+.tilt-stack__card:focus-visible .tilt-stack__face,
+.tilt-stack__card--spotlight .tilt-stack__face {
+    transform: var(--_ts-tilt-raised) translateY(-16px) scale(1.05);
+    box-shadow: var(--_ts-shadow-raised);
+}
+.tilt-stack__card:hover .tilt-stack__name,
+.tilt-stack__card:focus-visible .tilt-stack__name,
+.tilt-stack__card--spotlight .tilt-stack__name {
+    opacity: 1;
+    transform: translate(-50%, -4px) var(--_ts-tilt-raised);
+}
+.tilt-stack__card:focus-visible .tilt-stack__face { outline: 2px solid var(--_ts-brand); outline-offset: 3px; }
+.tilt-stack__card--clickable { cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+    .tilt-stack__face, .tilt-stack__name { transition: none; }
+}
