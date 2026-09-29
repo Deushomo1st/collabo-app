@@ -65,3 +65,44 @@ so a mouse user could never reach the labels); trigger and items are real `<butt
 The drawer is dark metal in both themes; only accents change. Public variables:
 `--floating-drawer-height` (440px), `-line`, `-accent` (item hover), `-danger`, `-z` (50).
 Light values live in `css/global/theme.css`.
+
+## Editing this component
+
+Rules that keep it safe to change:
+
+- **Every class starts with the component name** (`.floating-drawer__part`, `.floating-drawer--variant`). Component CSS is a
+  global `<link>`, so an unprefixed class can collide with another component. Keyframe names follow the same rule.
+- **Public vs private variables.** Pages set the public `--floating-drawer-*` variables. The component only reads its
+  private `--_fd-*` copies. Never set a private variable from outside.
+- **Light theme values go in `css/global/theme.css`**, under `:root[data-theme="light"]`. Dusk is the built-in default.
+- **Test in the gallery** (`/HTML-pages/components.html`, page 5) in both themes, then hard-refresh (Ctrl+Shift+R)
+  after every change, since browsers cache the CSS and JS.
+
+## Recipes (guided changes)
+
+### Add, remove or reorder sections
+
+Change the `items` array you pass in. Nothing inside the component needs editing. To change them at runtime:
+`drawer.setItems(newItems)` (the active item is kept if its `id` still exists).
+
+### Make the drawer taller, or recolour its hover accent
+
+```css
+:root { --floating-drawer-height: 520px; --floating-drawer-accent: #7fcf9e; }
+```
+Items beyond the height scroll inside the drawer; the footer stays pinned. **Verify:** gallery page 5, hover the tab.
+
+### Move it to the top-right corner
+
+1. In `floating-drawer.css`, on `.floating-drawer`, replace `left: 16px;` with `right: 16px;`.
+2. Nothing else is needed: anchored on the right, the drawer widens leftwards when it expands.
+3. **Verify:** hover, click-expand, and Escape still work, and the labels aren't cut off.
+
+### Put a non-destructive action in the footer
+
+The footer is styled as destructive (red) for sign-out. To allow neutral footer items:
+
+1. In `makeButton` in `floating-drawer.js`, change the class condition from `isFooter` to
+   `isFooter && item.danger !== false`.
+2. Pass `{ id, label, icon, danger: false }` for the neutral item.
+3. Document the `danger` field in the API table above.

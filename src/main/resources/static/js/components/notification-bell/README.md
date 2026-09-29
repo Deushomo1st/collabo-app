@@ -58,3 +58,48 @@ Light values live in `css/global/theme.css`. The panel's glass, text and inputs 
 
 The bell's label includes the unread count ("Notifications, 3 unread"). Items are buttons. The badge caps
 at `99+`. Swing and ring animations are skipped under `prefers-reduced-motion`.
+
+## Editing this component
+
+Rules that keep it safe to change:
+
+- **Every class starts with the component name** (`.notification-bell__part`, `.notification-bell--variant`). Component CSS is a
+  global `<link>`, so an unprefixed class can collide with another component. Keyframe names follow the same rule.
+- **Public vs private variables.** Pages set the public `--notification-bell-*` variables. The component only reads its
+  private `--_nb-*` copies. Never set a private variable from outside.
+- **Light theme values go in `css/global/theme.css`**, under `:root[data-theme="light"]`. Dusk is the built-in default.
+- **Test in the gallery** (`/HTML-pages/components.html`, page 6) in both themes, then hard-refresh (Ctrl+Shift+R)
+  after every change, since browsers cache the CSS and JS.
+
+## Recipes (guided changes)
+
+### Connect it to a real backend
+
+```js
+const bell = await mountNotificationBell('body', {
+    loadItems: async () => (await fetch('/api/notifications', { credentials: 'include' })).json(),
+    onRead: (n) => fetch(`/api/notifications/${n.id}/read`, { method: 'POST', credentials: 'include' }),
+    onSelect: (n) => { if (n.link) location.href = n.link; },
+    isActionable: (n) => !!n.link,
+});
+```
+The items must match `{ id, title, body?, createdAt?, read? }`; map your API's fields in `loadItems` if they differ.
+
+### Push new notifications instantly (WebSocket or SSE) instead of polling
+
+1. Mount with `pollMs: 0`.
+2. When your socket reports a new notification, call `bell.refresh()`. The badge updates, the bell rings,
+   and an open panel re-renders.
+
+### Move the bell, or shorten its string
+
+The bell is fixed at `top: 28px; right: 32px;`, and the string is the `height: 28px` in `.notification-bell::before`.
+Change **both** 28px values together, or the bell will float away from its string.
+The swing pivots at `transform-origin: 50% -28px` on `.notification-bell__button`, so update that too.
+
+### Add a field to each item (for example a sender)
+
+1. In `render()` inside `notification-bell.js`, add a `<span class="notification-bell__item-sender">` and set its
+   `textContent` (never `innerHTML`, since notification text comes from users).
+2. Style `.notification-bell__item-sender` in `notification-bell.css`.
+3. **Verify:** gallery page 6. Add `sender` to the demo items in `components.html`.

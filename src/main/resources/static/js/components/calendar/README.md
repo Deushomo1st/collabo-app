@@ -88,3 +88,44 @@ The range picker's buttons belong to glass-blur-dialog, so theme those with `--g
 ## Test page
 
 `/HTML-pages/glass-blur-dialog-test.html` includes an inline grid with marks and the range picker.
+
+## Editing this component
+
+Rules that keep it safe to change:
+
+- **Every class starts with the component name** (`.calendar__part`, `.calendar--variant`). Component CSS is a
+  global `<link>`, so an unprefixed class can collide with another component. Keyframe names follow the same rule.
+- **Public vs private variables.** Pages set the public `--calendar-*` variables. The component only reads its
+  private `--_cal-*` copies. Never set a private variable from outside.
+- **Light theme values go in `css/global/theme.css`**, under `:root[data-theme="light"]`. Dusk is the built-in default.
+- **Test in the gallery** (`/HTML-pages/components.html`, page 4) in both themes, then hard-refresh (Ctrl+Shift+R)
+  after every change, since browsers cache the CSS and JS.
+
+## Recipes (guided changes)
+
+### Add a new dot type (for example `meeting`)
+
+1. In `calendar.css`, add the private variable to the `.calendar` block:
+   `--_cal-meeting: var(--calendar-meeting, #b28dff);`
+2. Add the dot style next to the others:
+   `.calendar__dot--meeting { background: var(--_cal-meeting); }`
+3. If the light theme needs a different colour, add `--calendar-meeting: …;` to `css/global/theme.css`.
+4. Use it: `marks: { '2026-10-02': ['meeting'] }`. The JS needs no change: the mark name becomes the class.
+5. **Verify:** gallery page 4, with `meeting` added to one day's marks in the calendar entry of `components.html`.
+
+### Start the week on Sunday
+
+1. In `calendar.js`, change `WEEKDAYS` to start with `'SUN'`.
+2. Change the offset line `const startWd = (new Date(y, m, 1).getDay() + 6) % 7;` to
+   `const startWd = new Date(y, m, 1).getDay();`.
+3. **Verify:** gallery page 4. The 1st of the month must fall under the right weekday (check against your OS calendar).
+
+### Limit the range picker to future dates
+
+`openCalendarRange` doesn't take `min`/`max` yet. To add it:
+
+1. In `openCalendarRange`, read a floor date: `const floor = parseDate(opts.min);`
+2. In `draw()`, give the **From** grid `min: floor` (it already has `max: toDate`), and give the **To** grid
+   `min: fromDate || floor` instead of `min: fromDate`.
+3. Callers then pass `min: 'YYYY-MM-DD'`, for example today's date. Document `min` in the API table above.
+4. **Verify:** days before `min` are dimmed and can't be clicked in either pane.

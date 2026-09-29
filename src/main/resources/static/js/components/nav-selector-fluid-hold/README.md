@@ -74,3 +74,47 @@ reachable on long pages. It is dark in both themes; it doesn't read the theme va
 The HTML is injected with `fetch()`, and Chromium sometimes measures anchor positions before layout.
 The loader forces a reflow (`void target.offsetHeight`) right after inserting it; keep that line,
 or the active and hover bubbles can render with zero size.
+
+## Editing this component
+
+Rules that keep it safe to change:
+
+- **Every class starts with the component name** (`.nav-selector-fluid-hold__part`, `.nav-selector-fluid-hold--variant`). Component CSS is a
+  global `<link>`, so an unprefixed class can collide with another component. Keyframe names follow the same rule.
+- **Variables:** only the four sizing variables (`--nav-width`, `--nav-padding`, `--nav-link-padding`,
+  `--nav-font-size`) are public. Its colours are hard-coded, so it doesn't respond to the theme yet
+  (see the recolour recipe below).
+- **One per page:** the anchor names (`--ns-active`, `--ns-hover`, `--ns-nav`) are document-wide. Don't reuse them
+  in another component.
+- **Test in the gallery** (`/HTML-pages/components.html`, page 1) in both themes, then hard-refresh (Ctrl+Shift+R)
+  after every change, since browsers cache the CSS and JS.
+
+## Recipes (guided changes)
+
+### Your page scrolls inside a container, and the nav never collapses
+
+Pass that container as `scrollRoot`:
+```js
+await mountNavSelector('#nav', { scrollRoot: document.querySelector('main') });
+```
+Run `el.scrollHeight - el.clientHeight` on the container in the Console: it must be more than `threshold` (40).
+
+### Use your own icons
+
+Icons come from the `ICONS` array in `nav-selector-fluid-hold.js`, cycling by position. To choose them per link:
+
+1. Accept `options.icons` (an array of SVG strings) and use `options.icons?.[i] ?? ICONS[i % ICONS.length]`
+   in the `links` loop.
+2. Document `icons` in the API table above.
+
+### Collapse sooner or later, or never re-collapse on idle
+
+`threshold` sets how far from the top it stays expanded; `idleMs` sets the re-collapse delay after expanding
+mid-page. For "never on idle", pass a very large `idleMs` (for example `1e9`).
+
+### Recolour it
+
+The colours are hard-coded (dark greys, white bubble), not variables. To theme it, turn each colour into a
+public variable the way the other components do, for example
+`background: linear-gradient(145deg, var(--nav-selector-bg-from, #2a2a2a), var(--nav-selector-bg-to, #111));`,
+then add light values to `css/global/theme.css`.

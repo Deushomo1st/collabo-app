@@ -114,3 +114,51 @@ Variables starting `--_gbd-` are internal; don't set them.
 ## Test page
 
 `/HTML-pages/glass-blur-dialog-test.html` exercises every type, stacking, and clear glass.
+
+## Editing this component
+
+Rules that keep it safe to change:
+
+- **Every class starts with the component name** (`.glass-blur-dialog__part`, `.glass-blur-dialog--variant`). Component CSS is a
+  global `<link>`, so an unprefixed class can collide with another component. Keyframe names follow the same rule.
+- **Public vs private variables.** Pages set the public `--glass-blur-dialog-*` variables. The component only reads its
+  private `--_gbd-*` copies. Never set a private variable from outside.
+- **Light theme values go in `css/global/theme.css`**, under `:root[data-theme="light"]`. Dusk is the built-in default.
+- **Test in the gallery** (`/HTML-pages/components.html`, page 3) in both themes, then hard-refresh (Ctrl+Shift+R)
+  after every change, since browsers cache the CSS and JS.
+
+## Recipes (guided changes)
+
+### Change the accent colour of every dialog
+
+1. In the page's CSS (or `css/global/theme.css` for the light theme), set it on `:root`:
+   ```css
+   :root { --glass-blur-dialog-brand: #6d5dfc; --glass-blur-dialog-brand-ink: #ffffff; }
+   ```
+   It must be `:root`, not the element you clicked, because dialogs attach to `<body>`.
+2. **Verify:** gallery page 3 → **Confirm**. The primary button and focus rings use the new colour.
+
+### Add a new size (for example `2xl` = 900px)
+
+1. In `glass-blur-dialog.css`, next to the other sizes:
+   ```css
+   .glass-blur-dialog__panel--2xl { --_gbd-width: 900px; width: min(92vw, var(--_gbd-width)); }
+   ```
+2. No JS change is needed: `size: '2xl'` becomes the class `glass-blur-dialog__panel--2xl` automatically.
+3. Add `2xl` to the `size` row of the API table above.
+4. **Verify:** in the Console, run
+   `(await import('/js/components/glass-blur-dialog/glass-blur-dialog.js')).openGlassBlurDialog({ size: '2xl', html: '<p>wide</p>' })`.
+
+### Build a new dialog type (for example a prompt that returns text)
+
+1. Copy `glassBlurConfirm` in `glass-blur-dialog.js` and rename it `glassBlurPrompt`.
+2. In its `html`, add `<input class="glass-blur-dialog__input" data-field>` above the actions.
+3. On OK, `settle(dlg.panel.querySelector('[data-field]').value)`. On Cancel, and in `onClose`, `settle(null)`
+   (the copied code settles `false`; change both).
+4. Export it, and document it under **API** above.
+5. **Verify:** add a button for it on gallery page 3 (the `mountDemo` call in `components.html`).
+
+### Make a dialog that can't be dismissed by accident
+
+Pass `dismissable: false`. Backdrop clicks and Escape are then ignored, so you **must** give the user a
+button that calls `close()`.
