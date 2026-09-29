@@ -1,17 +1,23 @@
-:root {
-    --glass-foreground: oklch(0.99 0.008 95);
-    --glass-muted: oklch(0.91 0.02 230 / 0.8);
-    --glass-surface: oklch(0.98 0.02 240 / 0.1);
-    --glass-highlight: oklch(1 0 0 / 0.18);
-    --glass-border: oklch(1 0 0 / 0.22);
-    --status: oklch(0.83 0.17 151);
-    --shadow-glass: inset 0 1px 1px oklch(1 0 0 / 0.28), inset 0 -1px 1px oklch(0 0 0 / 0.1), 0 32px 80px oklch(0.06 0.03 255 / 0.5);
-}
+/* liquid-glass-modal: a modal whose backdrop refracts the page (SVG feDisplacementMap).
+   Vanilla port of a Lovable React/Tailwind v4 study.
+
+   The portal lives on the page (fixed, full-viewport), so set public variables on :root
+   or on any ancestor of the mount target.
+   Public:  --liquid-glass-modal-{foreground,muted,surface,highlight,border,status,shadow,z}
+   Private: --_lgm-* (internal, do not set from outside). */
 
 .liquid-glass-modal__portal {
+    --_lgm-foreground: var(--liquid-glass-modal-foreground, oklch(0.99 0.008 95));
+    --_lgm-muted: var(--liquid-glass-modal-muted, oklch(0.91 0.02 230 / 0.8));
+    --_lgm-surface: var(--liquid-glass-modal-surface, oklch(0.98 0.02 240 / 0.1));
+    --_lgm-highlight: var(--liquid-glass-modal-highlight, oklch(1 0 0 / 0.18));
+    --_lgm-border: var(--liquid-glass-modal-border, oklch(1 0 0 / 0.22));
+    --_lgm-status: var(--liquid-glass-modal-status, oklch(0.83 0.17 151));
+    --_lgm-shadow: var(--liquid-glass-modal-shadow, inset 0 1px 1px oklch(1 0 0 / 0.28), inset 0 -1px 1px oklch(0 0 0 / 0.1), 0 32px 80px oklch(0.06 0.03 255 / 0.5));
+
     position: fixed;
     inset: 0;
-    z-index: 50;
+    z-index: var(--liquid-glass-modal-z, 50);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -34,7 +40,7 @@
     -webkit-backdrop-filter: blur(8px) saturate(75%) grayscale(20%);
     mask-image: radial-gradient(ellipse 340px 320px at 50% 50%, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 1) 62%);
     -webkit-mask-image: radial-gradient(ellipse 340px 320px at 50% 50%, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 1) 62%);
-    animation: glass-fade-in 220ms ease-out both;
+    animation: liquid-glass-modal-fade-in 220ms ease-out both;
 }
 
 .liquid-glass-modal {
@@ -44,14 +50,14 @@
     max-width: 440px;
     padding: 1.75rem;
     overflow: hidden;
-    border: 1px solid var(--glass-border);
+    border: 1px solid var(--_lgm-border);
     border-radius: 1.75rem;
     background: linear-gradient(145deg, oklch(0.55 0.04 245 / 0.14), oklch(0.3 0.05 212 / 0.1));
-    box-shadow: var(--shadow-glass);
+    box-shadow: var(--_lgm-shadow);
     backdrop-filter: blur(3px) saturate(140%);
     -webkit-backdrop-filter: blur(3px) saturate(140%);
-    color: var(--glass-foreground);
-    animation: glass-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    color: var(--_lgm-foreground);
+    animation: liquid-glass-modal-enter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (min-width: 640px) {
@@ -78,7 +84,7 @@
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 11px;
     text-transform: uppercase;
-    color: var(--glass-muted);
+    color: var(--_lgm-muted);
 }
 
 .liquid-glass-modal__title {
@@ -86,7 +92,7 @@
     font-size: 1.5rem;
     font-weight: 600;
     letter-spacing: 0;
-    color: var(--glass-foreground);
+    color: var(--_lgm-foreground);
 }
 
 .liquid-glass-modal__close {
@@ -97,15 +103,15 @@
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
-    border: 1px solid var(--glass-border);
-    background-color: var(--glass-surface);
-    color: var(--glass-foreground);
+    border: 1px solid var(--_lgm-border);
+    background-color: var(--_lgm-surface);
+    color: var(--_lgm-foreground);
     cursor: pointer;
     transition: background-color 300ms ease;
 }
 
 .liquid-glass-modal__close:hover {
-    background-color: var(--glass-highlight);
+    background-color: var(--_lgm-highlight);
 }
 
 .liquid-glass-modal__close svg {
@@ -116,7 +122,7 @@
 .liquid-glass-modal__body {
     font-size: 15px;
     line-height: 1.75;
-    color: var(--glass-muted);
+    color: var(--_lgm-muted);
 }
 
 .liquid-glass-modal__body p {
@@ -131,10 +137,10 @@
     display: inline-block;
     padding: 0.125rem 0.375rem;
     border-radius: 0.25rem;
-    background-color: var(--glass-surface);
+    background-color: var(--_lgm-surface);
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 0.75rem;
-    color: var(--glass-foreground);
+    color: var(--_lgm-foreground);
 }
 
 .liquid-glass-modal__footer {
@@ -143,18 +149,18 @@
     gap: 0.75rem;
     margin-top: 2rem;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--glass-border);
+    border-top: 1px solid var(--_lgm-border);
     font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 10px;
     text-transform: uppercase;
-    color: var(--glass-muted);
+    color: var(--_lgm-muted);
 }
 
 .liquid-glass-modal__status {
     width: 0.375rem;
     height: 0.375rem;
     border-radius: 9999px;
-    background-color: var(--status);
+    background-color: var(--_lgm-status);
 }
 
 .liquid-glass-modal__filter {
@@ -163,11 +169,11 @@
     height: 0;
 }
 
-@keyframes glass-fade-in {
+@keyframes liquid-glass-modal-fade-in {
     from { opacity: 0; }
 }
 
-@keyframes glass-enter {
+@keyframes liquid-glass-modal-enter {
     from { opacity: 0; transform: translateY(18px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }

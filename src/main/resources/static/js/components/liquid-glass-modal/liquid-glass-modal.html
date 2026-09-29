@@ -1,22 +1,22 @@
+<!-- Default content below is used when mountLiquidGlassModal() gets no meta/title/body/footer options.
+     Element ids are assigned per open by the loader (so repeat opens don't duplicate them). -->
 <div class="liquid-glass-modal__portal" role="presentation">
-    <button type="button" class="liquid-glass-modal__backdrop" aria-label="Close liquid glass modal"></button>
+    <button type="button" class="liquid-glass-modal__backdrop" aria-label="Close" tabindex="-1"></button>
     <section
         class="liquid-glass-modal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="liquid-glass-title"
-        aria-describedby="liquid-glass-description"
     >
         <div class="liquid-glass-modal__header">
             <div>
                 <p class="liquid-glass-modal__meta">Material / 01</p>
-                <h2 id="liquid-glass-title" class="liquid-glass-modal__title">Liquid Glass</h2>
+                <h2 class="liquid-glass-modal__title">Liquid Glass</h2>
             </div>
             <button type="button" class="liquid-glass-modal__close" aria-label="Close modal">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
         </div>
-        <div id="liquid-glass-description" class="liquid-glass-modal__body">
+        <div class="liquid-glass-modal__body">
             <p>The background behind this modal bends and softens, while the text stays perfectly crisp.</p>
             <p>
                 Layered transparency, saturation, and an SVG <code class="liquid-glass-modal__code">feDisplacementMap</code> create the optical depth.
@@ -24,7 +24,7 @@
         </div>
         <div class="liquid-glass-modal__footer">
             <span class="liquid-glass-modal__status"></span>
-            Refraction active
+            <span class="liquid-glass-modal__footer-text">Refraction active</span>
         </div>
     </section>
 </div>
