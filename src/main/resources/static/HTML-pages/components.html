@@ -170,7 +170,7 @@
 
 <script type="module">
     import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-    import { mountLiquidGlassModal } from '/js/components/liquid-glass-modal/liquid-glass-modal.js';
+    import { mountLiquidGlassModal, preloadLiquidGlassModal } from '/js/components/liquid-glass-modal/liquid-glass-modal.js';
     import { openGlassBlurDialog, glassBlurConfirm, glassBlurAlert, preloadGlassBlurDialog }
         from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
     import { renderCalendarMonth, openCalendarRange, preloadCalendar }
@@ -259,8 +259,9 @@
         {
             id: 'liquid-glass-modal',
             title: 'Liquid Glass Modal',
-            files: ['liquid-glass-modal.html', 'liquid-glass-modal.css', 'liquid-glass-modal.js'],
+            files: ['liquid-glass-modal.html', 'liquid-glass-modal.css', 'liquid-glass-modal.js', 'README.md'],
             render: async (stage) => {
+                preloadLiquidGlassModal();
                 const wrap = document.createElement('div');
                 wrap.style.cssText = `
                     position: relative;
@@ -304,7 +305,7 @@
                 btn.addEventListener('mouseenter', () => btn.style.backgroundColor = 'oklch(1 0 0 / 0.18)');
                 btn.addEventListener('mouseleave', () => btn.style.backgroundColor = 'oklch(0.98 0.02 240 / 0.1)');
                 btn.addEventListener('click', () => {
-                    mountLiquidGlassModal('#gallery-stage');
+                    mountLiquidGlassModal(stage, { trigger: btn });
                 });
 
                 wrap.appendChild(btn);
