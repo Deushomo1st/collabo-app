@@ -1,57 +1,77 @@
 # liquid-glass-modal
 
-A "liquid glass" modal specimen: the page behind it is **refracted** (bent) by an SVG
-`feDisplacementMap` filter, softened with blur and saturation, while the modal's own text stays crisp.
+A modal whose backdrop **refracts** (bends) the page behind it through an SVG `feDisplacementMap` filter,
+softened with blur and saturation, while the modal's own text stays crisp.
 Vanilla HTML/CSS/JS port of a Lovable-generated React + Tailwind v4 study.
 
-> **Status: specimen, not yet a general-purpose modal.** Its content is fixed in the HTML fragment, and it
-> predates the component conventions (see **Known limitations**). For everyday dialogs use
-> [`glass-blur-dialog`](../glass-blur-dialog/README.md); use this one where the refraction effect is the point.
+For everyday confirms, alerts and forms, [`glass-blur-dialog`](../glass-blur-dialog/README.md) is lighter
+and stacks with the rest of the UI. Use this one where the refraction effect is the point.
 
 | File | Role |
 |---|---|
-| `liquid-glass-modal.js` | Loader (ES module) |
-| `liquid-glass-modal.css` | Styles, loaded as a global `<link>` |
-| `liquid-glass-modal.html` | Modal fragment + the SVG refraction filter |
+| `liquid-glass-modal.js` | Loader + API (ES module) |
+| `liquid-glass-modal.css` | Styles, loaded once as a global `<link>` |
+| `liquid-glass-modal.html` | Modal fragment (with default content) + the SVG refraction filter |
 
 ## Quick start
 
 ```html
-<button type="button" id="open-glass">Preview</button>
-<div id="liquid-glass-modal"></div>
+<button type="button" id="open-glass">What's new</button>
 
 <script type="module">
-    import { mountLiquidGlassModal } from '/js/components/liquid-glass-modal/liquid-glass-modal.js';
+    import { mountLiquidGlassModal, preloadLiquidGlassModal }
+        from '/js/components/liquid-glass-modal/liquid-glass-modal.js';
+
+    preloadLiquidGlassModal();                    // optional: makes the first open instant
 
     const trigger = document.querySelector('#open-glass');
-    trigger.addEventListener('click', () => {
-        mountLiquidGlassModal('#liquid-glass-modal', { trigger });
-    });
+    trigger.addEventListener('click', () => mountLiquidGlassModal('body', {
+        trigger,
+        meta: 'Release / 02',
+        title: 'New workspace',
+        body: 'Your team space is ready.',
+        footer: 'Synced just now',
+    }));
 </script>
 ```
 
-Each call **opens** the modal (fetches the fragment and appends it to the target). The modal covers the
-viewport (`position: fixed`), so the target can be any element.
+Each call **opens one modal**. It covers the viewport (`position: fixed`), so the target can be any element.
 
 ## API
 
-### `mountLiquidGlassModal(targetSelector = '#liquid-glass-modal', options) → Promise<void>`
+### `mountLiquidGlassModal(target = '#liquid-glass-modal', options) → Promise<{ element, close, destroy } | undefined>`
 
-`targetSelector` must be a **selector string** (not an element). Resolves to nothing; there is no handle.
+`target` is a selector or an element. Resolves to `undefined` if it doesn't exist.
 
 | Option | Type | Notes |
 |---|---|---|
-| `trigger` | Element | Gets focus back when the modal closes. Ignored if `onClose` is set. |
-| `onMount` | `(modalEl) => void` | Called after it opens, with the `<section class="liquid-glass-modal">`. The only way to change content today (see recipes). |
-| `onClose` | `() => void` | Called when it closes. **Replaces** the focus return to `trigger`, so return focus yourself if you use it. |
+| `trigger` | Element | Gets focus back on close. Default: whatever had focus when it opened. |
+| `meta` | string | Small uppercase line above the title (default `Material / 01`). |
+| `title` | string | Heading; also the dialog's accessible name (default `Liquid Glass`). |
+| `body` | string | Body **text** (escaped). |
+| `html` | string | Body **HTML**, **not escaped**: never pass user input. Wins over `body`. |
+| `footer` | string | Footer text next to the status dot (default `Refraction active`). |
+| `onMount` | `(modalEl) => void` | Called after it opens, with the `<section class="liquid-glass-modal">`. |
+| `onClose` | `() => void` | Called once when it closes (focus is still returned afterwards). |
+
+Options you leave out keep the fragment's default text.
+
+**Handle:** `close()` closes it (runs `onClose`, returns focus). `destroy()` is the same, for consistency with
+the other components. `element` is the dialog `<section>`.
+
+### `preloadLiquidGlassModal() → Promise`
+
+Fetches the fragment and waits for the stylesheet once. Every open calls it internally.
 
 ## Behaviour
 
-- Closes on **Escape**, the **✕** button, or a **backdrop** click.
-- Locks page scroll while open and restores the previous `overflow` on close.
-- Focus starts on ✕ and Tab is trapped inside the modal.
-- The window `keydown` listener is removed automatically once the modal leaves the page
-  (a `MutationObserver` watches for it).
+- Closes on **Escape** (topmost modal only), the **✕** button, or a **backdrop** click.
+- Locks page scroll while any modal is open; restores it when the last one closes.
+- Focus starts on ✕, Tab is trapped inside, and focus returns on close.
+- Each open gets its own element ids, so opening it twice (or stacking two) stays valid.
+- The SVG filter is added to the document once and shared by every open.
+- If a page removes the modal itself (for example by clearing its container), scroll lock and bookkeeping
+  are still cleaned up.
 - Opening and scrim animations are skipped under `prefers-reduced-motion`.
 
 **Browser support:** the refraction (`backdrop-filter: url(#…)`) currently works in **Chromium only**.
@@ -59,56 +79,47 @@ Other browsers get the plain blur + saturation fallback through `@supports`. Col
 
 ## Theming
 
-Its colours are **global, unprefixed** `:root` variables (a pre-convention leftover). Override them on `:root`:
+Public variables (set on `:root` or any ancestor of the target):
 
 | Variable | Used for |
 |---|---|
-| `--glass-foreground` | Title and text |
-| `--glass-muted` | Body text, meta line, footer |
-| `--glass-surface` / `--glass-highlight` | ✕ button background / hover, code chip |
-| `--glass-border` | Modal and button borders, footer rule |
-| `--status` | The green status dot |
-| `--shadow-glass` | Modal shadow |
+| `--liquid-glass-modal-foreground` | Title and text |
+| `--liquid-glass-modal-muted` | Body text, meta line, footer |
+| `--liquid-glass-modal-surface` / `-highlight` | ✕ button background / hover, code chip |
+| `--liquid-glass-modal-border` | Modal and button borders, footer rule |
+| `--liquid-glass-modal-status` | The status dot |
+| `--liquid-glass-modal-shadow` | Modal shadow |
+| `--liquid-glass-modal-z` | Stacking order (default 50) |
 
-It isn't wired into `css/global/theme.css`, so it looks the same in dusk and light.
-
-## Known limitations
-
-1. **Fixed content.** Title ("Liquid Glass"), meta ("Material / 01"), body and footer are hard-coded in the fragment.
-2. **Unprefixed globals.** The `:root` variables above and the keyframes `glass-fade-in` / `glass-enter`
-   can collide with other code. Every other component prefixes them.
-3. **Fixed element ids** (`liquid-glass-title`, `liquid-glass-description`, `liquid-glass-modal-filter`):
-   calling it again while it's open duplicates them.
-4. **No handle.** You can't close or destroy it from code, and `target` must be a string.
-5. **Fetches the fragment on every open** and doesn't wait for the stylesheet, so the first open can flash unstyled.
-
-The recipes below fix each one; they're also backlog item 5 in AGENTS.md.
+It looks the same in dusk and light (it isn't in `css/global/theme.css`); the refraction reads best over a
+dark, busy background either way.
 
 ## Editing this component
 
-- **Every class starts with `liquid-glass-modal`** (`.liquid-glass-modal__part`). Component CSS is a global `<link>`,
-  so an unprefixed class can collide. The filter id is prefixed too (`#liquid-glass-modal-filter`).
-- **Keep the CSS filter reference and the HTML filter id in sync.** The CSS refers to `url("#liquid-glass-modal-filter")`
-  three times (the `@supports` condition and both `backdrop-filter` lines); the fragment defines `<filter id="liquid-glass-modal-filter">`.
-- **Test** on gallery page 2 (or `/HTML-pages/liquid-glass-test.html`, whose big background text makes the
-  refraction easy to see), and hard-refresh (Ctrl+Shift+R) after every change.
+- **Every class starts with `liquid-glass-modal`** (`.liquid-glass-modal__part`), and so do the keyframes
+  (`liquid-glass-modal-fade-in`, `liquid-glass-modal-enter`). Component CSS is a global `<link>`, so an unprefixed
+  name can collide with another component.
+- **Public vs private variables.** Pages set `--liquid-glass-modal-*`; the component only reads its private
+  `--_lgm-*` copies (defined on `.liquid-glass-modal__portal`). Never set a private variable from outside.
+- **Keep the filter id in sync.** The CSS refers to `url("#liquid-glass-modal-filter")` three times (the `@supports`
+  condition and both `backdrop-filter` lines); the fragment defines `<filter id="liquid-glass-modal-filter">`,
+  and the JS looks it up by that id.
+- **Don't put ids back in the fragment** (other than the filter): the loader assigns them per open.
+- **Test** on gallery page 2, or `/HTML-pages/liquid-glass-test.html` (its big background text shows the
+  refraction clearly), and hard-refresh (Ctrl+Shift+R) after every change.
 
 ## Recipes (guided changes)
 
-### Change the content (without editing the component)
+### Show your own content
 
-Use `onMount`:
+Pass `meta`, `title`, `body` (or `html`) and `footer`. For content that needs markup:
 ```js
-mountLiquidGlassModal('#liquid-glass-modal', {
-    trigger,
-    onMount: (modal) => {
-        modal.querySelector('.liquid-glass-modal__meta').textContent = 'Release / 02';
-        modal.querySelector('.liquid-glass-modal__title').textContent = 'New workspace';
-        modal.querySelector('.liquid-glass-modal__body').textContent = 'Your team space is ready.';
-    },
+mountLiquidGlassModal('body', {
+    title: 'Keyboard shortcuts',
+    html: '<p>Press <code class="liquid-glass-modal__code">Ctrl K</code> to search.</p>',
 });
 ```
-Use `textContent` for anything a user typed.
+Use `body` (not `html`) for anything a user typed.
 
 ### Make the refraction stronger, softer, or off
 
@@ -116,41 +127,31 @@ In `liquid-glass-modal.html`, inside `<filter id="liquid-glass-modal-filter">`:
 
 - **Strength:** `scale="52"` (big waves) and `scale="18"` (fine ripple). Lower = subtler; `0` = none.
 - **Wave size:** `baseFrequency="0.014 0.022"`. Smaller numbers = larger, smoother waves.
-- **Off entirely:** delete the `@supports (backdrop-filter: url(...)) { … }` block in the CSS; the
-  plain blur fallback remains.
+- **Off entirely:** delete the `@supports (backdrop-filter: url(...)) { … }` block in the CSS; the plain blur
+  fallback remains.
 
-Verify on `/HTML-pages/liquid-glass-test.html`, where the background text shows the bending clearly.
+Verify on `/HTML-pages/liquid-glass-test.html`.
 
-### Prefix the global variables and keyframes (limitation 2)
+### Recolour it for one page
 
-1. In `liquid-glass-modal.css`, rename every `--glass-*`, `--status`, `--shadow-glass` to
-   `--liquid-glass-modal-*` (for example `--liquid-glass-modal-foreground`), in the `:root` block **and** every `var(…)`.
-   Better still, move them from `:root` onto `.liquid-glass-modal__portal` as private `--_lgm-*` copies of
-   public `--liquid-glass-modal-*` variables, the way the other components do.
-2. Rename `@keyframes glass-fade-in` / `glass-enter` to `liquid-glass-modal-fade-in` / `liquid-glass-modal-enter`,
-   and update the two `animation:` lines.
-3. Check nothing else used the old names:
-   `grep -rn -- '--glass-\|--status\|--shadow-glass\|glass-fade-in\|glass-enter' src/main/resources/static`
-4. Verify gallery page 2 looks identical before and after.
+```css
+:root {
+    --liquid-glass-modal-status: oklch(0.8 0.15 60);        /* amber dot */
+    --liquid-glass-modal-border: oklch(1 0 0 / 0.35);        /* brighter edges */
+}
+```
 
-### Take content from options (limitation 1)
+### Make it follow the light theme
 
-1. In the fragment, give the meta, title, body and footer elements their existing classes only (no demo text).
-2. In `mountLiquidGlassModal`, after inserting the fragment, fill them from `options.meta`, `options.title`,
-   `options.body` (via `textContent`), and `options.html` for rich body content (documented as "not escaped").
-3. Keep today's demo text as the defaults, so the gallery and test page don't change.
-4. Update the API table above.
+1. Pick light values for the public variables above (dark text, since the glass will sit over light pages).
+2. Add a `liquid-glass-modal` block to `css/global/theme.css` under `:root[data-theme="light"]`.
+3. **Verify:** gallery page 2 with the header switcher on Light.
 
-### Return a handle and allow repeat opens (limitations 3 and 4)
+### Add a primary action button to the footer
 
-1. Accept an element target: `typeof targetSelector === 'string' ? document.querySelector(targetSelector) : targetSelector`.
-2. Before inserting, generate a suffix (`const uid = ++counter;`) and rewrite the title/description ids and
-   `aria-labelledby`/`aria-describedby` with it. (Leave the filter id alone and only insert the `<svg>` if
-   `#liquid-glass-modal-filter` isn't already in the document.)
-3. `return { element: modal, close, destroy: close };`, and document it.
-
-### Open instantly (limitation 5)
-
-Cache the fragment the way glass-blur-dialog does: keep one module-level promise that fetches the HTML and
-awaits the stylesheet's `load` event, export `preloadLiquidGlassModal()`, and `await` it at the top of
-`mountLiquidGlassModal`.
+1. In the fragment, add `<button type="button" class="liquid-glass-modal__action" hidden></button>` at the end
+   of `.liquid-glass-modal__footer`.
+2. In `liquid-glass-modal.css`, style `.liquid-glass-modal__action` (push it right with `margin-left: auto`).
+3. In `mountLiquidGlassModal`, if `options.action` (`{ label, onClick }`) is given, set its `textContent`,
+   un-hide it, and call `onClick` then `close()` on click.
+4. Document `action` in the API table above.
