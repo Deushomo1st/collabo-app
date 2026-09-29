@@ -1,0 +1,24 @@
+<template data-part="upload">
+    <h2 class="glass-blur-dialog__title">Profile picture</h2>
+    <p class="glass-blur-dialog__text">Drag to reposition, zoom to fit the 4:3 frame.</p>
+    <div class="avatar-upload__stage">
+        <canvas class="avatar-upload__canvas" aria-label="Crop preview"></canvas>
+        <div class="avatar-upload__empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 5h6"/><path d="M19 2v6"/><path d="M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>
+            <span>Choose an image</span>
+        </div>
+    </div>
+    <label class="avatar-upload__zoom-label">
+        <span>Zoom</span>
+        <input type="range" class="avatar-upload__zoom" min="1" max="4" step="0.01" value="1" disabled>
+    </label>
+    <input type="file" accept="image/*" class="avatar-upload__file" hidden>
+    <p class="avatar-upload__msg" role="alert" hidden></p>
+    <div class="glass-blur-dialog__actions avatar-upload__actions">
+        <button type="button" class="glass-blur-dialog__btn glass-blur-dialog__btn--ghost" data-act="pick">Choose file</button>
+        <button type="button" class="glass-blur-dialog__btn glass-blur-dialog__btn--danger" data-act="remove" hidden>Remove</button>
+        <span class="avatar-upload__spacer"></span>
+        <button type="button" class="glass-blur-dialog__btn glass-blur-dialog__btn--ghost" data-act="cancel">Cancel</button>
+        <button type="button" class="glass-blur-dialog__btn" data-act="save" disabled>Save</button>
+    </div>
+</template>
