@@ -38,9 +38,11 @@ public class YarnService {
     private final YarnRepository yarns;
     private final UserBlockRepository blocks;
     private final UserRepository users;
+    private final FollowService follows;
 
     public YarnService(YarnThreadRepository threads, ThreadMemberRepository members, YarnRepository yarns,
-                       UserBlockRepository blocks, UserRepository users) {
+                       UserBlockRepository blocks, UserRepository users, FollowService follows) {
+        this.follows = follows;
         this.threads = threads; this.members = members; this.yarns = yarns; this.blocks = blocks; this.users = users;
     }
 
@@ -203,6 +205,7 @@ public class YarnService {
         if (userId.equals(me.getId())) throw new YarnException(HttpStatus.BAD_REQUEST, "You can't block yourself.");
         if (!users.existsById(userId)) throw new YarnException(HttpStatus.NOT_FOUND, "No such person.");
         if (!blocks.existsByBlockerIdAndBlockedId(me.getId(), userId)) blocks.save(new UserBlock(me.getId(), userId));
+        follows.endBetween(me.getId(), userId);   // a block ends any following, both ways
     }
 
     public void unblock(User me, UUID userId) {

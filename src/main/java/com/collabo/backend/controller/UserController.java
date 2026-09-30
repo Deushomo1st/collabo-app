@@ -5,7 +5,9 @@ import com.collabo.backend.dto.LinkDto;
 import com.collabo.backend.dto.ProfileResponse;
 import com.collabo.backend.dto.UpdateProfileRequest;
 import com.collabo.backend.entity.UserAvatar;
+import com.collabo.backend.dto.PersonDto;
 import com.collabo.backend.service.AvatarService;
+import com.collabo.backend.service.FollowService;
 import com.collabo.backend.service.ProfileService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.CacheControl;
@@ -24,9 +26,11 @@ public class UserController {
 
     private final ProfileService profiles;
     private final AvatarService avatars;
+    private final FollowService follows;
     private final CurrentUser current;
 
-    public UserController(ProfileService profiles, AvatarService avatars, CurrentUser current) {
+    public UserController(ProfileService profiles, AvatarService avatars, FollowService follows, CurrentUser current) {
+        this.follows = follows;
         this.avatars = avatars;
         this.profiles = profiles;
         this.current = current;
@@ -72,6 +76,30 @@ public class UserController {
                 .cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePrivate())
                 .eTag("\"" + a.getUpdatedAt().toEpochMilli() + "\"")
                 .body(a.getImage());
+    }
+
+    @PutMapping("/{username}/follow")
+    public ProfileResponse follow(@PathVariable String username) {
+        var me = current.require();
+        follows.follow(me, username);
+        return profiles.view(username, me);
+    }
+
+    @DeleteMapping("/{username}/follow")
+    public ProfileResponse unfollow(@PathVariable String username) {
+        var me = current.require();
+        follows.unfollow(me, username);
+        return profiles.view(username, me);
+    }
+
+    @GetMapping("/{username}/followers")
+    public List<PersonDto> followers(@PathVariable String username) {
+        return follows.followers(username, current.require());
+    }
+
+    @GetMapping("/{username}/following")
+    public List<PersonDto> following(@PathVariable String username) {
+        return follows.following(username, current.require());
     }
 
     @GetMapping("/{username}")

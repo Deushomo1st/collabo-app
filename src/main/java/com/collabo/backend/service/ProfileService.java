@@ -36,9 +36,11 @@ public class ProfileService {
     private final UserRepository users;
     private final ProfileLinkRepository links;
     private final AvatarService avatars;
+    private final FollowService follows;
 
-    public ProfileService(UserRepository users, ProfileLinkRepository links, AvatarService avatars) {
+    public ProfileService(UserRepository users, ProfileLinkRepository links, AvatarService avatars, FollowService follows) {
         this.avatars = avatars;
+        this.follows = follows;
         this.users = users;
         this.links = links;
     }
@@ -46,7 +48,7 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public ProfileResponse view(String username, User viewer) {
         User user = users.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("No one has that username."));
-        return ProfileResponse.of(user, user.getId().equals(viewer.getId()), linksOf(user), avatars.versionOf(user));
+        return ProfileResponse.of(user, user.getId().equals(viewer.getId()), linksOf(user), avatars.versionOf(user), follows.stateFor(user, viewer));
     }
 
     public ProfileResponse update(User me, UpdateProfileRequest req) {
@@ -54,7 +56,7 @@ public class ProfileService {
         if (req.preferredTitle() != null) user.setPreferredTitle(cleanTitle(req.preferredTitle()));
         if (req.bio() != null) user.setBio(cleanBio(req.bio()));
         if (req.credentialsPrivacy() != null) user.setCredentialsPrivacy(req.credentialsPrivacy());
-        return ProfileResponse.of(users.save(user), true, linksOf(user), avatars.versionOf(user));
+        return ProfileResponse.of(users.save(user), true, linksOf(user), avatars.versionOf(user), follows.stateFor(user, user));
     }
 
     /** Replaces the whole list; the order sent is the order shown. All-or-nothing: one bad entry rejects the lot. */

@@ -18,10 +18,11 @@ public record ProfileResponse(
         CredentialsPrivacy credentialsPrivacy,
         LocalDateTime joined,
         List<LinkDto> links,
-        Long avatarVersion) {   // null = no picture; otherwise add it to the picture URL as ?v=
+        Long avatarVersion,     // null = no picture; otherwise add it to the picture URL as ?v=
+        FollowState follow) {
 
-    public static ProfileResponse of(User user, boolean self, List<LinkDto> links, Long avatarVersion) {
+    public static ProfileResponse of(User user, boolean self, List<LinkDto> links, Long avatarVersion, FollowState follow) {
         return new ProfileResponse(user.getUsername(), user.getPreferredTitle(), user.getBio(), self,
-                self ? user.getCredentialsPrivacy() : null, user.getCreatedAt(), links, avatarVersion);
+                self ? user.getCredentialsPrivacy() : null, user.getCreatedAt(), links, avatarVersion, follow);
     }
 }
