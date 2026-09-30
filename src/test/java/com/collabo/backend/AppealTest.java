@@ -143,6 +143,31 @@ class AppealTest {
     }
 
     @Test
+    void decidedAppealsMoveToTheirOwnListWithWhoDecided() throws Exception {
+        removeBobWithABadge(2);
+        String id = appeal();
+        String mineFilter = "$[?(@.record.removed.username=='" + bob + "')]";
+        send(get("/api/moderation/appeals?status=decided"), modS, null).andExpect(jsonPath(mineFilter, hasSize(0)));
+        send(post("/api/moderation/appeals/" + id + "/decide"), modS, "{\"outcome\":\"STICKS\"}").andExpect(status().isOk());
+        send(get("/api/moderation/appeals?status=decided"), modS, null).andExpect(status().isOk())
+                .andExpect(jsonPath(mineFilter, hasSize(1))).andExpect(jsonPath(mineFilter + ".decidedBy", contains(mod)))
+                .andExpect(jsonPath(mineFilter + ".outcome", contains("STICKS")));
+        send(get("/api/moderation/appeals?status=decided"), danS, null).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void aModeratorWhoWasPartOfTheRemovalCannotRuleOnIt() throws Exception {
+        removeBobWithABadge(2);
+        String id = appeal();
+        User remover = users.findByUsername(ann).orElseThrow();
+        remover.setRole(Role.MODERATOR);
+        users.save(remover);
+        send(get("/api/moderation/appeals/" + id), annS, null).andExpect(status().isForbidden());
+        send(post("/api/moderation/appeals/" + id + "/decide"), annS, "{\"outcome\":\"DROPS\"}").andExpect(status().isForbidden());
+        send(get("/api/moderation/appeals/" + id), modS, null).andExpect(status().isOk());   // someone else still can
+    }
+
+    @Test
     void sticksLeavesTheBadge() throws Exception {
         removeBobWithABadge(2);
         String id = appeal();

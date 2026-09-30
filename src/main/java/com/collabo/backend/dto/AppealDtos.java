@@ -13,12 +13,12 @@ public final class AppealDtos {
 
     public record DecideRequest(String outcome) {}
 
-    /** outcome is null while the appeal is open. */
-    public record AppealView(UUID id, String note, String outcome, Instant createdAt, RecordView record) {}
+    /** outcome, decidedBy and decidedAt are null while the appeal is open. */
+    public record AppealView(UUID id, String note, String outcome, Instant createdAt, String decidedBy, Instant decidedAt, RecordView record) {}
 
     /** A yarn from the room; sender is null for system yarns. */
     public record HistoryLine(String sender, boolean system, String body, Instant createdAt) {}
 
     /** The appeal plus the room's yarns from a day before the removal to an hour after it. Nothing else of the room, and no DMs. */
-    public record AppealDetail(UUID id, String note, String outcome, Instant createdAt, RecordView record, List<HistoryLine> history) {}
+    public record AppealDetail(UUID id, String note, String outcome, Instant createdAt, String decidedBy, Instant decidedAt, RecordView record, List<HistoryLine> history) {}
 }

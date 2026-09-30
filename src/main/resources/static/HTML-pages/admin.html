@@ -123,6 +123,37 @@
   .modal p { font-size: 13px; color: #9aa0a6; margin-bottom: 12px; }
   .modal input { width: 100%; margin-bottom: 14px; }
   .modal .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* ---------- Tabs ---------- */
+  nav.tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid #2a2e33; }
+  nav.tabs button { border: none; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 14px; color: #9aa0a6; }
+  nav.tabs button.on { color: #d4d7da; border-bottom-color: #3b82f6; }
+  .count { display: inline-block; min-width: 18px; margin-left: 6px; padding: 0 5px; border-radius: 9px; background: #3b82f6; color: #fff; font-size: 11px; text-align: center; }
+  .count:empty { display: none; }
+  .gate-card .gate-alt { display: block; margin-top: 14px; font-size: 12px; color: #9aa0a6; text-align: center; }
+
+  /* ---------- Reports ---------- */
+  #rp-filter { display: flex; gap: 6px; margin-bottom: 12px; }
+  #rp-filter button.on { border-color: #3b82f6; }
+  .rp-grid { display: grid; grid-template-columns: minmax(240px, 340px) 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .rp-grid { grid-template-columns: 1fr; } }
+  #rp-list { display: flex; flex-direction: column; gap: 6px; max-height: 70vh; overflow: auto; }
+  .rp-row { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 9px 11px; width: 100%; }
+  .rp-row.on { border-color: #3b82f6; }
+  .rp-row span { color: #9aa0a6; font-size: 12.5px; overflow-wrap: anywhere; }
+  .rp-row small, .rp-head small, .rp-line small, .rp-said small { color: #6b7280; font-size: 11px; }
+  .rp-empty { color: #6b7280; padding: 14px 4px; }
+  #rp-detail { background: #0f1113; border: 1px solid #2a2e33; border-radius: 6px; padding: 14px; min-height: 120px; }
+  #rp-detail h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #9aa0a6; margin: 16px 0 6px; }
+  #rp-detail p { margin: 4px 0; overflow-wrap: anywhere; }
+  .rp-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .rp-tag { font-size: 11px; padding: 1px 7px; border: 1px solid #2a2e33; border-radius: 10px; color: #9aa0a6; }
+  .rp-note { white-space: pre-wrap; background: #181b1e; border-radius: 4px; padding: 9px 11px; }
+  .rp-said { display: grid; gap: 8px; }
+  .rp-history { display: grid; gap: 8px; max-height: 40vh; overflow: auto; background: #181b1e; border-radius: 4px; padding: 10px 12px; }
+  .rp-line.sys p { color: #6b7280; font-style: italic; }
+  .rp-hint { color: #6b7280; font-size: 12px; margin-top: 14px; }
+  .rp-actions { display: flex; gap: 8px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -133,6 +164,7 @@
     <input id="gate-key" type="password" placeholder="Admin key" autocomplete="off" autofocus>
     <button id="gate-unlock" class="primary" type="button">Unlock</button>
     <div id="gate-error"></div>
+    <a class="gate-alt" href="/HTML-pages/login.html?next=%2FHTML-pages%2Fadmin.html">Moderator? Sign in with your account</a>
   </div>
 </div>
 
@@ -145,7 +177,25 @@
     </div>
   </header>
 
-  <section id="users">
+  <nav class="tabs" id="tabs">
+    <button type="button" data-tab="reports">Reports<span class="count" id="tab-reports-count"></span></button>
+    <button type="button" data-tab="users">Users</button>
+    <button type="button" data-tab="database">Database</button>
+  </nav>
+
+  <section id="reports" data-tab="reports">
+    <h2>Reports <span class="count" id="rp-count"></span></h2>
+    <div id="rp-filter">
+      <button type="button" class="on" data-status="open">Open</button>
+      <button type="button" data-status="decided">Decided</button>
+    </div>
+    <div class="rp-grid">
+      <div id="rp-list"></div>
+      <div id="rp-detail"><p class="rp-empty">Pick a report.</p></div>
+    </div>
+  </section>
+
+  <section id="users" data-tab="users">
     <h2>Users</h2>
     <form id="create-user" autocomplete="off">
       <input id="cu-email" type="email" placeholder="Email" required>
@@ -153,6 +203,7 @@
       <input id="cu-password" type="password" placeholder="Password" autocomplete="new-password" required>
       <select id="cu-role">
         <option value="USER">USER</option>
+        <option value="MODERATOR">MODERATOR</option>
         <option value="ADMIN">ADMIN</option>
       </select>
       <label class="cu-test"><input id="cu-test" type="checkbox"> Test</label>
@@ -166,7 +217,7 @@
     </table>
   </section>
 
-  <section id="database">
+  <section id="database" data-tab="database">
     <h2>Database</h2>
     <table id="db-table">
       <thead>
@@ -191,11 +242,13 @@
   </div>
 </div>
 
+<script src="/js/pages/admin-reports.js"></script>
 <script>
 (function () {
   'use strict';
 
-  var S = { key: sessionStorage.getItem('adminKey') };
+  // key: admin key (Users, Database). mod: signed in as a moderator or admin account (Reports).
+  var S = { key: sessionStorage.getItem('adminKey'), mod: false, tab: null };
 
   var gateView = document.getElementById('gate-view');
   var panelView = document.getElementById('panel-view');
@@ -219,6 +272,7 @@
     toastWrap.appendChild(el);
     setTimeout(function () { el.remove(); }, 3000);
   }
+  window.adminToast = toast;
 
   // ---------- views ----------
   function showGate(msg) {
@@ -232,6 +286,20 @@
   function showPanel() {
     gateView.style.display = 'none';
     panelView.style.display = 'block';
+    var open = [];
+    document.querySelectorAll('#tabs button').forEach(function (b) {
+      var ok = b.dataset.tab === 'reports' ? S.mod : !!S.key;
+      b.hidden = !ok;
+      if (ok) open.push(b.dataset.tab);
+    });
+    selectTab(open.indexOf(S.tab) >= 0 ? S.tab : open[0]);
+    if (S.mod) window.AdminReports.count();
+  }
+
+  function selectTab(name) {
+    S.tab = name;
+    document.querySelectorAll('#tabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === name); });
+    document.querySelectorAll('section[data-tab]').forEach(function (s) { s.style.display = s.dataset.tab === name ? '' : 'none'; });
     refreshAll();
   }
 
@@ -249,7 +317,8 @@
       if (res.status === 403) {
         sessionStorage.removeItem('adminKey');
         S.key = null;
-        showGate('Wrong key.');
+        if (S.mod) { showPanel(); toast('Wrong admin key.', true); }
+        else showGate('Wrong key.');
         throw new Error('forbidden');
       }
       if (res.status === 503) {
@@ -337,7 +406,7 @@
 
         var tdRole = document.createElement('td');
         var sel = document.createElement('select');
-        ['USER', 'ADMIN'].forEach(function (r) {
+        ['USER', 'MODERATOR', 'ADMIN'].forEach(function (r) {
           var opt = document.createElement('option');
           opt.value = r;
           opt.textContent = r;
@@ -487,8 +556,9 @@
   }
 
   function refreshAll() {
-    loadUsers();
-    loadTables();
+    if (S.tab === 'reports') window.AdminReports.load();
+    else if (S.tab === 'users') loadUsers();
+    else if (S.tab === 'database') loadTables();
   }
 
   // ---------- wiring ----------
@@ -512,7 +582,12 @@
   document.getElementById('btn-logout').addEventListener('click', function () {
     sessionStorage.removeItem('adminKey');
     S.key = null;
-    showGate();
+    if (!S.mod) { showGate(); return; }
+    window.AdminReports.signOut().then(function () { S.mod = false; showGate(); });
+  });
+
+  document.querySelectorAll('#tabs button').forEach(function (b) {
+    b.addEventListener('click', function () { selectTab(b.dataset.tab); });
   });
 
   document.getElementById('btn-refresh').addEventListener('click', refreshAll);
@@ -543,11 +618,11 @@
   });
 
   // ---------- boot ----------
-  if (S.key) {
-    showPanel();
-  } else {
-    showGate();
-  }
+  fetch('/api/auth/me').then(function (res) { return res.ok ? res.json() : null; }).catch(function () { return null; })
+    .then(function (me) {
+      S.mod = !!me && (me.role === 'MODERATOR' || me.role === 'ADMIN');
+      if (S.key || S.mod) showPanel(); else showGate();
+    });
 })();
 </script>
 </body>

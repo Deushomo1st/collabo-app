@@ -12,4 +12,5 @@ public interface AppealRepository extends JpaRepository<Appeal, UUID> {
     Optional<Appeal> findByRecordId(UUID recordId);
     List<Appeal> findByRecordIdIn(Collection<UUID> recordIds);
     List<Appeal> findTop100ByOutcomeIsNullOrderByCreatedAtAsc();
+    List<Appeal> findTop100ByOutcomeIsNotNullOrderByDecidedAtDesc();
 }

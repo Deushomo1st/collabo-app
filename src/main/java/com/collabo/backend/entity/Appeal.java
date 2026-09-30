@@ -47,6 +47,8 @@ public class Appeal {
     public String getNote() { return note; }
     public Outcome getOutcome() { return outcome; }
     public Instant getCreatedAt() { return createdAt; }
+    public UUID getDecidedBy() { return decidedBy; }
+    public Instant getDecidedAt() { return decidedAt; }
     public boolean isOpen() { return outcome == null; }
     public void decide(Outcome outcome, UUID by) { this.outcome = outcome; this.decidedBy = by; this.decidedAt = Instant.now(); }
 }

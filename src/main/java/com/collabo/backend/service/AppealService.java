@@ -60,9 +60,9 @@ public class AppealService {
     }
 
     @Transactional(readOnly = true)
-    public List<AppealView> queue(User me) {
+    public List<AppealView> queue(User me, boolean decided) {
         requireModerator(me);
-        List<Appeal> open = appeals.findTop100ByOutcomeIsNullOrderByCreatedAtAsc();
+        List<Appeal> open = decided ? appeals.findTop100ByOutcomeIsNotNullOrderByDecidedAtDesc() : appeals.findTop100ByOutcomeIsNullOrderByCreatedAtAsc();
         Map<UUID, RemovalRecord> rows = records.findAllById(open.stream().map(Appeal::getRecordId).toList()).stream().collect(Collectors.toMap(RemovalRecord::getId, Function.identity()));
         return open.stream().filter(a -> rows.containsKey(a.getRecordId())).map(a -> view(a, rows.get(a.getRecordId()))).toList();
     }
@@ -72,8 +72,9 @@ public class AppealService {
         requireModerator(me);
         Appeal a = appeals.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such appeal."));
         RemovalRecord r = records.findById(a.getRecordId()).orElseThrow(() -> new ResourceNotFoundException("No such appeal."));
+        requireImpartial(me, r);
         AppealView v = view(a, r);
-        return new AppealDetail(v.id(), v.note(), v.outcome(), v.createdAt(), v.record(), history(r));
+        return new AppealDetail(v.id(), v.note(), v.outcome(), v.createdAt(), v.decidedBy(), v.decidedAt(), v.record(), history(r));
     }
 
     public AppealView decide(User me, UUID id, String outcome) {
@@ -84,6 +85,7 @@ public class AppealService {
         catch (IllegalArgumentException e) { throw new InvalidProfileException("Decide STICKS or DROPS."); }
         if (!a.isOpen()) throw new InvalidProfileException("This appeal has already been decided.");
         RemovalRecord r = records.findById(a.getRecordId()).orElseThrow(() -> new ResourceNotFoundException("No such appeal."));
+        requireImpartial(me, r);
         a.decide(o, me.getId());
         appeals.save(a);
         if (o == Appeal.Outcome.DROPS) { r.dropBadge(); records.save(r); }
@@ -106,11 +108,18 @@ public class AppealService {
 
     private AppealView view(Appeal a, RemovalRecord r) {
         RecordView rv = recordViews.present(List.of(r)).stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("No such record."));
-        return new AppealView(a.getId(), a.getNote(), a.getOutcome() == null ? null : a.getOutcome().name(), a.getCreatedAt(), rv);
+        return new AppealView(a.getId(), a.getNote(), a.getOutcome() == null ? null : a.getOutcome().name(), a.getCreatedAt(),
+                a.getDecidedBy() == null ? null : nameOf(a.getDecidedBy()), a.getDecidedAt(), rv);
     }
 
     private void requireModerator(User me) {
         if (me.getRole() != Role.MODERATOR && me.getRole() != Role.ADMIN) throw new ForbiddenException("Moderators only.");
+    }
+
+    /** Whoever removed or was removed cannot read the room or rule on it, even if they are a moderator. */
+    private void requireImpartial(User me, RemovalRecord r) {
+        if (me.getId().equals(r.getRemovedId()) || me.getId().equals(r.getRemovedById()))
+            throw new ForbiddenException("You were part of this removal, so another moderator has to handle it.");
     }
 
     private String nameOf(UUID userId) { return users.findById(userId).map(User::getUsername).orElse(""); }

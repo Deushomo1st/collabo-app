@@ -22,7 +22,7 @@ public class AppealController {
     public AppealView appeal(@PathVariable UUID recordId, @RequestBody AppealRequest req) { return appeals.appeal(current.require(), recordId, req.note()); }
 
     @GetMapping("/moderation/appeals")
-    public List<AppealView> queue() { return appeals.queue(current.require()); }
+    public List<AppealView> queue(@RequestParam(defaultValue = "open") String status) { return appeals.queue(current.require(), "decided".equalsIgnoreCase(status)); }
 
     @GetMapping("/moderation/appeals/{id}")
     public AppealDetail detail(@PathVariable UUID id) { return appeals.detail(current.require(), id); }
