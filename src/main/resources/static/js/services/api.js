@@ -101,6 +101,7 @@ export const credentialUnship = (id, linkId) => call(`/api/credentials/${id}/shi
 
 // ---- Posts and The Gaze ------------------------------------------------------
 const post = (id, path = '') => `/api/posts/${id}${path}`;
+export const gazeNewer = (feed, { pending, top }) => call(`/api/gaze/newer${q({ feed, pending: pending ? 'true' : '', top: top.join(',') })}`);
 export const gazeFeed = (feed, { pending, before } = {}) => call(`/api/gaze${q({ feed, pending: pending ? 'true' : '', before })}`);
 export const userPosts = (name, tab, before) => call(user(name, '/posts') + q({ tab, before }));
 export const postCreate = (title, body, applyBy) => call('/api/posts', { method: 'POST', body: { title, body, applyBy } }, 'Could not post your idea.');

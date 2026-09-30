@@ -60,6 +60,9 @@ public class LiveHub {
         }
     }
 
+    /** Every signed-in user's sockets (not moderators, not the admin console). For id-only signals that concern everyone. */
+    public void broadcastUsers(String json) { send(byAccount.keySet().stream().filter(k -> k.startsWith("u:")).toList(), json); }
+
     /** A client that stopped pinging is gone; free its slot. */
     @Scheduled(fixedDelay = 30_000L, initialDelay = 30_000L)
     void sweepIdle() {

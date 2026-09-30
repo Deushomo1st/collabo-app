@@ -1,5 +1,6 @@
 package com.collabo.backend.service;
 
+import com.collabo.backend.live.LiveSignals;
 import com.collabo.backend.dto.PostDtos.PostRequest;
 import com.collabo.backend.dto.PostDtos.PostResponse;
 import com.collabo.backend.entity.Post;
@@ -38,9 +39,11 @@ public class PostService {
     private final PostCommentRepository comments;
     private final ShoutRepository shouts;
     private final ApplicationRepository applications;
+    private final LiveSignals signals;
 
     public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts,
-                       ApplicationRepository applications) {
+                       ApplicationRepository applications, LiveSignals signals) {
+        this.signals = signals;
         this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts; this.applications = applications;
     }
 
@@ -51,7 +54,9 @@ public class PostService {
         if (title.length() > MAX_TITLE) throw new InvalidProfileException("Keep the title under " + MAX_TITLE + " characters.");
         if (body.length() > MAX_BODY) throw new InvalidProfileException("Keep the description under " + MAX_BODY + " characters.");
         if (req.applyBy() != null && !req.applyBy().isAfter(Instant.now())) throw new InvalidProfileException("The application deadline must be in the future.");
-        return view(posts.save(new Post(me.getId(), title, body, req.applyBy())), me);
+        Post saved = posts.save(new Post(me.getId(), title, body, req.applyBy()));
+        signals.gaze();
+        return view(saved, me);
     }
 
     @Transactional(readOnly = true)
@@ -66,6 +71,7 @@ public class PostService {
         shouts.deleteByPostId(id);
         applications.deleteByPostId(id);
         posts.delete(p);
+        signals.postGone(id);
     }
 
     /** null = indefinite. Extending is free; shortening waits at least 24 hours so nobody is closed out mid-draft. */

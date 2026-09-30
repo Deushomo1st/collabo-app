@@ -1,6 +1,7 @@
 package com.collabo.backend.service;
 
 import com.collabo.backend.dto.PostDtos.FeedPage;
+import com.collabo.backend.dto.PostDtos.PostResponse;
 import com.collabo.backend.entity.Post;
 import com.collabo.backend.entity.Shout;
 import com.collabo.backend.entity.User;
@@ -72,6 +73,17 @@ public class GazeService {
             default -> throw new InvalidProfileException("Unknown feed.");
         }
         return page(entries, n, viewer);
+    }
+
+    /**
+     * How many entries the viewer's feed has above the newest thing they have seen. `tops` are the ids at the top of what they are
+     * looking at (several, in case the first was deleted); the first match marks where "new" ends. Capped at one page, so 50 means "50 or more".
+     */
+    public int newer(User viewer, String feed, boolean pendingOnly, List<UUID> tops) {
+        if (tops.isEmpty()) return 0;
+        List<PostResponse> items = feed(viewer, feed, pendingOnly, null, MAX_LIMIT).items();
+        for (int i = 0; i < items.size(); i++) if (tops.contains(items.get(i).id())) return i;
+        return items.size();
     }
 
     /** A person's profile tabs: "posts" (default) or "reposts". A block either way makes the person not found. */

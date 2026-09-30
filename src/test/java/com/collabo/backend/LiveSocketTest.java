@@ -214,6 +214,23 @@ class LiveSocketTest {
     }
 
     @Test
+    void theGazeHearsNewIdeasAndDeletionsAndCountsWhatIsNewerThanWhatYouSaw() throws Exception {
+        String tag = UUID.randomUUID().toString().substring(0, 6);
+        Browser ann = new Browser("ann" + tag), bob = new Browser("bob" + tag);
+        var bobQ = bob.listen(null);
+        String first = JsonPath.read(ann.call("POST", "/api/posts", "{\"title\":\"One\",\"body\":\"first idea\"}"), "$.id");
+        take(bobQ, "gaze");
+        assertEquals(0, (int) JsonPath.read(bob.call("GET", "/api/gaze/newer?top=" + first, null), "$.count"));   // he is looking at the newest
+        ann.call("POST", "/api/posts", "{\"title\":\"Two\",\"body\":\"second idea\"}");
+        take(bobQ, "gaze");
+        assertEquals(1, (int) JsonPath.read(bob.call("GET", "/api/gaze/newer?top=" + first, null), "$.count"));   // one idea above what he has seen
+        assertEquals(0, (int) JsonPath.read(bob.call("GET", "/api/gaze/newer?top=", null), "$.count"));           // nothing on screen: nothing to compare
+
+        ann.call("DELETE", "/api/posts/" + first, null);
+        assertEquals(first, JsonPath.read(take(bobQ, "post-gone"), "$.post"));
+    }
+
+    @Test
     void deliveredFramesFromStrangersOrJunkChangeNothing() throws Exception {
         String tag = UUID.randomUUID().toString().substring(0, 6);
         Browser ann = new Browser("ann" + tag), bob = new Browser("bob" + tag), eve = new Browser("eve" + tag);

@@ -39,6 +39,18 @@ public class LiveSignals {
     /** The admin's investigation queue changed (a report or appeal came in, findings arrived, or it was assigned, closed or decided). */
     public void adminQueue() { sendTo(java.util.Set.of(AdminSocket.ACCOUNT), "{\"t\":\"queue\"}"); }
 
+    /** A new idea was posted: open Gazes may have something newer to offer. No ids, no content: they ask the server how many. */
+    public void gaze() { afterCommit(() -> hub.broadcastUsers("{\"t\":\"gaze\"}")); }
+
+    /** An idea was deleted: any Gaze showing it should drop it. */
+    public void postGone(UUID post) { afterCommit(() -> hub.broadcastUsers("{\"t\":\"post-gone\",\"post\":\"" + post + "\"}")); }
+
+    private void afterCommit(Runnable run) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() { @Override public void afterCommit() { run.run(); } });
+        } else run.run();
+    }
+
     private void send(Collection<UUID> users, String json) {
         sendTo(users.stream().map(LiveHub::userKey).collect(Collectors.toSet()), json);
     }

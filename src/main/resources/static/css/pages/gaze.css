@@ -67,3 +67,19 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 }
 .ap-tools .sp-input:not(.ap-select) { flex: 1; min-width: 0; }
 .ap-clock { max-width: 110px; }
+
+/* "N new" and "See old": one slot, pinned just under the header. Zero height, so it never pushes the feed. */
+.gz-bar { position: sticky; top: 76px; z-index: 19; height: 0; display: flex; justify-content: center; gap: 8px; pointer-events: none; }
+.gz-pill {
+    pointer-events: auto; height: 34px; padding: 0 16px; border-radius: 999px; font: 800 13px var(--sp-font); cursor: pointer;
+    border: 1px solid var(--sp-brand); background: var(--sp-brand); color: var(--sp-brand-ink); box-shadow: 0 6px 20px rgba(0,0,0,.28);
+    animation: gz-drop .22s cubic-bezier(.25,1,.5,1);
+}
+.gz-pill--quiet { background: var(--sp-panel-hi); color: var(--sp-text); border-color: var(--sp-line); backdrop-filter: blur(16px); }
+@keyframes gz-drop { from { opacity: 0; transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .gz-pill { animation: none; } }
+.gz-old, .gz-fresh { display: grid; gap: 12px; }
+.gz-old { margin-bottom: 12px; overflow-anchor: none; }
+.gz-old[hidden] { display: none; }
+.gz-old::after { content: 'You were here'; justify-self: center; color: var(--sp-muted); font: 600 11px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
+.gz-sentinel { min-height: 1px; text-align: center; color: var(--sp-muted); font-size: 12.5px; padding: 6px 0 18px; }
