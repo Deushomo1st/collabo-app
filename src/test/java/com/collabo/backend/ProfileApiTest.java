@@ -18,6 +18,7 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -100,6 +101,41 @@ class ProfileApiTest {
         mvc.perform(edit("{\"bio\":\"be\\u0007ll\"}")).andExpect(status().isBadRequest());
         mvc.perform(edit("{\"bio\":\"" + "a".repeat(601) + "\"}")).andExpect(status().isBadRequest());
         mvc.perform(edit("{\"credentialsPrivacy\":\"EVERYBODY\"}")).andExpect(status().isBadRequest());
+    }
+
+    private MockHttpServletRequestBuilder putLinks(String json) {
+        return put("/api/users/me/links").cookie(XSRF, session).header("X-XSRF-TOKEN", "t").contentType("application/json").content(json);
+    }
+
+    @Test
+    void linksAreReplacedInOrderAndVisibleToOthers() throws Exception {
+        mvc.perform(putLinks("[{\"title\":\"Site\",\"url\":\"https://ada.dev\",\"note\":\"my work\"},{\"title\":\"Code\",\"url\":\"http://git.example/ada\"}]"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.links.length()").value(2))
+                .andExpect(jsonPath("$.links[0].title").value("Site")).andExpect(jsonPath("$.links[1].note").value(""));
+        mvc.perform(putLinks("[{\"title\":\"Only\",\"url\":\"https://only.dev\"}]")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.links.length()").value(1));
+        mvc.perform(get("/api/users/" + name).cookie(otherSession)).andExpect(jsonPath("$.links[0].title").value("Only"));
+        mvc.perform(putLinks("[]")).andExpect(status().isOk()).andExpect(jsonPath("$.links.length()").value(0));
+    }
+
+    @Test
+    void badLinksAreRejectedAndNothingIsChanged() throws Exception {
+        mvc.perform(putLinks("[{\"title\":\"Keep\",\"url\":\"https://keep.dev\"}]")).andExpect(status().isOk());
+        for (String url : new String[]{"javascript:alert(1)", "data:text/html,hi", "ftp://x.dev/f", "//x.dev", "https://", "not a url", ""}) {
+            mvc.perform(putLinks("[{\"title\":\"Bad\",\"url\":\"" + url + "\"}]")).andExpect(status().isBadRequest());
+        }
+        mvc.perform(putLinks("[{\"title\":\"\",\"url\":\"https://x.dev\"}]")).andExpect(status().isBadRequest());
+        mvc.perform(putLinks("[{\"title\":\"" + "x".repeat(61) + "\",\"url\":\"https://x.dev\"}]")).andExpect(status().isBadRequest());
+        mvc.perform(putLinks("[{\"title\":\"T\",\"url\":\"https://x.dev\",\"note\":\"" + "n".repeat(121) + "\"}]")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/users/me").cookie(session)).andExpect(jsonPath("$.links.length()").value(1))
+                .andExpect(jsonPath("$.links[0].title").value("Keep"));
+    }
+
+    @Test
+    void atMostTwelveLinks() throws Exception {
+        String one = "{\"title\":\"L\",\"url\":\"https://l.dev\"}";
+        mvc.perform(putLinks("[" + String.join(",", java.util.Collections.nCopies(12, one)) + "]")).andExpect(status().isOk());
+        mvc.perform(putLinks("[" + String.join(",", java.util.Collections.nCopies(13, one)) + "]")).andExpect(status().isBadRequest());
     }
 
     @Test

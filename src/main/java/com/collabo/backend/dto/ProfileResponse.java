@@ -4,6 +4,7 @@ import com.collabo.backend.entity.CredentialsPrivacy;
 import com.collabo.backend.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * A profile as one viewer sees it. Never the User entity (it carries the password hash and the email).
@@ -15,10 +16,11 @@ public record ProfileResponse(
         String bio,
         boolean self,
         CredentialsPrivacy credentialsPrivacy,
-        LocalDateTime joined) {
+        LocalDateTime joined,
+        List<LinkDto> links) {
 
-    public static ProfileResponse of(User user, boolean self) {
+    public static ProfileResponse of(User user, boolean self, List<LinkDto> links) {
         return new ProfileResponse(user.getUsername(), user.getPreferredTitle(), user.getBio(), self,
-                self ? user.getCredentialsPrivacy() : null, user.getCreatedAt());
+                self ? user.getCredentialsPrivacy() : null, user.getCreatedAt(), links);
     }
 }

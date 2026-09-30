@@ -1,10 +1,13 @@
 package com.collabo.backend.controller;
 
 import com.collabo.backend.config.CurrentUser;
+import com.collabo.backend.dto.LinkDto;
 import com.collabo.backend.dto.ProfileResponse;
 import com.collabo.backend.dto.UpdateProfileRequest;
 import com.collabo.backend.service.ProfileService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /** Profiles: read anyone's, edit your own. Thin shell over ProfileService. Sign-in required (default rule). */
 @RestController
@@ -28,6 +31,11 @@ public class UserController {
     @PatchMapping("/me")
     public ProfileResponse update(@RequestBody UpdateProfileRequest req) {
         return profiles.update(current.require(), req);
+    }
+
+    @PutMapping("/me/links")
+    public ProfileResponse replaceLinks(@RequestBody List<LinkDto> links) {
+        return profiles.replaceLinks(current.require(), links);
     }
 
     @GetMapping("/{username}")
