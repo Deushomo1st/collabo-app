@@ -40,11 +40,13 @@ public class ApplicationService {
     private final UserBlockRepository blocks;
     private final SpaceRepository spaces;
     private final CollaboratorRepository collaborators;
+    private final YarnService yarnService;
 
     public ApplicationService(ApplicationRepository applications, PostService postService, PostRepository posts,
                               UserRepository users, UserBlockRepository blocks, SpaceRepository spaces,
-                              CollaboratorRepository collaborators) {
-        this.collaborators = collaborators;
+                              CollaboratorRepository collaborators,
+                              YarnService yarnService) {
+        this.yarnService = yarnService; this.collaborators = collaborators;
         this.applications = applications; this.postService = postService; this.posts = posts;
         this.users = users; this.blocks = blocks; this.spaces = spaces;
     }
@@ -123,7 +125,7 @@ public class ApplicationService {
     /** ACCEPT, DECLINE or SHORTLIST, set explicitly by the post's author. Can be changed until a space exists. */
     public ReviewResponse decide(User me, UUID applicationId, String decision) {
         Application a = applications.findById(applicationId).orElseThrow(() -> new ResourceNotFoundException("No such application."));
-        ownPost(me, a.getPostId());
+        Post post = ownPost(me, a.getPostId());
         if (a.getState() == ApplicationState.WITHDRAWN) throw new InvalidProfileException("This application was withdrawn.");
         if (a.getState() == ApplicationState.ACCEPTED && spaces.existsByPostId(a.getPostId())) {
             throw new InvalidProfileException("This applicant is already part of a space.");
@@ -134,8 +136,10 @@ public class ApplicationService {
             case "SHORTLIST" -> ApplicationState.SHORTLISTED;
             default -> throw new InvalidProfileException("Choose accept, decline or shortlist.");
         };
+        boolean newlyAccepted = next == ApplicationState.ACCEPTED && a.getState() != ApplicationState.ACCEPTED;
         a.setState(next);
         User applicant = users.findById(a.getApplicantId()).orElseThrow(() -> new ResourceNotFoundException("No such application."));
+        if (newlyAccepted) yarnService.notifyAccepted(me, applicant, post.getTitle());
         return review(applications.save(a), applicant);
     }
 
