@@ -47,6 +47,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/verify", "/api/users/resend-otp").permitAll()
                         .requestMatchers("/api/admin/**").permitAll()
+                        // Yarnspaces identifies its caller itself (YarnCaller) until real login exists
+                        .requestMatchers("/api/yarns/**").permitAll()
                         // Allow public access to the registration/admin pages and static assets
                         .requestMatchers("/", "/index.html", "/admin.html", "/HTML-pages/**", "/**/*.css", "/**/*.js", "/**/*.html").permitAll()
                         .anyRequest().authenticated()

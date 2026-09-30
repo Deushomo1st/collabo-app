@@ -17,4 +17,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     // Same check for username (used by the admin create-user endpoint)
     boolean existsByUsername(String username);
+
+    Optional<User> findByUsername(String username);
+
+    java.util.List<User> findTop10ByUsernameContainingIgnoreCaseAndIdNot(String fragment, UUID id);
 }
