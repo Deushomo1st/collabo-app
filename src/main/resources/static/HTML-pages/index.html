@@ -2,11 +2,53 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COLLABO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>COLLABO: find your people, build something</title>
+<meta name="description" content="Post an idea, meet the people who want to build it, and work together in one space.">
 <link rel="stylesheet" href="/css/global/global.css">
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/hero.css">
 </head>
-<body>
-<h1>COLLABO Frontend - Coming Soon</h1>
+<body class="hero-page">
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
+<div class="hr-veil" id="veil" aria-hidden="true"></div>
+
+<header class="hr-bar">
+    <a class="hr-logo" href="/HTML-pages/index.html" aria-label="COLLABO">COLLABO</a>
+    <nav class="hr-bar__nav"><a href="/HTML-pages/login.html">Sign in</a></nav>
+</header>
+
+<main>
+    <section class="hr" id="hero">
+        <h1 class="hr-title" id="hr-title">Find your people.<br>Build something.</h1>
+        <p class="hr-sub" id="hr-sub">Post an idea. Meet the people who want to make it real. Work together in one space.</p>
+        <a class="hr-btn" id="hr-btn" href="/HTML-pages/register.html" data-chars><span>Get started</span></a>
+        <p class="hr-live" id="hr-live"><i class="hr-dot"></i><span>Spaces forming now</span></p>
+
+        <div class="hr-marquees" id="hr-marquees" aria-hidden="true">
+            <div class="hr-marquee" data-dir="-1"><div class="hr-track"></div></div>
+            <div class="hr-marquee" data-dir="1"><div class="hr-track"></div></div>
+        </div>
+    </section>
+
+    <section class="hr-next" id="trigger">
+        <h2 class="hr-big" id="hr-big">Let's make<br>something real.</h2>
+        <a class="hr-btn" href="/HTML-pages/register.html" data-chars><span>Create an account</span></a>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script type="module" src="/js/pages/hero.js"></script>
 </body>
 </html>

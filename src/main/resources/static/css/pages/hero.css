@@ -1,0 +1,37 @@
+/* The landing hero. Motion is in hero.js; everything here is the resting state. */
+.hero-page { overflow-x: hidden; }
+.hero-page.is-loading .hr-title, .hero-page.is-loading .hr-sub, .hero-page.is-loading .hr-btn, .hero-page.is-loading .hr-live { visibility: hidden; }
+
+.hr-veil { position: fixed; inset: 0; z-index: 100; background: var(--sp-bg); pointer-events: none; }
+.hr-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; padding: 18px var(--sp-gutter); }
+.hr-logo { font: 800 18px var(--sp-font); letter-spacing: .14em; color: var(--sp-text); text-decoration: none; }
+.hr-bar__nav a { color: var(--sp-text); font: 700 14px var(--sp-font); text-decoration: none; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
+.hr-bar__nav a:hover { background: var(--sp-panel-hi); }
+
+.hr { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; padding: 96px var(--sp-gutter) 0; overflow: hidden; }
+.hr-title, .hr-big { margin: 0; font: 800 clamp(40px, 9vw, 112px)/.98 var(--sp-font); text-transform: uppercase; letter-spacing: -.02em; }
+.hr-sub { margin: 0; max-width: 520px; color: var(--sp-muted); font: 500 clamp(15px, 2vw, 18px)/1.5 var(--sp-font); }
+.hr-btn {
+    position: relative; display: inline-flex; overflow: hidden; padding: 16px 34px; border-radius: 18px; text-decoration: none;
+    background: var(--sp-brand); color: var(--sp-brand-ink); font: 800 18px var(--sp-font);
+    box-shadow: 0 10px 30px color-mix(in srgb, var(--sp-brand) 35%, transparent); transition: transform .3s cubic-bezier(.16, 1, .3, 1);
+}
+.hr-btn:hover { transform: translateY(-2px) scale(1.02); }
+.hr-btn span { display: inline-flex; overflow: hidden; }
+/* each character has a twin below it; on hover the row rolls up, letter by letter (the delays are set in hero.js) */
+.hr-btn .ch { display: inline-block; position: relative; transition: transform .45s cubic-bezier(.16, 1, .3, 1); white-space: pre; }
+.hr-btn .ch::after { content: attr(data-c); position: absolute; left: 0; top: 100%; }
+.hr-btn:hover .ch { transform: translateY(-100%); }
+.hr-live { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--sp-muted); font: 500 12px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
+.hr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sp-ok); box-shadow: 0 0 10px var(--sp-ok); animation: hr-pulse 1.6s ease-in-out infinite; }
+@keyframes hr-pulse { 50% { opacity: .35; } }
+
+.hr-marquees { width: 100%; display: grid; gap: 12px; padding: 40px 0 28px; }
+.hr-marquee { overflow: hidden; }
+.hr-track { display: flex; gap: 12px; width: max-content; will-change: transform; }
+.hr-chip { flex: none; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); backdrop-filter: blur(8px); font: 700 14px var(--sp-font); white-space: nowrap; }
+.hr-chip b { color: var(--sp-brand); font-weight: 800; }
+
+.hr-next { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; text-align: center; padding: 0 var(--sp-gutter); }
+
+@media (prefers-reduced-motion: reduce) { .hr-veil { display: none; } .hr-dot { animation: none; } .hr-btn, .hr-btn .ch { transition: none; } }
