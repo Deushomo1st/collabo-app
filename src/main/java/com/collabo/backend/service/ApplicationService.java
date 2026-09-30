@@ -1,6 +1,7 @@
 package com.collabo.backend.service;
 
 import com.collabo.backend.dto.ApplicationDtos.ApplicationResponse;
+import com.collabo.backend.dto.ApplicationDtos.ReviewResponse;
 import com.collabo.backend.dto.PersonDto;
 import com.collabo.backend.entity.Application;
 import com.collabo.backend.entity.ApplicationState;
@@ -82,6 +83,58 @@ public class ApplicationService {
                     Post p = byPost.get(a.getPostId());
                     return ApplicationResponse.of(a, p, PersonDto.of(authors.get(p.getAuthorId())));
                 }).toList();
+    }
+
+    /** The founder's review stack: sort "recent" (default) or "oldest"; filter "unreviewed" or "shortlisted" (default all). Withdrawn are never shown. */
+    @Transactional(readOnly = true)
+    public List<ReviewResponse> stack(User me, UUID postId, String sort, String filter) {
+        Post post = ownPost(me, postId);
+        boolean oldest = switch (sort == null || sort.isBlank() ? "recent" : sort) {
+            case "recent" -> false;
+            case "oldest" -> true;
+            default -> throw new InvalidProfileException("Unknown sort.");
+        };
+        ApplicationState only = switch (filter == null || filter.isBlank() ? "all" : filter) {
+            case "all" -> null;
+            case "unreviewed" -> ApplicationState.SUBMITTED;
+            case "shortlisted" -> ApplicationState.SHORTLISTED;
+            default -> throw new InvalidProfileException("Unknown filter.");
+        };
+        List<Application> rows = oldest
+                ? applications.findByPostIdAndStateNotOrderByCreatedAtAsc(post.getId(), ApplicationState.WITHDRAWN)
+                : applications.findByPostIdAndStateNotOrderByCreatedAtDesc(post.getId(), ApplicationState.WITHDRAWN);
+        Set<UUID> hidden = new HashSet<>(blocks.counterpartsOf(me.getId()));
+        List<Application> shown = rows.stream().filter(a -> (only == null || a.getState() == only) && !hidden.contains(a.getApplicantId())).toList();
+        Map<UUID, User> people = users.findAllById(shown.stream().map(Application::getApplicantId).collect(Collectors.toSet()))
+                .stream().collect(Collectors.toMap(User::getId, Function.identity()));
+        return shown.stream().map(a -> review(a, people.get(a.getApplicantId()))).toList();
+    }
+
+    /** ACCEPT, DECLINE or SHORTLIST, set explicitly by the post's author. Can be changed until a space exists. */
+    public ReviewResponse decide(User me, UUID applicationId, String decision) {
+        Application a = applications.findById(applicationId).orElseThrow(() -> new ResourceNotFoundException("No such application."));
+        ownPost(me, a.getPostId());
+        if (a.getState() == ApplicationState.WITHDRAWN) throw new InvalidProfileException("This application was withdrawn.");
+        ApplicationState next = switch (decision == null ? "" : decision) {
+            case "ACCEPT" -> ApplicationState.ACCEPTED;
+            case "DECLINE" -> ApplicationState.DECLINED;
+            case "SHORTLIST" -> ApplicationState.SHORTLISTED;
+            default -> throw new InvalidProfileException("Choose accept, decline or shortlist.");
+        };
+        a.setState(next);
+        User applicant = users.findById(a.getApplicantId()).orElseThrow(() -> new ResourceNotFoundException("No such application."));
+        return review(applications.save(a), applicant);
+    }
+
+    private static ReviewResponse review(Application a, User applicant) {
+        return new ReviewResponse(a.getId(), PersonDto.of(applicant), a.getStatement(), a.getState().name(), a.getCreatedAt());
+    }
+
+    /** The post, if it is the caller's; anyone else (or a missing post) gets not-found. */
+    private Post ownPost(User me, UUID postId) {
+        Post p = posts.findById(postId).filter(x -> x.getAuthorId().equals(me.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("That post is gone."));
+        return p;
     }
 
     private ApplicationResponse response(Application a, Post p) {

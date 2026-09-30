@@ -14,6 +14,9 @@ import java.util.UUID;
 public interface ApplicationRepository extends JpaRepository<Application, UUID> {
     Optional<Application> findByPostIdAndApplicantId(UUID postId, UUID applicantId);
     List<Application> findByApplicantIdOrderByCreatedAtDesc(UUID applicantId);
+    // ponytail: the whole stack in one go, fine for a founder's review list; page it if a post ever draws thousands
+    List<Application> findByPostIdAndStateNotOrderByCreatedAtDesc(UUID postId, ApplicationState state);
+    List<Application> findByPostIdAndStateNotOrderByCreatedAtAsc(UUID postId, ApplicationState state);
 
     /** [postId, count] for a page of posts, withdrawn ones left out. */
     @Query("select a.postId, count(a) from Application a where a.postId in :ids and a.state <> :withdrawn group by a.postId")

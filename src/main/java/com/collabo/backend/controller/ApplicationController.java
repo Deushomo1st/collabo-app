@@ -3,6 +3,8 @@ package com.collabo.backend.controller;
 import com.collabo.backend.config.CurrentUser;
 import com.collabo.backend.dto.ApplicationDtos.ApplicationResponse;
 import com.collabo.backend.dto.ApplicationDtos.ApplyRequest;
+import com.collabo.backend.dto.ApplicationDtos.DecisionRequest;
+import com.collabo.backend.dto.ApplicationDtos.ReviewResponse;
 import com.collabo.backend.service.ApplicationService;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +30,17 @@ public class ApplicationController {
 
     @PostMapping("/applications/{id}/withdraw")
     public ApplicationResponse withdraw(@PathVariable UUID id) { return applications.withdraw(current.require(), id); }
+
+    @GetMapping("/posts/{postId}/applications")
+    public List<ReviewResponse> stack(@PathVariable UUID postId, @RequestParam(required = false) String sort,
+                                      @RequestParam(required = false) String filter) {
+        return applications.stack(current.require(), postId, sort, filter);
+    }
+
+    @PatchMapping("/applications/{id}")
+    public ReviewResponse decide(@PathVariable UUID id, @RequestBody DecisionRequest req) {
+        return applications.decide(current.require(), id, req.decision());
+    }
 
     @GetMapping("/applications/mine")
     public List<ApplicationResponse> mine() { return applications.mine(current.require()); }
