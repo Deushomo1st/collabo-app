@@ -1,9 +1,19 @@
-package com.collabo.backend.yarn;
+package com.collabo.backend.service;
 
-import com.collabo.backend.yarn.YarnDtos.*;
+import com.collabo.backend.entity.ThreadMember;
+import com.collabo.backend.entity.UserBlock;
+import com.collabo.backend.entity.Yarn;
+import com.collabo.backend.entity.YarnThread;
+import com.collabo.backend.exception.YarnException;
+import com.collabo.backend.repository.ThreadMemberRepository;
+import com.collabo.backend.repository.UserBlockRepository;
+import com.collabo.backend.repository.YarnRepository;
+import com.collabo.backend.repository.YarnThreadRepository;
+
+import com.collabo.backend.dto.YarnDtos.*;
 import com.collabo.backend.entity.User;
-import com.collabo.backend.yarn.YarnThread.Status;
-import com.collabo.backend.yarn.YarnThread.Tier;
+import com.collabo.backend.entity.YarnThread.Status;
+import com.collabo.backend.entity.YarnThread.Tier;
 import com.collabo.backend.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,6 @@
-package com.collabo.backend.yarn;
+package com.collabo.backend.entity;
+
+
 
 import jakarta.persistence.*;
 import java.time.Instant;

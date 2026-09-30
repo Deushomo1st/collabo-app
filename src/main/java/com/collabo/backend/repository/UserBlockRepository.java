@@ -1,4 +1,6 @@
-package com.collabo.backend.yarn;
+package com.collabo.backend.repository;
+
+import com.collabo.backend.entity.UserBlock;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;

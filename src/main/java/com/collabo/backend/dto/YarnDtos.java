@@ -1,4 +1,6 @@
-package com.collabo.backend.yarn;
+package com.collabo.backend.dto;
+
+import com.collabo.backend.entity.YarnThread;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

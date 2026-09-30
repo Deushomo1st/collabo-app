@@ -1,11 +1,12 @@
 package com.collabo.backend;
 
-import com.collabo.backend.yarn.*;
-import com.collabo.backend.yarn.YarnDtos.Prefs;
-import com.collabo.backend.yarn.YarnDtos.ThreadView;
+import com.collabo.backend.dto.YarnDtos.Prefs;
+import com.collabo.backend.dto.YarnDtos.ThreadView;
+import com.collabo.backend.exception.YarnException;
+import com.collabo.backend.service.YarnService;
 import com.collabo.backend.entity.Role;
 import com.collabo.backend.entity.User;
-import com.collabo.backend.yarn.YarnThread.Tier;
+import com.collabo.backend.entity.YarnThread.Tier;
 import com.collabo.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

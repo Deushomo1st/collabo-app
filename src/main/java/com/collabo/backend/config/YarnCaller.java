@@ -1,4 +1,6 @@
-package com.collabo.backend.yarn;
+package com.collabo.backend.config;
+
+import com.collabo.backend.exception.YarnException;
 
 import com.collabo.backend.entity.User;
 import com.collabo.backend.repository.UserRepository;

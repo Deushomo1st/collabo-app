@@ -1,4 +1,6 @@
-package com.collabo.backend.yarn;
+package com.collabo.backend.exception;
+
+
 
 import org.springframework.http.HttpStatus;
 

@@ -1,4 +1,6 @@
-package com.collabo.backend.yarn;
+package com.collabo.backend.repository;
+
+import com.collabo.backend.entity.Yarn;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
