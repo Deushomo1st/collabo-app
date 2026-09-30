@@ -7,6 +7,7 @@ import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.repository.ApplicationRepository;
 import com.collabo.backend.repository.PostRepository;
+import com.collabo.backend.repository.SpaceMemberRepository;
 import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,11 @@ public class SpaceService {
     private final ApplicationRepository applications;
     private final UserRepository users;
     private final CredentialService credentials;
+    private final SpaceMemberRepository members;
 
     public SpaceService(SpaceRepository spaces, PostRepository posts, ApplicationRepository applications, UserRepository users,
-                        CredentialService credentials) {
-        this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
+                        CredentialService credentials, SpaceMemberRepository members) {
+        this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
     }
 
     /** The post's author forms the space, once, when at least one applicant has been accepted. */
@@ -73,12 +75,14 @@ public class SpaceService {
         return response(s, post, role);
     }
 
-    /** OWNER, APPLICANT (accepted, may read), or null (no access). */
+    /** OWNER, MEMBER (joined), APPLICANT (accepted, may read, not joined), or null (no access). */
     String roleOf(User me, Space s) {
         if (s.getOwnerId().equals(me.getId())) return "OWNER";
         boolean accepted = applications.findByPostIdAndApplicantId(s.getPostId(), me.getId())
                 .filter(a -> a.getState() == ApplicationState.ACCEPTED).isPresent();
-        return accepted ? "APPLICANT" : null;
+        if (!accepted) return null;
+        boolean joined = members.findBySpaceIdAndUserId(s.getId(), me.getId()).filter(m -> m.getState() == SpaceMember.State.ACTIVE).isPresent();
+        return joined ? "MEMBER" : "APPLICANT";
     }
 
     private SpaceResponse response(Space s, Post post, String role) {
