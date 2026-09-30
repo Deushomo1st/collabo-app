@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -38,7 +40,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AdminKeyFilter adminKeyFilter) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                // Cookie login means CSRF protection is needed: the token comes back in an XSRF-TOKEN cookie
+                // and js/services/api.js sends it as X-XSRF-TOKEN. /api/admin/** uses a header key, not a cookie.
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                        .ignoringRequestMatchers("/api/admin/**"))
                 // Picks up the CorsConfigurationSource bean from CorsConfig
                 .cors(Customizer.withDefaults())
                 // /api/admin/** is gated solely by AdminKeyFilter (X-Admin-Key header);

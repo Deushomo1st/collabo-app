@@ -30,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SessionAuthTest {
 
     static final String PASSWORD = "Passw0rd!x9";
+    // double-submit CSRF: any matching cookie + header pair passes (not csrf(): that permanently swaps the filter's repository)
+    static final Cookie XSRF = new Cookie("XSRF-TOKEN", "t");
 
     @Autowired MockMvc mvc;
     @Autowired UserRepository users;
@@ -55,7 +57,7 @@ class SessionAuthTest {
     }
 
     private org.springframework.test.web.servlet.ResultActions login(String who, String pw) throws Exception {
-        return mvc.perform(post("/api/auth/login").contentType("application/json").content(body(who, pw)));
+        return mvc.perform(post("/api/auth/login").cookie(XSRF).header("X-XSRF-TOKEN", "t").contentType("application/json").content(body(who, pw)));
     }
 
     @Test
@@ -68,7 +70,7 @@ class SessionAuthTest {
         mvc.perform(get("/api/auth/me").cookie(session)).andExpect(status().isOk()).andExpect(jsonPath("$.username").value(name));
         login(name + "@T.dev", PASSWORD).andExpect(status().isOk());   // email works, case-insensitively
 
-        mvc.perform(post("/api/auth/logout").cookie(session)).andExpect(status().isNoContent());
+        mvc.perform(post("/api/auth/logout").cookie(XSRF, session).header("X-XSRF-TOKEN", "t")).andExpect(status().isNoContent());
         mvc.perform(get("/api/auth/me").cookie(session)).andExpect(status().isUnauthorized());
     }
 
@@ -107,5 +109,16 @@ class SessionAuthTest {
 
         Cookie session = login(name, PASSWORD).andReturn().getResponse().getCookie("COLLABO_SESSION");
         mvc.perform(get("/api/yarns/threads").cookie(session)).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void writesNeedTheCsrfTokenAndTheCsrfEndpointHandsItOut() throws Exception {
+        mvc.perform(post("/api/auth/login").contentType("application/json").content(body(name, PASSWORD))).andExpect(status().isForbidden());
+        String header = mvc.perform(get("/api/auth/csrf")).andExpect(status().isNoContent()).andReturn().getResponse().getHeaders("Set-Cookie").stream().filter(h -> h.contains("XSRF-TOKEN=")).findFirst().orElse(null);
+        org.junit.jupiter.api.Assertions.assertNotNull(header, "csrf endpoint must set the XSRF-TOKEN cookie");
+        header = header.substring(header.indexOf("XSRF-TOKEN="));
+        Cookie token = new Cookie("XSRF-TOKEN", header.substring("XSRF-TOKEN=".length(), header.indexOf(';')));
+        mvc.perform(post("/api/auth/login").cookie(token).header("X-XSRF-TOKEN", token.getValue())
+                .contentType("application/json").content(body(name, PASSWORD))).andExpect(status().isOk());
     }
 }

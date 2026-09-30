@@ -18,6 +18,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +37,13 @@ public class SessionController {
     public SessionController(AuthService authService, UserRepository users) {
         this.authService = authService;
         this.users = users;
+    }
+
+    /** Hands out the CSRF token cookie (XSRF-TOKEN) before the first write, e.g. the login itself. */
+    @GetMapping("/csrf")
+    public ResponseEntity<Void> csrf(CsrfToken token) {
+        token.getToken();   // reading it is what writes the cookie
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/login")
