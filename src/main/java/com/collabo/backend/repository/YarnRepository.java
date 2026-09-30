@@ -16,6 +16,8 @@ public interface YarnRepository extends JpaRepository<Yarn, UUID> {
 
     long countByThreadId(UUID threadId);
 
+    List<Yarn> findByThreadIdAndCreatedAtBetweenOrderByCreatedAtAsc(UUID threadId, Instant from, Instant to);
+
     /** Yarns I have not read: newer than my marker and not sent by me (system yarns count). */
     @Query("select count(y) from Yarn y where y.threadId = :threadId and y.createdAt > :after "
             + "and (y.senderId is null or y.senderId <> :me)")

@@ -30,10 +30,11 @@ public class RemovalRecordService {
     private final MilestoneRepository milestones;
     private final UserRepository users;
     private final NotificationService notifications;
+    private final AppealRepository appeals;
 
     public RemovalRecordService(RemovalRecordRepository records, AddressRepository addresses, MilestoneRepository milestones,
-                                UserRepository users, NotificationService notifications) {
-        this.records = records; this.addresses = addresses; this.milestones = milestones; this.users = users; this.notifications = notifications;
+                                UserRepository users, NotificationService notifications, AppealRepository appeals) {
+        this.appeals = appeals; this.records = records; this.addresses = addresses; this.milestones = milestones; this.users = users; this.notifications = notifications;
     }
 
     /** Called when a removal process completes. */
@@ -63,7 +64,7 @@ public class RemovalRecordService {
         return new AddressView(a.getId(), PersonDto.of(me), a.getBody(), a.getCreatedAt());
     }
 
-    private List<RecordView> present(List<RemovalRecord> rows) {
+    List<RecordView> present(List<RemovalRecord> rows) {
         Set<UUID> ids = rows.stream().map(RemovalRecord::getId).collect(Collectors.toSet());
         List<Address> all = ids.isEmpty() ? List.of() : addresses.findByRecordIdInOrderByCreatedAtAsc(ids);
         Set<UUID> people = new HashSet<>();
@@ -71,13 +72,15 @@ public class RemovalRecordService {
         all.forEach(a -> people.add(a.getAuthorId()));
         Map<UUID, User> byId = users.findAllById(people).stream().collect(Collectors.toMap(User::getId, Function.identity()));
         Map<UUID, List<Address>> perRecord = all.stream().collect(Collectors.groupingBy(Address::getRecordId));
+        Map<UUID, Appeal> appealOf = ids.isEmpty() ? Map.of() : appeals.findByRecordIdIn(ids).stream().collect(Collectors.toMap(Appeal::getRecordId, Function.identity()));
         List<RecordView> out = new ArrayList<>();
         for (RemovalRecord r : rows) {
             User removed = byId.get(r.getRemovedId()), by = byId.get(r.getRemovedById());
             if (removed == null || by == null) continue;
             List<AddressView> views = perRecord.getOrDefault(r.getId(), List.of()).stream().filter(a -> byId.containsKey(a.getAuthorId()))
                     .map(a -> new AddressView(a.getId(), PersonDto.of(byId.get(a.getAuthorId())), a.getBody(), a.getCreatedAt())).toList();
-            out.add(new RecordView(r.getId(), r.getSpaceName(), PersonDto.of(removed), PersonDto.of(by), r.getReason(), r.isBadge(), r.getCreatedAt(), views));
+            out.add(new RecordView(r.getId(), r.getSpaceName(), PersonDto.of(removed), PersonDto.of(by), r.getReason(), r.isBadge(), r.getCreatedAt(), views,
+                    Optional.ofNullable(appealOf.get(r.getId())).map(a -> a.isOpen() ? "OPEN" : a.getOutcome().name()).orElse(null)));
         }
         return out;
     }
