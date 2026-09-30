@@ -99,4 +99,13 @@ class SessionAuthTest {
         login(name, PASSWORD).andExpect(status().isTooManyRequests()).andExpect(jsonPath("$.retryAfterSeconds").exists());
         login(name + "2", "x").andExpect(status().isUnauthorized());   // other identifiers are unaffected
     }
+
+    @Test
+    void yarnsNeedALoginAndIgnoreTheOldDevHeader() throws Exception {
+        mvc.perform(get("/api/yarns/threads")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/yarns/threads").header("X-Dev-User", name)).andExpect(status().isUnauthorized());
+
+        Cookie session = login(name, PASSWORD).andReturn().getResponse().getCookie("COLLABO_SESSION");
+        mvc.perform(get("/api/yarns/threads").cookie(session)).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+    }
 }

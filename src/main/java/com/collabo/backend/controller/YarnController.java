@@ -20,8 +20,6 @@ import java.util.UUID;
 @RequestMapping("/api/yarns")
 public class YarnController {
 
-    private static final String WHO = "X-Dev-User";
-
     private final YarnService service;
     private final YarnCaller caller;
 
@@ -31,76 +29,75 @@ public class YarnController {
     }
 
     @GetMapping("/me")
-    public PersonView me(@RequestHeader(value = WHO, required = false) String who) {
-        var me = caller.require(who);
+    public PersonView me() {
+        var me = caller.require();
         return new PersonView(me.getId(), me.getUsername());
     }
 
     @GetMapping("/directory")
-    public List<PersonView> directory(@RequestHeader(value = WHO, required = false) String who, @RequestParam(defaultValue = "") String q) {
-        return service.directory(caller.require(who), q);
+    public List<PersonView> directory(@RequestParam(defaultValue = "") String q) {
+        return service.directory(caller.require(), q);
     }
 
     @GetMapping("/threads")
-    public List<ThreadView> threads(@RequestHeader(value = WHO, required = false) String who,
-                                    @RequestParam(defaultValue = "inbox") String view,
+    public List<ThreadView> threads(@RequestParam(defaultValue = "inbox") String view,
                                     @RequestParam(required = false) String tier,
                                     @RequestParam(required = false) String q) {
         if (!view.equals("inbox") && !view.equals("archived")) throw new YarnException(HttpStatus.BAD_REQUEST, "view must be inbox or archived");
-        return service.list(caller.require(who), view.equals("archived"), parseTier(tier), q);
+        return service.list(caller.require(), view.equals("archived"), parseTier(tier), q);
     }
 
     @PostMapping("/threads/myspace")
-    public ResponseEntity<ThreadView> startMySpace(@RequestHeader(value = WHO, required = false) String who, @Valid @RequestBody StartMySpace req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.startMySpace(caller.require(who), req.username(), req.body()));
+    public ResponseEntity<ThreadView> startMySpace(@Valid @RequestBody StartMySpace req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.startMySpace(caller.require(), req.username(), req.body()));
     }
 
     @PostMapping("/threads/group")
-    public ResponseEntity<ThreadView> createGroup(@RequestHeader(value = WHO, required = false) String who, @Valid @RequestBody NewGroup req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createGroup(caller.require(who), req.tier(), req.name(), req.usernames()));
+    public ResponseEntity<ThreadView> createGroup(@Valid @RequestBody NewGroup req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createGroup(caller.require(), req.tier(), req.name(), req.usernames()));
     }
 
     @GetMapping("/threads/{id}/yarns")
-    public List<YarnView> history(@RequestHeader(value = WHO, required = false) String who, @PathVariable UUID id,
+    public List<YarnView> history(@PathVariable UUID id,
                                   @RequestParam(required = false) Instant before, @RequestParam(defaultValue = "50") int limit) {
-        return service.history(caller.require(who), id, before, limit);
+        return service.history(caller.require(), id, before, limit);
     }
 
     @PostMapping("/threads/{id}/yarns")
-    public ResponseEntity<YarnView> send(@RequestHeader(value = WHO, required = false) String who, @PathVariable UUID id, @Valid @RequestBody SendYarn req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.send(caller.require(who), id, req.body()));
+    public ResponseEntity<YarnView> send(@PathVariable UUID id, @Valid @RequestBody SendYarn req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.send(caller.require(), id, req.body()));
     }
 
     @PostMapping("/threads/{id}/read")
-    public ResponseEntity<Void> read(@RequestHeader(value = WHO, required = false) String who, @PathVariable UUID id) {
-        service.markRead(caller.require(who), id);
+    public ResponseEntity<Void> read(@PathVariable UUID id) {
+        service.markRead(caller.require(), id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/threads/{id}/prefs")
-    public ThreadView prefs(@RequestHeader(value = WHO, required = false) String who, @PathVariable UUID id, @RequestBody Prefs req) {
-        return service.setPrefs(caller.require(who), id, req);
+    public ThreadView prefs(@PathVariable UUID id, @RequestBody Prefs req) {
+        return service.setPrefs(caller.require(), id, req);
     }
 
     @PostMapping("/threads/{id}/respond")
-    public ThreadView respond(@RequestHeader(value = WHO, required = false) String who, @PathVariable UUID id, @RequestBody Respond req) {
-        return service.respond(caller.require(who), id, req.accept());
+    public ThreadView respond(@PathVariable UUID id, @RequestBody Respond req) {
+        return service.respond(caller.require(), id, req.accept());
     }
 
     @GetMapping("/blocks")
-    public List<BlockView> blocked(@RequestHeader(value = WHO, required = false) String who) {
-        return service.blocked(caller.require(who));
+    public List<BlockView> blocked() {
+        return service.blocked(caller.require());
     }
 
     @PutMapping("/blocks/{userId}")
-    public ResponseEntity<Void> block(@RequestHeader(value = WHO, required = false) String who, @PathVariable UUID userId) {
-        service.block(caller.require(who), userId);
+    public ResponseEntity<Void> block(@PathVariable UUID userId) {
+        service.block(caller.require(), userId);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/blocks/{userId}")
-    public ResponseEntity<Void> unblock(@RequestHeader(value = WHO, required = false) String who, @PathVariable UUID userId) {
-        service.unblock(caller.require(who), userId);
+    public ResponseEntity<Void> unblock(@PathVariable UUID userId) {
+        service.unblock(caller.require(), userId);
         return ResponseEntity.noContent().build();
     }
 
