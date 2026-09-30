@@ -38,3 +38,6 @@ docs/
 
 # Local-only AI instruction file (project docs, deploy details — not for git)
 AGENTS.md
+
+# Local-only plans
+Please git ignore this/
