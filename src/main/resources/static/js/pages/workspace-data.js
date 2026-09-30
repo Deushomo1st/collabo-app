@@ -28,7 +28,7 @@ export function initialState() {
         ],
         messages: [
             { id: 1, type: 'day', text: 'Monday' },
-            { id: 2, type: 'system', text: 'Workspace opened from the post “Kobo needs a designer & a backend brain”. Name inherited from the We Space.', time: '09:02' },
+            { id: 2, type: 'system', text: 'Workspace opened from the post “Kobo needs a designer & a backend brain”. Name inherited from the WeSpace.', time: '09:02' },
             { id: 3, type: 'msg', who: 'amaka', text: 'Onboarding flow is in Figma. Three screens, no more. Comment on anything that feels heavy.', time: '09:40', pinned: true },
             { id: 4, type: 'msg', who: 'kelvin', text: 'Deposits endpoint is up on staging. Idempotency keys are in, so a double tap can’t double-save.', time: '11:15' },
             { id: 5, type: 'msg', who: 'sade', text: 'Wiring the savings ring to it now. Ring animates on real numbers, not fake ones.', time: '11:32' },
@@ -153,7 +153,7 @@ export function setPermission(state, memberId, permId, on) {
 }
 
 export function nudge(state, memberId) {
-    return announce(state, `${first(state, ME)} nudged ${first(state, memberId)}. It lands in their My Space with a pointer to what’s waiting.`);
+    return announce(state, `${first(state, ME)} nudged ${first(state, memberId)}. It lands in their MySpace with a pointer to what’s waiting.`);
 }
 
 export function changeSetting(state, key, value) {
