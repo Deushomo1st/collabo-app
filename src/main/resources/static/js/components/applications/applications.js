@@ -1,7 +1,7 @@
 // Applications on the page: the Apply dialog, the founder's review stack and "My applications".
 // Each opener builds a dialog; text goes in through textContent only (h()).
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
-import { applyTo, applicationWithdraw, applicationsMine, applicationStack, applicationDecide, founderCredentials } from '/js/services/api.js';
+import { applyTo, applicationWithdraw, applicationsMine, applicationStack, applicationDecide, founderCredentials, spaceForm } from '/js/services/api.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
 
 const MAX_WORDS = 150;
@@ -48,11 +48,27 @@ export async function openReview(post) {
     const select = (label, opts, onchange) => h('select', { class: 'sp-input ap-select', 'aria-label': label, onchange: (e) => onchange(e.target.value) },
         ...opts.map(([v, t]) => h('option', { value: v, text: t })));
     const list = h('div', { class: 'ap-list', 'aria-live': 'polite' });
+    const formBox = h('div', { class: 'ap-form' });
     async function load() {
         try {
             const rows = await applicationStack(post.id, sort, filter);
+            drawForm(rows.some((r) => r.state === 'ACCEPTED'));
             list.replaceChildren(...(rows.length ? rows.map(card) : [h('p', { class: 'pc-hint', text: 'No applications here.' })]));
         } catch (err) { list.replaceChildren(h('p', { class: 'pc-error', text: err.message })); }
+    }
+    // Forming a space needs someone accepted; the name defaults to the post title.
+    function drawForm(anyAccepted) {
+        if (post.status === 'formed') return formBox.replaceChildren(h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/space.html?post=${post.id}`, text: 'Open space' }));
+        if (!anyAccepted) return formBox.replaceChildren(h('p', { class: 'pc-hint', text: 'Accept at least one applicant to form a space.' }));
+        const name = h('input', { class: 'sp-input', maxlength: 80, placeholder: post.title, 'aria-label': 'Space name' });
+        const err = h('p', { class: 'pc-error', hidden: true });
+        const form = h('form', { class: 'ap-tools' }, name, h('button', { class: 'pc-btn pc-btn--brand', type: 'submit', text: 'Form space' }));
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try { const s = await spaceForm(post.id, name.value); location.href = `/HTML-pages/space.html?id=${s.id}`; }
+            catch (ex) { err.textContent = ex.message; err.hidden = false; }
+        });
+        formBox.replaceChildren(form, h('p', { class: 'pc-hint', text: 'Forming closes the post to new applications and locks your accepted applicants in.' }), err);
     }
     function card(a) {
         const big = h('p', { class: 'ap-text', text: a.statement });
@@ -71,7 +87,7 @@ export async function openReview(post) {
         h('div', { class: 'ap-tools' },
             select('Sort', [['recent', 'Newest first'], ['oldest', 'Oldest first']], (v) => { sort = v; load(); }),
             select('Filter', [['', 'All'], ['unreviewed', 'Unreviewed'], ['shortlisted', 'Shortlisted']], (v) => { filter = v; load(); })),
-        list);
+        formBox, list);
     load();
 }
 
@@ -90,6 +106,8 @@ export async function openMine() {
             h('time', { class: 'pc-time', datetime: a.createdAt, text: day(a.createdAt) })),
         h('p', { class: 'pc-hint' }, 'by ', h('a', { class: 'pc-who', href: profileHref(a.postAuthor.username), text: a.postAuthor.username }),
             a.postStatus === 'closed' ? ' · applications closed' : ''),
+        a.state === 'ACCEPTED' && a.postStatus === 'formed' && h('div', { class: 'pc-actions' },
+            h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/space.html?post=${a.postId}`, text: 'Open space' })),
         h('p', { class: 'ap-text', text: a.statement }),
         (a.state === 'SUBMITTED' || a.state === 'SHORTLISTED') && h('div', { class: 'pc-actions' },
             h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Withdraw', onclick: async () => {

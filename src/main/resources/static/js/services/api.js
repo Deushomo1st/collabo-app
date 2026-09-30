@@ -113,3 +113,11 @@ export const applicationsMine = () => call('/api/applications/mine');
 export const applicationStack = (id, sort, filter) => call(post(id, `/applications?sort=${sort}${filter ? `&filter=${filter}` : ''}`));
 export const applicationDecide = (id, decision) => call(`/api/applications/${id}`, { method: 'PATCH', body: { decision } });
 export const founderCredentials = (id) => call(post(id, '/founder-credentials'));
+
+// spaces: form from a post, open, join/leave, members
+export const spaceForm = (postId, name) => call(post(postId, '/space'), { method: 'POST', body: { name } }, 'Could not form the space.');
+export const spaceOfPost = (postId) => call(post(postId, '/space'));
+export const spaceById = (id) => call(`/api/spaces/${id}`);
+export const spaceJoin = (id) => call(`/api/spaces/${id}/join`, { method: 'POST' });
+export const spaceLeave = (id) => call(`/api/spaces/${id}/leave`, { method: 'POST' });
+export const spaceMembers = (id) => call(`/api/spaces/${id}/members`);

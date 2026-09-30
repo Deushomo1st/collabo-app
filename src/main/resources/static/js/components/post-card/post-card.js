@@ -77,27 +77,29 @@ export function postCard(initial, { onGone } = {}) {
 
     function draw() {
         const closed = p.status === 'closed';
+        const formed = p.status === 'formed';
         root.replaceChildren(...[
             p.shoutedBy && h('p', { class: 'pc-shouted' }, person(p.shoutedBy), ' shouted this out'),
             h('div', { class: 'pc-top' },
                 person(p.author),
                 p.author.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: p.author.preferredTitle }),
-                h('span', { class: `sp-tag ${closed ? 'sp-tag--muted' : 'sp-tag--ok'}`, text: closed ? 'Closed' : 'Pending' }),
+                h('span', { class: `sp-tag ${closed ? 'sp-tag--muted' : 'sp-tag--ok'}`, text: closed ? 'Closed' : formed ? 'Space formed' : 'Pending' }),
                 h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) })),
             h('h3', { class: 'pc-title', text: p.title }),
             h('p', { class: 'pc-body', text: p.body }),
-            h('p', { class: 'pc-hint', text: p.applyBy ? `${closed ? 'Applications closed' : 'Applications close'} ${when(p.applyBy)}` : 'Open to applications, no deadline' }),
+            h('p', { class: 'pc-hint', text: formed ? 'A space was formed for this idea.' : p.applyBy ? `${closed ? 'Applications closed' : 'Applications close'} ${when(p.applyBy)}` : 'Open to applications, no deadline' }),
             h('div', { class: 'pc-actions' },
                 !p.mine && h('button', { class: `pc-btn ${p.shouted ? 'is-on' : ''}`, type: 'button', 'aria-pressed': String(p.shouted),
                     text: `${p.shouted ? 'Shouted out' : 'Shout out'} · ${p.shouts}`, onclick: () => act(() => (p.shouted ? postUnshout : postShout)(p.id)) }),
                 p.mine && p.shouts > 0 && h('span', { class: 'pc-hint', text: `${p.shouts} shout-out${p.shouts === 1 ? '' : 's'}` }),
                 h('button', { class: 'pc-btn', type: 'button', 'aria-expanded': String(open), text: open ? 'Hide comments' : 'Comments', onclick: toggleComments }),
                 !p.mine && p.applied && p.applied !== 'WITHDRAWN' && h('span', { class: 'sp-tag sp-tag--ok', text: 'Applied' }),
-                !p.mine && !closed && (!p.applied || p.applied === 'WITHDRAWN') && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Apply',
+                !p.mine && !closed && !formed && (!p.applied || p.applied === 'WITHDRAWN') && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Apply',
                     onclick: () => openApply(p, (state) => { p = { ...p, applied: state }; draw(); }) }),
                 p.mine && h('button', { class: 'pc-btn', type: 'button', text: `Applicants · ${p.applicants ?? 0}`, onclick: () => openReview(p) }),
-                p.mine && h('button', { class: 'pc-btn', type: 'button', text: 'Deadline', onclick: editWindow }),
-                p.mine && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Delete', onclick: remove })),
+                p.mine && formed && h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/space.html?post=${p.id}`, text: 'Open space' }),
+                p.mine && !formed && h('button', { class: 'pc-btn', type: 'button', text: 'Deadline', onclick: editWindow }),
+                p.mine && !formed && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Delete', onclick: remove })),
             open && comments && commentBox()].filter(Boolean));
     }
 

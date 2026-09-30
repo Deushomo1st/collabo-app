@@ -43,10 +43,11 @@
     border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text);
 }
 .pc-btn:hover { background: var(--sp-panel-hi); }
+a.pc-btn { text-decoration: none; justify-self: start; }
 .pc-btn.is-on { border-color: var(--sp-brand); color: var(--sp-brand); }
 .pc-btn--danger { color: var(--sp-danger); }
 .pc-btn--brand { background: var(--sp-brand); border-color: var(--sp-brand); color: var(--sp-brand-ink); }
-.ap-list, .ap-body { display: grid; gap: 10px; }
+.ap-list, .ap-body, .ap-form { display: grid; gap: 10px; }
 .ap-tools { display: flex; gap: 8px; }
 .ap-select { width: auto; }
 .ap-card { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
@@ -64,3 +65,4 @@
 @media (max-width: 560px) {
     .gz-nav { padding: 8px 10px; }
 }
+.ap-tools .sp-input:not(.ap-select) { flex: 1; min-width: 0; }
