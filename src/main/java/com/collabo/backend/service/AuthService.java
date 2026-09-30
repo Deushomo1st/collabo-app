@@ -6,6 +6,7 @@ import com.collabo.backend.entity.Role;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.AccountUnverifiedException;
 import com.collabo.backend.exception.EmailAlreadyExistsException;
+import com.collabo.backend.exception.InvalidCredentialsException;
 import com.collabo.backend.exception.InvalidEmailException;
 import com.collabo.backend.exception.InvalidOtpException;
 import com.collabo.backend.exception.OtpExpiredException;
@@ -41,17 +42,22 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final RegistrationRateLimiter rateLimiter;
+    private final LoginRateLimiter loginLimiter;
+    private final String dummyHash;   // compared against when the account doesn't exist, so timing doesn't reveal it
     private final boolean testAccountsEnabled;
 
     public AuthService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        EmailService emailService,
                        RegistrationRateLimiter rateLimiter,
+                       LoginRateLimiter loginLimiter,
                        @Value("${app.test-accounts.enabled:false}") boolean testAccountsEnabled) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.rateLimiter = rateLimiter;
+        this.loginLimiter = loginLimiter;
+        this.dummyHash = passwordEncoder.encode("not-a-real-password");
         this.testAccountsEnabled = testAccountsEnabled;
     }
 
@@ -137,6 +143,30 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         emailService.sendVerificationEmail(email, username, code);
         return UserResponse.from(savedUser);
+    }
+
+    /**
+     * Check an email-or-username + password. Returns the user; the caller opens the session.
+     * Wrong details always give the same error, and unverified accounts are only revealed
+     * after the password was right.
+     */
+    @Transactional(readOnly = true)
+    public User authenticate(String identifier, String password, String clientIp) {
+        String id = identifier.trim();
+        String key = clientIp + "|" + id.toLowerCase();
+        loginLimiter.check(key);
+
+        User user = userRepository.findByEmail(id.toLowerCase()).or(() -> userRepository.findByUsername(id)).orElse(null);
+        boolean ok = passwordEncoder.matches(password, user != null ? user.getPassword() : dummyHash);
+        if (user == null || !ok) {
+            loginLimiter.recordFailure(key);
+            throw new InvalidCredentialsException();
+        }
+        if (!user.isVerified()) {
+            throw new AccountUnverifiedException();
+        }
+        loginLimiter.recordSuccess(key);
+        return user;
     }
 
     /**

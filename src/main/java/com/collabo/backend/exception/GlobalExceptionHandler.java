@@ -65,6 +65,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Map<String, String>> handleBadLogin(InvalidCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", ex.getMessage()));
+    }
+
     @ExceptionHandler(InvalidOtpException.class)
     public ResponseEntity<Map<String, String>> handleInvalidOtp(InvalidOtpException ex) {
         return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));

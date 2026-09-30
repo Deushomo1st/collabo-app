@@ -50,6 +50,7 @@ public class SecurityConfig {
                         // Tightened: only the registration POST is public, not every method on /api/users
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/users/verify", "/api/users/resend-otp").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()   // login/logout/me decide for themselves
                         .requestMatchers("/api/admin/**").permitAll()
                         // Yarnspaces identifies its caller itself (YarnCaller) until real login exists
                         .requestMatchers("/api/yarns/**").permitAll()
