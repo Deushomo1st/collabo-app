@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 public class YarnService {
 
     private static final String CANT_DELIVER = "This yarn can't be delivered.";
-    private static final int MAX_GROUP = 30;
 
     private final YarnThreadRepository threads;
     private final ThreadMemberRepository members;
@@ -102,29 +101,6 @@ public class YarnService {
             return fresh;
         });
         send(me, t.getId(), body);
-        return viewFor(me, t.getId());
-    }
-
-    public ThreadView createGroup(User me, Tier tier, String name, List<String> usernames) {
-        if (tier == Tier.MYSPACE) throw new YarnException(HttpStatus.BAD_REQUEST, "MySpace is one-to-one. Start it from a person.");
-        Set<String> wanted = usernames.stream().map(String::trim).filter(s -> !s.isEmpty() && !s.equalsIgnoreCase(me.getUsername())).collect(Collectors.toCollection(LinkedHashSet::new));
-        List<User> invited = new ArrayList<>();
-        for (String u : wanted) {
-            User found = users.findByUsername(u).orElseThrow(() -> new YarnException(HttpStatus.NOT_FOUND, "No one with the username " + u + "."));
-            // silently skip people who blocked me, so a block is never revealed
-            if (!blocks.existsByBlockerIdAndBlockedId(found.getId(), me.getId())) invited.add(found);
-        }
-        if (invited.isEmpty()) throw new YarnException(HttpStatus.BAD_REQUEST, "There is nobody to add.");
-        if (invited.size() + 1 > MAX_GROUP) throw new YarnException(HttpStatus.BAD_REQUEST, "A space holds at most " + MAX_GROUP + " people.");
-
-        YarnThread t = new YarnThread();
-        t.setTier(tier); t.setName(name.trim()); t.setCreatedBy(me.getId());
-        threads.save(t);
-        ThreadMember owner = seat(t, me.getId(), ThreadMember.Role.OWNER);
-        owner.setLastReadAt(Instant.now());
-        members.save(owner);
-        invited.forEach(u -> members.save(seat(t, u.getId(), ThreadMember.Role.MEMBER)));
-        addYarn(t, null, Yarn.Kind.SYSTEM, me.getUsername() + " opened " + t.getName() + ".");
         return viewFor(me, t.getId());
     }
 

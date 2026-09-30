@@ -5,7 +5,13 @@ import com.collabo.backend.dto.YarnDtos.ThreadView;
 import com.collabo.backend.exception.YarnException;
 import com.collabo.backend.service.YarnService;
 import com.collabo.backend.entity.Role;
+import com.collabo.backend.entity.ThreadMember;
 import com.collabo.backend.entity.User;
+import com.collabo.backend.entity.Yarn;
+import com.collabo.backend.entity.YarnThread;
+import com.collabo.backend.repository.ThreadMemberRepository;
+import com.collabo.backend.repository.YarnRepository;
+import com.collabo.backend.repository.YarnThreadRepository;
 import com.collabo.backend.entity.YarnThread.Tier;
 import com.collabo.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +35,9 @@ class YarnServiceTest {
 
     @Autowired YarnService yarns;
     @Autowired UserRepository users;
+    @Autowired YarnThreadRepository threadRepo;
+    @Autowired ThreadMemberRepository seatRepo;
+    @Autowired YarnRepository yarnRepo;
 
     User ada, bo, cy;
 
@@ -42,6 +51,19 @@ class YarnServiceTest {
         User u = new User();
         u.setUsername(name); u.setEmail(name + "@t.dev"); u.setPassword("x"); u.setRole(Role.USER);
         return users.save(u);
+    }
+
+    /** A group thread the way a space would open one; the app no longer lets people make these by hand. */
+    private UUID group(User owner, Tier tier, String name, User... others) {
+        YarnThread t = new YarnThread();
+        t.setTier(tier); t.setName(name); t.setCreatedBy(owner.getId());
+        threadRepo.save(t);
+        seatRepo.save(new ThreadMember(t.getId(), owner.getId(), ThreadMember.Role.OWNER));
+        for (User u : others) seatRepo.save(new ThreadMember(t.getId(), u.getId(), ThreadMember.Role.MEMBER));
+        Yarn y = yarnRepo.save(new Yarn(t.getId(), null, Yarn.Kind.SYSTEM, owner.getUsername() + " opened " + name + "."));
+        t.recordYarn(null, y.getBody(), y.getCreatedAt());
+        threadRepo.save(t);
+        return t.getId();
     }
 
     private List<ThreadView> inbox(User u) { return yarns.list(u, false, null, null); }
@@ -96,29 +118,29 @@ class YarnServiceTest {
 
     @Test
     void archiveIsPerPersonAndANewYarnBringsItBack() {
-        ThreadView t = yarns.createGroup(ada, Tier.WESPACE, "Kobo", List.of(bo.getUsername(), cy.getUsername()));
-        yarns.setPrefs(bo, t.id(), new Prefs(true, null, null));
+        UUID t = group(ada, Tier.WESPACE, "Kobo", bo, cy);
+        yarns.setPrefs(bo, t, new Prefs(true, null, null));
         assertTrue(inbox(bo).isEmpty());
         assertEquals(1, inbox(cy).size());   // cy is untouched
 
-        yarns.send(ada, t.id(), "decision time");
+        yarns.send(ada, t, "decision time");
         assertEquals(1, inbox(bo).size());   // un-archived by the new yarn
 
-        yarns.setPrefs(bo, t.id(), new Prefs(true, null, true));   // archived and muted
-        yarns.send(ada, t.id(), "again");
+        yarns.setPrefs(bo, t, new Prefs(true, null, true));   // archived and muted
+        yarns.send(ada, t, "again");
         assertTrue(inbox(bo).isEmpty());   // muted stays put
     }
 
     @Test
     void pinnedThreadsSortFirstAndUnreadClearsOnRead() {
-        ThreadView older = yarns.createGroup(ada, Tier.WORKSPACE, "Older", List.of(bo.getUsername()));
-        ThreadView newer = yarns.createGroup(ada, Tier.WESPACE, "Newer", List.of(bo.getUsername()));
+        UUID older = group(ada, Tier.WORKSPACE, "Older", bo);
+        group(ada, Tier.WESPACE, "Newer", bo);
         assertEquals("Newer", inbox(bo).get(0).name());
-        yarns.setPrefs(bo, older.id(), new Prefs(null, true, null));
+        yarns.setPrefs(bo, older, new Prefs(null, true, null));
         assertEquals("Older", inbox(bo).get(0).name());
 
         assertTrue(inbox(bo).get(0).unread() > 0);
-        yarns.markRead(bo, older.id());
+        yarns.markRead(bo, older);
         assertEquals(0, inbox(bo).get(0).unread());
         assertEquals(1, yarns.list(bo, false, Tier.WESPACE, null).size());   // tier filter
         assertEquals(1, yarns.list(bo, false, null, "newer").size());        // search
@@ -126,8 +148,8 @@ class YarnServiceTest {
 
     @Test
     void strangersCannotSeeAThread() {
-        ThreadView t = yarns.createGroup(ada, Tier.WESPACE, "Private", List.of(bo.getUsername()));
-        assertThrows(YarnException.class, () -> yarns.history(cy, t.id(), null, 50));
-        assertThrows(YarnException.class, () -> yarns.send(cy, t.id(), "hi"));
+        UUID t = group(ada, Tier.WESPACE, "Private", bo);
+        assertThrows(YarnException.class, () -> yarns.history(cy, t, null, 50));
+        assertThrows(YarnException.class, () -> yarns.send(cy, t, "hi"));
     }
 }

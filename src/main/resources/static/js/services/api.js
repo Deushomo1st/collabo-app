@@ -66,7 +66,6 @@ export const yarnMe = currentUser;
 export const yarnDirectory = (text) => yarn(`/directory${q({ q: text })}`);
 export const yarnThreads = (view = 'inbox', tier, text) => yarn(`/threads${q({ view, tier, q: text })}`);
 export const yarnStartMySpace = (username, body) => yarn('/threads/myspace', { method: 'POST', body: { username, body } });
-export const yarnCreateGroup = (tier, name, usernames) => yarn('/threads/group', { method: 'POST', body: { tier, name, usernames } });
 export const yarnHistory = (id, before) => yarn(`/threads/${id}/yarns${q({ before, limit: 50 })}`);
 export const yarnSend = (id, body) => yarn(`/threads/${id}/yarns`, { method: 'POST', body: { body } });
 export const yarnMarkRead = (id) => yarn(`/threads/${id}/read`, { method: 'POST' });

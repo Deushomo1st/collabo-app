@@ -52,11 +52,6 @@ public class YarnController {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.startMySpace(caller.require(), req.username(), req.body()));
     }
 
-    @PostMapping("/threads/group")
-    public ResponseEntity<ThreadView> createGroup(@Valid @RequestBody NewGroup req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createGroup(caller.require(), req.tier(), req.name(), req.usernames()));
-    }
-
     @GetMapping("/threads/{id}/yarns")
     public List<YarnView> history(@PathVariable UUID id,
                                   @RequestParam(required = false) Instant before, @RequestParam(defaultValue = "50") int limit) {
