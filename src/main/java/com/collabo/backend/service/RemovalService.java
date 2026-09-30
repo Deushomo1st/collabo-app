@@ -41,11 +41,12 @@ public class RemovalService {
     private final SpaceThreadService spaceThreads;
     private final YarnService yarns;
     private final NotificationService notifications;
+    private final RemovalRecordService recordService;
 
     public RemovalService(SpaceRepository spaces, RemovalProcessRepository processes, PleaRepository pleas, SpaceMemberRepository members,
                           CollaboratorRepository collaborators, UserRepository users, SpaceService spaceService, SpaceThreadService spaceThreads,
-                          YarnService yarns, NotificationService notifications) {
-        this.notifications = notifications; this.spaces = spaces; this.processes = processes; this.pleas = pleas; this.members = members; this.collaborators = collaborators;
+                          YarnService yarns, NotificationService notifications, RemovalRecordService recordService) {
+        this.recordService = recordService; this.notifications = notifications; this.spaces = spaces; this.processes = processes; this.pleas = pleas; this.members = members; this.collaborators = collaborators;
         this.users = users; this.spaceService = spaceService; this.spaceThreads = spaceThreads; this.yarns = yarns;
     }
 
@@ -147,6 +148,7 @@ public class RemovalService {
         notifications.resolve("removal:" + p.getId());
         if (s == null || target == null || by == null) return;
         spaceService.unseat(s, target.getId());
+        recordService.record(p, s);
         spaceThreads.announce(s, by.getUsername() + " removed " + target.getUsername() + " for: " + p.getReason());
         notifications.notify(target.getId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "You were removed from \"" + s.getName() + "\"", by.getUsername() + ": " + p.getReason(), "/HTML-pages/yarnspaces.html");
         yarns.systemNote(by, target, "You were removed from \"" + s.getName() + "\" for: " + p.getReason());

@@ -86,6 +86,13 @@ public class User {
     public boolean isVerified() { return Boolean.TRUE.equals(verified); }
     public void setVerified(boolean verified) { this.verified = verified; }
 
+    // Nullable wrapper: null reads as false. Admin-set only; there is no purchase flow yet (docs leave premium unspecified).
+    @Column
+    private Boolean premium = false;
+
+    public boolean isPremium() { return Boolean.TRUE.equals(premium); }
+    public void setPremium(boolean premium) { this.premium = premium; }
+
     // null-safe: a legacy row reads as not-a-test-account.
     public boolean isTest() { return Boolean.TRUE.equals(test); }
     public void setTest(boolean test) { this.test = test; }

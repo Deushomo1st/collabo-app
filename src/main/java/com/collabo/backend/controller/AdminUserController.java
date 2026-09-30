@@ -45,6 +45,11 @@ public class AdminUserController {
         return userService.updateRole(id, request);
     }
 
+    @PatchMapping("/{id}/premium")
+    public AdminUserResponse setPremium(@PathVariable UUID id, @RequestBody com.collabo.backend.dto.RemovalRecordDtos.PremiumRequest request) {
+        return userService.setPremium(id, request.premium());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
