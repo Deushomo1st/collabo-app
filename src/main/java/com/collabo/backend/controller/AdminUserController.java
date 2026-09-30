@@ -39,6 +39,11 @@ public class AdminUserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(request));
     }
 
+    @PostMapping("/bulk")
+    public List<com.collabo.backend.dto.AdminBulkDtos.Result> createUsers(@Valid @RequestBody com.collabo.backend.dto.AdminBulkDtos.Request request) {
+        return userService.createUsers(request);
+    }
+
     @PatchMapping("/{id}/role")
     public AdminUserResponse updateRole(@PathVariable UUID id,
                                         @Valid @RequestBody UpdateRoleRequest request) {

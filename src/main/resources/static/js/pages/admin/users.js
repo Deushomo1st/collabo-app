@@ -1,7 +1,7 @@
-// Users: search, filter, change role, toggle premium, create, delete. The last ADMIN can be neither demoted nor deleted (self-lockout guard).
+// Users: search, filter, change role, toggle premium, create (one or in bulk), delete. The last ADMIN can be neither demoted nor deleted (self-lockout guard).
 import { h } from '/js/services/dom.js';
 import * as api from '/js/services/admin-api.js';
-import { notify, field, confirmDialog, formDialog, ago } from './ui.js';
+import { notify, field, confirmDialog, formDialog, ago, copy } from './ui.js';
 
 const FILTERS = [['all', 'All', () => true], ['unverified', 'Unverified', (u) => !u.verified], ['premium', 'Premium', (u) => u.premium],
     ['admin', 'Admins', (u) => u.role === 'ADMIN'], ['test', 'Test', (u) => u.test]];
@@ -64,9 +64,51 @@ export async function usersView() {
         if (out) act(() => api.createUser({ email: out.email.trim(), username: out.username.trim(), password: out.password, role: out.role, test: out.test }), 'User created.');
     }
 
+    /** One line per account: email, username, and optionally a password (comma or tab separated). A blank password is generated. */
+    const parseRows = (text) => text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((l) => l.split(/[,\t]/).map((c) => c.trim()))
+        .filter(([email]) => email.toLowerCase() !== 'email').map(([email, username, password]) => ({ email, username, password: password || '' }));
+
+    const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    function download(results) {
+        const csv = ['email,username,password,result', ...results.map((r) => [r.email, r.username, r.password, r.ok ? 'created' : r.error].map(csvCell).join(','))].join('\n');
+        const a = h('a', { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: 'new-accounts.csv' });
+        a.click(); URL.revokeObjectURL(a.href);
+    }
+
+    /** The outcome of a bulk run. Generated passwords are shown here once and are not stored anywhere readable. */
+    function showResults(results) {
+        const dlg = h('dialog', { class: 'ad-dialog ad-dialog--wide' });
+        const ok = results.filter((r) => r.ok).length;
+        dlg.append(h('h3', { text: `${ok} of ${results.length} accounts created` }),
+            h('p', { class: 'ad-dialog__lead', text: 'Generated passwords appear only here. Download or copy them now.' }),
+            h('div', { class: 'ad-scroll' }, h('table', { class: 'ad-table' },
+                h('thead', {}, h('tr', {}, ...['#', 'Email', 'Username', 'Password / problem'].map((t) => h('th', { text: t })))),
+                h('tbody', {}, ...results.map((r) => h('tr', {}, h('td', { text: String(r.row) }), h('td', { text: r.email }), h('td', { text: r.username }),
+                    h('td', { class: r.ok ? '' : 'ad-sub', text: r.ok ? (r.password || 'as supplied') : r.error })))))),
+            h('div', { class: 'ad-dialog__actions' },
+                h('button', { class: 'ad-btn', type: 'button', text: 'Copy', onclick: () => copy(results.map((r) => [r.email, r.username, r.password || (r.ok ? '' : r.error)].join('\t')).join('\n')) }),
+                h('button', { class: 'ad-btn', type: 'button', text: 'Download CSV', onclick: () => download(results) }),
+                h('button', { class: 'ad-btn ad-btn--primary', type: 'button', text: 'Done', onclick: () => dlg.close() })));
+        dlg.addEventListener('close', () => dlg.remove());
+        document.body.append(dlg);
+        dlg.showModal();
+    }
+
+    async function bulk() {
+        const rows = field('rows', 'email, username, password (optional): one account per line', { tag: 'textarea', rows: 8, placeholder: 'ann@example.com, ann\nbob@example.com, bob, Chosen#Pass1' });
+        const test = field('test', 'Test accounts (skip email checks)', { type: 'checkbox' });
+        const out = await formDialog({ title: 'Create many users', lead: 'Paste a list, or a CSV from a spreadsheet. Rows without a password get a generated one.', fields: [rows, test], submit: 'Create',
+            valid: () => parseRows(rows.input.value).length > 0 });
+        if (!out) return;
+        const list = parseRows(out.rows);
+        if (list.length > 500) return notify('At most 500 accounts at a time.', true);
+        try { showResults(await api.createUsers(list, out.test)); state.all = await api.users(); draw(); }
+        catch (e) { if (e instanceof api.AdminAuthError) throw e; notify(e.message, true); }
+    }
+
     draw();
     return h('div', { class: 'ad-view' },
-        h('div', { class: 'ad-head' }, h('h2', { text: 'Users' }), h('button', { class: 'ad-btn ad-btn--primary', type: 'button', text: 'New user', onclick: create })),
+        h('div', { class: 'ad-head' }, h('h2', { text: 'Users' }), h('span', {}, h('button', { class: 'ad-btn', type: 'button', text: 'Bulk create', onclick: bulk }), ' ', h('button', { class: 'ad-btn ad-btn--primary', type: 'button', text: 'New user', onclick: create }))),
         h('div', { class: 'ad-toolbar' }, search, chips, count),
         h('div', { class: 'ad-scroll' }, h('table', { class: 'ad-table' },
             h('thead', {}, h('tr', {}, ...['User', 'Role', 'Status', 'Premium', 'Joined', ''].map((t) => h('th', { text: t })))), body)));

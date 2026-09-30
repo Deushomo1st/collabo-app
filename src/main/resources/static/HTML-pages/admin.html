@@ -5,9 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
 <title>COLLABO Admin</title>
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
 <link rel="stylesheet" href="/css/pages/admin.css">
 </head>
 <body>
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
 
 <div id="gate" class="ad-gate" hidden>
     <form id="gate-form" class="ad-gate__card" autocomplete="off">
@@ -23,6 +33,7 @@
     <aside class="ad-side">
         <div class="ad-brand">COLLABO <small>Admin</small></div>
         <nav id="nav" aria-label="Admin sections"></nav>
+        <div class="ad-theme" id="theme-slot"></div>
         <button id="signout" class="ad-btn ad-btn--small" type="button">Sign out</button>
     </aside>
     <div class="ad-main">

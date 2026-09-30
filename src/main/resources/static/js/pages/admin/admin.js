@@ -2,6 +2,7 @@
 // Views live next to this file and return a DOM node. An AdminAuthError anywhere sends you back to the gate.
 import * as api from '/js/services/admin-api.js';
 import { h } from '/js/services/dom.js';
+import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { overview, checks } from './overview.js';
 import { usersView } from './users.js';
 import { moderatorsView } from './moderators.js';
@@ -81,3 +82,5 @@ setInterval(() => { if (!$('app').hidden && !document.hidden) refreshStatus().ca
 
 if (api.getKey()) refreshStatus().then(showApp).catch((e) => { api.setKey(''); showGate(e instanceof api.AdminAuthError ? e.message : ''); });
 else showGate();
+
+mountThemeSwitcher('#theme-slot', { inline: true });

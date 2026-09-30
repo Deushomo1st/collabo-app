@@ -28,6 +28,7 @@ export const status = () => call('/status');
 
 export const users = () => call('/users');
 export const createUser = (body) => call('/users', { method: 'POST', body });
+export const createUsers = (users, test) => call('/users/bulk', { method: 'POST', body: { users, test } });
 export const setRole = (id, role) => call(`/users/${id}/role`, { method: 'PATCH', body: { role } });
 export const setPremium = (id, premium) => call(`/users/${id}/premium`, { method: 'PATCH', body: { premium } });
 export const deleteUser = (id) => call(`/users/${id}`, { method: 'DELETE' });
