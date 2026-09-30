@@ -12,7 +12,7 @@ import {
 const MAX_LINKS = 12, MAX_SHIPPED = 5;
 const PRIVACY = [
     ['EVERYONE', 'Everyone'], ['FOLLOWERS', 'People who follow me'], ['FOLLOWING', 'People I follow'],
-    ['MUTUAL', 'Mutual follows'], ['APPLICANTS', 'Only me (applicants come with applications)'],
+    ['MUTUAL', 'Mutual follows'], ['APPLICANTS', 'Only people who applied to my posts'],
 ];
 const KIND = { SPACE_FORMED: 'Space formed', MILESTONE_CREDITED: 'Milestone' };
 

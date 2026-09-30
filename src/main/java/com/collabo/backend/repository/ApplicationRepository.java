@@ -26,5 +26,10 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     @Query("select a.postId, a.state from Application a where a.applicantId = :u and a.postId in :ids and a.state <> :withdrawn")
     List<Object[]> statesOf(@Param("u") UUID applicantId, @Param("ids") Collection<UUID> postIds, @Param("withdrawn") ApplicationState withdrawn);
 
+    /** Has this person a live (not withdrawn) application to any post by that author? */
+    @Query("select count(a) > 0 from Application a, Post p where p.id = a.postId and a.applicantId = :applicant "
+            + "and p.authorId = :author and a.state <> :withdrawn")
+    boolean liveBetween(@Param("applicant") UUID applicantId, @Param("author") UUID authorId, @Param("withdrawn") ApplicationState withdrawn);
+
     void deleteByPostId(UUID postId);
 }

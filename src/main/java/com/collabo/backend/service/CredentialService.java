@@ -4,11 +4,14 @@ import com.collabo.backend.dto.CredentialsResponse;
 import com.collabo.backend.dto.ShippedLinkRequest;
 import com.collabo.backend.entity.ShippedLink;
 import com.collabo.backend.repository.ShippedLinkRepository;
+import com.collabo.backend.entity.ApplicationState;
 import com.collabo.backend.entity.CredentialEntry;
 import com.collabo.backend.entity.CredentialKind;
+import com.collabo.backend.entity.Post;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
+import com.collabo.backend.repository.ApplicationRepository;
 import com.collabo.backend.repository.CredentialEntryRepository;
 import com.collabo.backend.repository.FollowRepository;
 import com.collabo.backend.repository.UserRepository;
@@ -34,9 +37,12 @@ public class CredentialService {
     private final ShippedLinkRepository shipped;
     private final FollowRepository follows;
     private final UserRepository users;
+    private final ApplicationRepository applications;
+    private final PostService posts;
 
-    public CredentialService(CredentialEntryRepository entries, ShippedLinkRepository shipped, FollowRepository follows, UserRepository users) {
-        this.shipped = shipped;
+    public CredentialService(CredentialEntryRepository entries, ShippedLinkRepository shipped, FollowRepository follows, UserRepository users,
+                             ApplicationRepository applications, PostService posts) {
+        this.shipped = shipped; this.applications = applications; this.posts = posts;
         this.entries = entries; this.follows = follows; this.users = users;
     }
 
@@ -64,6 +70,23 @@ public class CredentialService {
     public CredentialsResponse view(String username, User viewer) {
         User owner = users.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("No one has that username."));
         if (!canView(owner, viewer)) return CredentialsResponse.hidden();
+        return open(owner);
+    }
+
+    /**
+     * "View founder's credentials": the founder of a post, for someone with a live application to it.
+     * Tied to the application, so it is not a general unlock of the founder's profile.
+     */
+    @Transactional(readOnly = true)
+    public CredentialsResponse founderView(User viewer, UUID postId) {
+        Post post = posts.visible(viewer, postId);
+        boolean applied = applications.findByPostIdAndApplicantId(postId, viewer.getId())
+                .filter(a -> a.getState() != ApplicationState.WITHDRAWN).isPresent();
+        if (!applied) throw new ResourceNotFoundException("That post is gone.");
+        return open(users.findById(post.getAuthorId()).orElseThrow(() -> new ResourceNotFoundException("That post is gone.")));
+    }
+
+    private CredentialsResponse open(User owner) {
         List<CredentialEntry> rows = entries.findByUserIdOrderByOccurredAtDesc(owner.getId());
         Map<UUID, List<ShippedLink>> shipped = shippedFor(rows);
         return new CredentialsResponse(true, rows.stream().map(e -> entryView(e, shipped)).toList());
@@ -113,12 +136,14 @@ public class CredentialService {
     boolean canView(User owner, User viewer) {
         UUID o = owner.getId(), v = viewer.getId();
         if (o.equals(v)) return true;
+        // applying overrides the owner's setting: a founder always sees the credentials of someone who applied to them
+        if (applications.liveBetween(o, v, ApplicationState.WITHDRAWN)) return true;
         return switch (owner.getCredentialsPrivacy()) {
             case EVERYONE -> true;
             case FOLLOWERS -> follows.existsByFollowerIdAndFollowedId(v, o);
             case FOLLOWING -> follows.existsByFollowerIdAndFollowedId(o, v);
             case MUTUAL -> follows.existsByFollowerIdAndFollowedId(v, o) && follows.existsByFollowerIdAndFollowedId(o, v);
-            case APPLICANTS -> false;   // acts as "only me" until applications exist (phase 4)
+            case APPLICANTS -> applications.liveBetween(v, o, ApplicationState.WITHDRAWN);   // people who applied to my posts
         };
     }
 

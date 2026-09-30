@@ -5,7 +5,9 @@ import com.collabo.backend.dto.ApplicationDtos.ApplicationResponse;
 import com.collabo.backend.dto.ApplicationDtos.ApplyRequest;
 import com.collabo.backend.dto.ApplicationDtos.DecisionRequest;
 import com.collabo.backend.dto.ApplicationDtos.ReviewResponse;
+import com.collabo.backend.dto.CredentialsResponse;
 import com.collabo.backend.service.ApplicationService;
+import com.collabo.backend.service.CredentialService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,10 +19,11 @@ import java.util.UUID;
 public class ApplicationController {
 
     private final ApplicationService applications;
+    private final CredentialService credentials;
     private final CurrentUser current;
 
-    public ApplicationController(ApplicationService applications, CurrentUser current) {
-        this.applications = applications; this.current = current;
+    public ApplicationController(ApplicationService applications, CredentialService credentials, CurrentUser current) {
+        this.applications = applications; this.credentials = credentials; this.current = current;
     }
 
     @PostMapping("/posts/{postId}/applications")
@@ -41,6 +44,10 @@ public class ApplicationController {
     public ReviewResponse decide(@PathVariable UUID id, @RequestBody DecisionRequest req) {
         return applications.decide(current.require(), id, req.decision());
     }
+
+    /** The founder's credentials, for someone who applied to this post. */
+    @GetMapping("/posts/{postId}/founder-credentials")
+    public CredentialsResponse founderCredentials(@PathVariable UUID postId) { return credentials.founderView(current.require(), postId); }
 
     @GetMapping("/applications/mine")
     public List<ApplicationResponse> mine() { return applications.mine(current.require()); }
