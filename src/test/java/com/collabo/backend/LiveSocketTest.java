@@ -188,6 +188,31 @@ class LiveSocketTest {
         take(twoQ, "case");                                   // closing clears it from the desk that held it
     }
 
+    private BlockingQueue<String> adminSocket(String ticket) throws Exception {
+        BlockingQueue<String> got = new LinkedBlockingQueue<>();
+        HttpClient.newHttpClient().newWebSocketBuilder().buildAsync(URI.create("ws://localhost:" + port + "/ws/admin" + (ticket == null ? "" : "?ticket=" + ticket)), new WebSocket.Listener() {
+            @Override public CompletionStage<?> onText(WebSocket w, CharSequence data, boolean last) { got.add(data.toString()); w.request(1); return CompletableFuture.completedFuture(null); }
+        }).get(5, TimeUnit.SECONDS);
+        return got;
+    }
+
+    @Test
+    void theAdminConsoleTradesItsKeyForAOneTimeTicketAndHearsTheQueueChange() throws Exception {
+        String tag = UUID.randomUUID().toString().substring(0, 6);
+        Browser ann = new Browser("ann" + tag), bob = new Browser("bob" + tag);
+        assertThrows(Exception.class, () -> adminSocket(null));            // no ticket
+        assertThrows(Exception.class, () -> adminSocket("guess"));         // wrong ticket
+        assertThrows(AssertionError.class, () -> ann.call("POST", "/api/admin/live/ticket", null, "wrong-key"));   // 403: the key is needed to get one
+
+        String ticket = JsonPath.read(ann.admin("POST", "/api/admin/live/ticket", null), "$.ticket");
+        var q = adminSocket(ticket);
+        assertThrows(Exception.class, () -> adminSocket(ticket));          // spent: a leaked URL is useless
+
+        String dm = JsonPath.read(ann.call("POST", "/api/yarns/threads/myspace", "{\"username\":\"" + bob.name + "\",\"body\":\"hi\"}"), "$.id");
+        ann.call("POST", "/api/yarns/threads/" + dm + "/report", "{\"reason\":\"rude\"}");
+        take(q, "queue");                                                   // a new report reaches the open console
+    }
+
     @Test
     void deliveredFramesFromStrangersOrJunkChangeNothing() throws Exception {
         String tag = UUID.randomUUID().toString().substring(0, 6);

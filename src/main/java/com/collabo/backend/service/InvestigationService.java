@@ -50,7 +50,9 @@ public class InvestigationService {
         if (!threads.existsById(threadId) || seats.findByThreadIdAndUserId(threadId, me.getId()).isEmpty()) throw new ResourceNotFoundException("No such yarn thread.");
         if (investigations.existsByThreadIdAndReporterIdAndKindAndStatusNot(threadId, me.getId(), Investigation.Kind.REPORT, Investigation.Status.CLOSED))
             throw new InvalidProfileException("You have already reported this, and it is being looked at.");
-        return view(investigations.save(new Investigation(Investigation.Kind.REPORT, threadId, me.getId(), reason)));
+        Investigation saved = investigations.save(new Investigation(Investigation.Kind.REPORT, threadId, me.getId(), reason));
+        signals.adminQueue();
+        return view(saved);
     }
 
     /** status: "active" (open, assigned, reported; oldest first) or "closed" (newest first). */
@@ -76,6 +78,7 @@ public class InvestigationService {
         if (i.isClosed()) throw new InvalidProfileException("This investigation is already closed.");
         i.close();
         investigations.save(i);
+        signals.adminQueue();
         if (i.getModeratorId() != null) signals.moderatorCases(i.getModeratorId());
         notifications.notify(i.getReporterId(), Bucket.SPACES, "Your report was reviewed", "A moderator looked into your report and the admin has closed it.",
                 i.getThreadId() == null ? null : "/HTML-pages/yarnspaces.html#t/" + i.getThreadId());
@@ -93,6 +96,7 @@ public class InvestigationService {
         investigations.save(i);
         if (before != null && !before.equals(m.getId())) signals.moderatorCases(before);   // the case leaves their desk
         signals.moderatorCases(m.getId());
+        signals.adminQueue();
         InvestigationView v = view(i);
         String where = v.title().isBlank() ? "a conversation" : "\"" + v.title() + "\"";
         for (UUID userId : i.getKind() == Investigation.Kind.APPEAL || i.getThreadId() == null ? List.of(i.getReporterId()) : involvedSeats(i.getThreadId()))
@@ -107,6 +111,7 @@ public class InvestigationService {
         Investigation i = find(id);
         if (i.getAppealId() == null) throw new InvalidProfileException("Only an appeal has a badge to decide.");
         appeals.decide(i.getAppealId(), outcome);
+        signals.adminQueue();
         if (i.getModeratorId() != null) signals.moderatorCases(i.getModeratorId());
         return view(find(id));
     }

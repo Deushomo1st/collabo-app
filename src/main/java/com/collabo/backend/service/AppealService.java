@@ -8,6 +8,7 @@ import com.collabo.backend.entity.*;
 import com.collabo.backend.entity.Notification.Bucket;
 import com.collabo.backend.exception.ForbiddenException;
 import com.collabo.backend.exception.InvalidProfileException;
+import com.collabo.backend.live.LiveSignals;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -39,10 +40,12 @@ public class AppealService {
     private final UserRepository users;
     private final NotificationService notifications;
     private final InvestigationRepository investigations;
+    private final LiveSignals signals;
 
     public AppealService(AppealRepository appeals, RemovalRecordRepository records, RemovalRecordService recordViews, SpaceRepository spaces,
                          SpaceThreadService spaceThreads, YarnRepository yarns, UserRepository users, NotificationService notifications,
-                         InvestigationRepository investigations) {
+                         InvestigationRepository investigations, LiveSignals signals) {
+        this.signals = signals;
         this.appeals = appeals; this.records = records; this.recordViews = recordViews; this.spaces = spaces; this.spaceThreads = spaceThreads;
         this.yarns = yarns; this.users = users; this.notifications = notifications; this.investigations = investigations;
     }
@@ -60,6 +63,7 @@ public class AppealService {
             throw new InvalidProfileException("This removal has already been appealed.");
         }
         investigations.save(Investigation.forAppeal(roomOf(r), a, r.getCreatedAt().minus(BEFORE), r.getCreatedAt().plus(AFTER)));
+        signals.adminQueue();
         return view(a, r);
     }
 

@@ -41,6 +41,7 @@ export const tables = () => call('/db/tables');
 export const tableRows = (name, limit, offset) => call(`/db/tables/${encodeURIComponent(name)}/rows?limit=${limit}&offset=${offset}`);
 export const cleanTable = (name) => call(`/db/tables/${encodeURIComponent(name)}/truncate`, { method: 'POST' });
 
+export const liveTicket = () => call('/live/ticket', { method: 'POST' });
 export const investigations = (status = 'active') => call(`/investigations?status=${status}`);
 export const investigation = (id) => call(`/investigations/${id}`);
 export const assignInvestigation = (id, moderatorId) => call(`/investigations/${id}/assign`, { method: 'POST', body: { moderatorId } });

@@ -3,6 +3,7 @@ package com.collabo.backend.service;
 import com.collabo.backend.dto.InvestigationDtos.FindingView;
 import com.collabo.backend.entity.*;
 import com.collabo.backend.exception.InvalidProfileException;
+import com.collabo.backend.live.LiveSignals;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -28,8 +29,10 @@ public class FindingService {
     private final FindingRepository findings;
     private final FindingImageRepository images;
     private final ModeratorRepository moderators;
+    private final LiveSignals signals;
 
-    public FindingService(InvestigationRepository investigations, FindingRepository findings, FindingImageRepository images, ModeratorRepository moderators) {
+    public FindingService(InvestigationRepository investigations, FindingRepository findings, FindingImageRepository images, ModeratorRepository moderators, LiveSignals signals) {
+        this.signals = signals;
         this.investigations = investigations; this.findings = findings; this.images = images; this.moderators = moderators;
     }
 
@@ -50,6 +53,7 @@ public class FindingService {
         Finding f = findings.save(new Finding(i.getId(), m.getId(), text, rec));
         i.markReported();
         investigations.save(i);
+        signals.adminQueue();
         return new FindingView(f.getId(), m.getName(), f.getText(), f.getRecommendation(), f.getCreatedAt(), List.of());
     }
 

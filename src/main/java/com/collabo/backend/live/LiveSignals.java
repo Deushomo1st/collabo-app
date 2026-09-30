@@ -36,6 +36,9 @@ public class LiveSignals {
     /** A moderator's case list changed (assigned, swapped away, closed, decided): their desk should reload it. */
     public void moderatorCases(UUID moderator) { sendTo(java.util.Set.of(LiveHub.moderatorKey(moderator)), "{\"t\":\"case\"}"); }
 
+    /** The admin's investigation queue changed (a report or appeal came in, findings arrived, or it was assigned, closed or decided). */
+    public void adminQueue() { sendTo(java.util.Set.of(AdminSocket.ACCOUNT), "{\"t\":\"queue\"}"); }
+
     private void send(Collection<UUID> users, String json) {
         sendTo(users.stream().map(LiveHub::userKey).collect(Collectors.toSet()), json);
     }

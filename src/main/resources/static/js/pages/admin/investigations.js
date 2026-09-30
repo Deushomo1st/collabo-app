@@ -2,6 +2,7 @@
 // back (with screenshots), then close a report or rule on an appeal's badge. Moderators never close anything themselves.
 import { h } from '/js/services/dom.js';
 import * as api from '/js/services/admin-api.js';
+import { watchQueue } from '/js/services/admin-live.js';
 import { notify, field, confirmDialog, formDialog, ago } from './ui.js';
 
 const TIER = { MYSPACE: 'MySpace', WESPACE: 'WeSpace', WORKSPACE: 'Workspace' };
@@ -90,10 +91,13 @@ export async function investigationsView() {
     }
 
     await list();
-    // The console signs in with a key, not a session, so it has no socket: it looks again every 15s while the queue is on screen.
+    // A "queue" signal means look again; the list redraws only if something changed. Without the socket it looks every 15s instead.
+    const idle = () => showing === 'list' && document.visibilityState === 'visible' && !document.querySelector('dialog[open]');
+    const look = () => { if (idle()) list(true).catch(() => {}); };
+    const watch = watchQueue(look);
     const timer = setInterval(() => {
-        if (!root.isConnected) return clearInterval(timer);
-        if (showing === 'list' && document.visibilityState === 'visible' && !document.querySelector('dialog[open]')) list(true).catch(() => {});
+        if (!root.isConnected) { clearInterval(timer); return watch.stop(); }
+        if (!watch.connected()) look();
     }, 15_000);
     return root;
 }

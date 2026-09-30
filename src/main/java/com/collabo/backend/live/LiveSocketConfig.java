@@ -18,13 +18,17 @@ public class LiveSocketConfig implements WebSocketConfigurer {
     private final LiveSocketHandler handler;
     private final String[] extraOrigins;
 
-    public LiveSocketConfig(LiveSocketHandler handler, @Value("${app.ws.allowed-origins:}") String[] extraOrigins) {
-        this.handler = handler; this.extraOrigins = extraOrigins;
+    private final AdminSocket admin;
+
+    public LiveSocketConfig(LiveSocketHandler handler, AdminSocket admin, @Value("${app.ws.allowed-origins:}") String[] extraOrigins) {
+        this.handler = handler; this.admin = admin; this.extraOrigins = extraOrigins;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         var reg = registry.addHandler(handler, "/ws/live");
-        if (extraOrigins.length > 0 && !extraOrigins[0].isBlank()) reg.setAllowedOrigins(extraOrigins);   // unset means same-origin only
+        // the admin console: no session, so a one-time ticket (see AdminSocket) is its credential; same-origin rule applies too
+        var adminReg = registry.addHandler(admin, "/ws/admin").addInterceptors(admin);
+        if (extraOrigins.length > 0 && !extraOrigins[0].isBlank()) { reg.setAllowedOrigins(extraOrigins); adminReg.setAllowedOrigins(extraOrigins); }   // unset means same-origin only
     }
 }
