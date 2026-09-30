@@ -2,6 +2,8 @@
 // All network calls live in js/services/api.js; text goes in through textContent only.
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
+import { milestonesSection } from '/js/components/space/milestones.js';
+import { paymentsSection } from '/js/components/space/payments.js';
 import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers, spaceMemberUpdate, spaceMemberRemove } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
@@ -67,6 +69,9 @@ function draw() {
     const tag = document.getElementById('space-role');
     tag.textContent = ROLE[space.role] || space.role; tag.hidden = false;
     document.title = `COLLABO — ${space.name}`;
+    const mine = members.find((m) => m.person.username === me.username);
+    const can = (perm) => !!mine && mine.permissions.includes(perm);
+    const inRoom = space.role !== 'APPLICANT';   // payments are the team's business; the record of milestones is open to accepted applicants too
     main().replaceChildren(...[
         space.role === 'APPLICANT' && h('section', { class: 'spc-card spc-join sp-glass' },
             h('h2', { text: 'You were accepted' }),
@@ -82,7 +87,9 @@ function draw() {
             h('h2', { text: `The team · ${members.length}` }),
             h('div', { class: 'spc-members' }, ...members.map(memberRow)),
             space.role === 'MEMBER' && !space.canManage && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Leave space',
-                onclick: () => act(() => spaceLeave(space.id), 'You left the space.') })))].filter(Boolean));
+                onclick: () => act(() => spaceLeave(space.id), 'You left the space.') }))),
+        milestonesSection(space, { canLog: can('LOG_MILESTONES'), me }),
+        inRoom && paymentsSection(space, { canLog: can('LOG_PAYMENTS'), me, members })].filter(Boolean));
 }
 
 async function boot() {

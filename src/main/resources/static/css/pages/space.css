@@ -8,3 +8,6 @@
 .spc-perms { margin-left: auto; color: var(--sp-muted); font: 500 11px var(--sp-mono); }
 .spc-join { border-color: var(--sp-brand); }
 .sp-form label.spc-check { display: flex; flex-direction: row; align-items: center; gap: 8px; color: var(--sp-muted); font-size: 13px; cursor: pointer; }
+.spc-ms { display: grid; gap: 6px; }
+.spc-credited { margin: 0; }
+.spc-ms > .sp-tag { justify-self: start; }

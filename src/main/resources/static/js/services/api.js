@@ -129,3 +129,15 @@ export const collaboratorInvite = (postId, username) => call(post(postId, '/coll
 export const collaboratorAnswer = (postId, accept) => call(post(postId, accept ? '/collaborators/accept' : '/collaborators/decline'), { method: 'POST' });
 export const collaboratorRemove = (postId, username) => call(post(postId, `/collaborators/${encodeURIComponent(username)}`), { method: 'DELETE' });
 export const collaborationsMine = () => call('/api/collaborations');
+
+// milestones and payment records of a space
+const sp = (id, path) => `/api/spaces/${id}${path}`;
+export const milestonesOf = (id) => call(sp(id, '/milestones'));
+export const milestoneCreate = (id, title) => call(sp(id, '/milestones'), { method: 'POST', body: { title } });
+export const milestoneFulfil = (id, mid, note) => call(sp(id, `/milestones/${mid}/fulfil`), { method: 'POST', body: { note } });
+export const milestoneDelete = (id, mid) => call(sp(id, `/milestones/${mid}`), { method: 'DELETE' });
+export const milestoneOptOut = (id, mid) => call(sp(id, `/milestones/${mid}/opt-out`), { method: 'POST' });
+export const paymentsOf = (id) => call(sp(id, '/payments'));
+export const paymentClaim = (id, fields) => call(sp(id, '/payments'), { method: 'POST', body: fields });
+export const paymentConfirm = (id, pid) => call(sp(id, `/payments/${pid}/confirm`), { method: 'POST' });
+export const paymentCancel = (id, pid) => call(sp(id, `/payments/${pid}/cancel`), { method: 'POST' });
