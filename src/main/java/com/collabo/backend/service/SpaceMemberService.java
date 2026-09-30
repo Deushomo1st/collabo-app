@@ -63,19 +63,18 @@ public class SpaceMemberService {
         Space s = find(spaceId);
         if (spaceAccess.roleOf(me, s) == null) throw new ResourceNotFoundException(GONE);
         List<MemberResponse> out = new ArrayList<>();
-        User owner = users.findById(s.getOwnerId()).orElseThrow(() -> new ResourceNotFoundException(GONE));
-        out.add(new MemberResponse(PersonDto.of(owner), true, "Owner", names(EnumSet.allOf(SpacePermission.class)), s.getCreatedAt()));
         for (SpaceMember m : members.findBySpaceIdAndStateOrderByJoinedAtAsc(s.getId(), SpaceMember.State.ACTIVE)) {
-            users.findById(m.getUserId()).ifPresent(u -> out.add(present(u, m)));
+            users.findById(m.getUserId()).ifPresent(u -> out.add(present(s, u, m)));
         }
         return out;
     }
 
-    /** Owner only (collaborators arrive in the next step). Weighty permissions need confirm=true. */
+    /** Owner only (collaborators arrive in the next step). The owner's own row is fixed. Weighty permissions need confirm=true. */
     public MemberResponse update(User me, UUID spaceId, String username, String title, List<String> requested, Boolean confirm) {
         Space s = find(spaceId);
         if (!s.getOwnerId().equals(me.getId())) throw new ResourceNotFoundException(GONE);
         User target = users.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("No such member."));
+        if (target.getId().equals(s.getOwnerId())) throw new InvalidProfileException("The owner's role is fixed.");
         SpaceMember m = activeMember(s, target);
         if (title != null) {
             String t = title.trim();
@@ -91,7 +90,7 @@ public class SpaceMemberService {
             }
             m.setPermissions(next);
         }
-        return present(target, members.save(m));
+        return present(s, target, members.save(m));
     }
 
     /** The owner, or a member holding ACCEPT_MEMBERS, removes someone. The owner cannot be removed. */
@@ -115,8 +114,8 @@ public class SpaceMemberService {
                 .orElseThrow(() -> new ResourceNotFoundException("No such member."));
     }
 
-    private static MemberResponse present(User u, SpaceMember m) {
-        return new MemberResponse(PersonDto.of(u), false, m.getTitle(), names(m.getPermissions()), m.getJoinedAt());
+    private static MemberResponse present(Space s, User u, SpaceMember m) {
+        return new MemberResponse(PersonDto.of(u), u.getId().equals(s.getOwnerId()), m.getTitle(), names(m.getPermissions()), m.getJoinedAt());
     }
 
     private static SpacePermission parse(String name) {

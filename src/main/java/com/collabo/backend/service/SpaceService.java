@@ -51,6 +51,10 @@ public class SpaceService {
             else throw new InvalidProfileException("Keep the space name under " + MAX_NAME + " characters.");
         }
         Space space = spaces.save(new Space(postId, me.getId(), name));
+        SpaceMember founder = new SpaceMember(space.getId(), me.getId());
+        founder.setTitle("Owner");
+        founder.setPermissions(java.util.EnumSet.allOf(SpacePermission.class));
+        members.save(founder);   // the owner is a member like everyone else
         post.setFormed(true);
         posts.save(post);
         credentials.record(me.getId(), CredentialKind.SPACE_FORMED, space.getName(), "", "space", space.getId().toString(), null);

@@ -116,6 +116,15 @@ class SpaceMembershipTest {
     }
 
     @Test
+    void theOwnersRowIsFixedButReal() throws Exception {
+        formAndJoin();
+        send(patch("/api/spaces/" + space + "/members/" + ann), annS, "{\"title\":\"King\"}").andExpect(status().isBadRequest());
+        send(get("/api/spaces/" + space + "/members"), annS, null)
+                .andExpect(jsonPath("$[0].title").value("Owner")).andExpect(jsonPath("$[0].permissions", hasSize(6)))
+                .andExpect(jsonPath("$[1].owner").value(false));
+    }
+
+    @Test
     void leavingRemovesYouFromTheListAndYouCanComeBack() throws Exception {
         formAndJoin();
         send(post("/api/spaces/" + space + "/leave"), annS, null).andExpect(status().isBadRequest());
