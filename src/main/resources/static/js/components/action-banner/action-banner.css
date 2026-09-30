@@ -1,0 +1,50 @@
+/* action-banner: glowing "action required" strip.
+   Public variables: --action-banner-{glow,ink,muted,bg,ok,ok-ink,line}
+   Private: --_ab-* (internal). Light values live in css/global/theme.css. */
+
+.action-banner {
+    --_ab-glow: var(--action-banner-glow, #f87171);
+    --_ab-ink: var(--action-banner-ink, #f4f5f7);
+    --_ab-muted: var(--action-banner-muted, #9099a8);
+    --_ab-bg: var(--action-banner-bg, rgba(255, 255, 255, .045));
+    --_ab-ok: var(--action-banner-ok, #34d399);
+    --_ab-ok-ink: var(--action-banner-ok-ink, #032);
+    --_ab-line: var(--action-banner-line, rgba(255, 255, 255, .10));
+
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
+    padding: 14px 16px; border-radius: 22px; color: var(--_ab-ink);
+    border: 1px solid color-mix(in srgb, var(--_ab-glow) 70%, transparent);
+    background: color-mix(in srgb, var(--_ab-glow) 12%, var(--_ab-bg));
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    box-shadow: 0 0 26px color-mix(in srgb, var(--_ab-glow) 40%, transparent), inset 0 0 32px color-mix(in srgb, var(--_ab-glow) 14%, transparent);
+    animation: action-banner-glow 2.6s ease-in-out infinite;
+}
+@keyframes action-banner-glow {
+    50% { box-shadow: 0 0 40px color-mix(in srgb, var(--_ab-glow) 58%, transparent), inset 0 0 40px color-mix(in srgb, var(--_ab-glow) 20%, transparent); }
+}
+
+.action-banner__body { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; flex: 1 1 240px; min-width: 0; }
+.action-banner__tag {
+    padding: 5px 8px; border-radius: 999px; font: 500 10.5px/1 ui-monospace, Menlo, monospace;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--_ab-glow);
+    border: 1px solid color-mix(in srgb, var(--_ab-glow) 60%, transparent);
+}
+.action-banner__title { margin-top: 2px; }
+.action-banner__text { color: var(--_ab-muted); font-size: 13px; }
+
+.action-banner__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.action-banner__note { padding: 5px 8px; border-radius: 999px; border: 1px solid var(--_ab-line); color: var(--_ab-muted); font-size: 12px; }
+.action-banner__btn {
+    padding: 9px 16px; border-radius: 14px; font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer;
+    color: inherit; border: 1px solid var(--_ab-line); background: color-mix(in srgb, var(--_ab-ink) 10%, transparent);
+}
+.action-banner__btn:hover { filter: brightness(1.12); }
+.action-banner__btn:focus-visible { outline: 2px solid var(--_ab-glow); outline-offset: 2px; }
+.action-banner__btn--ok { background: var(--_ab-ok); color: var(--_ab-ok-ink); border-color: transparent; }
+.action-banner__btn--danger { background: transparent; color: var(--_ab-glow); border-color: color-mix(in srgb, var(--_ab-glow) 55%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+    .action-banner { animation: none; }
+}
