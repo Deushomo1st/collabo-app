@@ -20,18 +20,14 @@ const csrfCookie = () => {
     return m ? decodeURIComponent(m[1]) : '';
 };
 
-// fetch + JSON + CSRF. Returns { response, data }. A write that is refused for a stale CSRF token is retried once.
-async function send(path, { method = 'GET', body } = {}, retry = true) {
+// fetch + JSON + CSRF. Returns { response, data }. The token cookie is fetched before the first write.
+async function send(path, { method = 'GET', body } = {}) {
     const write = method !== 'GET';
     if (write && !csrfCookie()) await fetch('/api/auth/csrf');
     const headers = {};
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (write) headers['X-XSRF-TOKEN'] = csrfCookie();
     const response = await fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
-    if (response.status === 403 && write && retry) {   // token expired or rotated: fetch a fresh one and try again
-        await fetch('/api/auth/csrf');
-        return send(path, { method, body }, false);
-    }
     const data = response.status === 204 ? null : await response.json().catch(() => ({}));
     return { response, data };
 }
