@@ -15,6 +15,8 @@ public record AdminUserResponse(
         String username,
         Role role,
         boolean test,
+        boolean verified,
+        boolean premium,
         LocalDateTime createdAt
 ) {
     public static AdminUserResponse from(User user) {
@@ -24,6 +26,8 @@ public record AdminUserResponse(
                 user.getUsername(),
                 user.getRole(),
                 user.isTest(),
+                user.isVerified(),
+                user.isPremium(),
                 user.getCreatedAt()
         );
     }
