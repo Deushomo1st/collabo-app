@@ -221,6 +221,8 @@
     import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
     import { renderTiltStack, preloadTiltStack } from '/js/components/tilt-stack/tilt-stack.js';
     import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
+    import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
+    import { createSwitch, preloadSwitch } from '/js/components/switch/switch.js';
 
     // Placeholder "photos" for demos: a gradient with a head-and-shoulders silhouette (no network needed).
     const photo = (hue) => 'data:image/svg+xml,' + encodeURIComponent(
@@ -629,6 +631,61 @@
             },
         },
 
+        {
+            id: 'action-banner',
+            title: 'Action Banner',
+            files: ['action-banner.css', 'action-banner.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                await preloadActionBanner();
+                const { wrap, result } = mountDemo(stage, {
+                    'Bring the banner back': () => { show(); return 'A new claim is waiting.'; },
+                });
+                const slot = document.createElement('div');
+                slot.style.cssText = 'width:min(640px,100%)';
+                wrap.prepend(slot);
+                function show() {
+                    slot.replaceChildren(createActionBanner({
+                        title: 'Amaka O. claims ₦30,000 paid to Tolu A.',
+                        text: '“Prototype-day transport & printing” · Until confirmed this is only a claim, and the room is on hold.',
+                        actions: [
+                            { label: 'Confirm receipt', variant: 'ok', onClick: () => { slot.replaceChildren(); result.textContent = 'Confirmed. The room is open again.'; } },
+                            { label: 'Cancel claim', variant: 'danger', onClick: () => { slot.replaceChildren(); result.textContent = 'Claim cancelled.'; } },
+                        ],
+                    }).element);
+                }
+                show();
+                result.textContent = 'Pick an action; the banner clears itself.';
+            },
+        },
+
+        {
+            id: 'switch',
+            title: 'Switch',
+            files: ['switch.css', 'switch.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                await preloadSwitch();
+                const { wrap, result } = mountDemo(stage, {});
+                result.textContent = 'Click or press Space on a switch.';
+                const rows = document.createElement('div');
+                rows.style.cssText = 'display:grid;gap:14px;width:min(360px,100%)';
+                const row = (label, opts) => {
+                    const line = document.createElement('label');
+                    line.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;color:var(--g-demo-text)';
+                    const sw = createSwitch({ ...opts, label, onChange: (on) => { result.textContent = `${label}: ${on ? 'on' : 'off'}`; } });
+                    line.append(label, sw.element);
+                    return line;
+                };
+                rows.append(
+                    row('Pleas', { checked: true }),
+                    row('Response clock alerts', {}),
+                    row('Owner (locked)', { checked: true, disabled: true }),
+                );
+                wrap.prepend(rows);
+            },
+        },
+
     ];
 
     const stage = document.getElementById('gallery-stage');
@@ -648,6 +705,8 @@
         'theme-switcher': svg('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'),
         'tilt-stack': svg('<path d="m12.83 2.18 8.58 3.91a1 1 0 0 1 0 1.83l-8.58 3.9a2 2 0 0 1-1.66 0L2.6 7.92a1 1 0 0 1 0-1.83l8.58-3.9a2 2 0 0 1 1.66 0z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/>'),
         'avatar': ICON.users,
+        'action-banner': svg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
+        'switch': svg('<rect width="20" height="12" x="2" y="6" rx="6"/><circle cx="16" cy="12" r="2"/>'),
     };
 
     let current = -1;
