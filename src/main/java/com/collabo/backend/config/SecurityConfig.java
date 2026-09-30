@@ -37,8 +37,16 @@ public class SecurityConfig {
         return registration;
     }
 
+    /** Same reason as above: RateLimitFilter must run only inside the Spring Security chain, after the session is loaded. */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, AdminKeyFilter adminKeyFilter) throws Exception {
+    public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(RateLimitFilter rateLimitFilter) {
+        FilterRegistrationBean<RateLimitFilter> registration = new FilterRegistrationBean<>(rateLimitFilter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AdminKeyFilter adminKeyFilter, RateLimitFilter rateLimitFilter) throws Exception {
         http
                 // Cookie login means CSRF protection is needed: the token comes back in an XSRF-TOKEN cookie
                 // and js/services/api.js sends it as X-XSRF-TOKEN. /api/admin/** uses a header key, not a cookie.
@@ -51,6 +59,8 @@ public class SecurityConfig {
                 // /api/admin/** is gated solely by AdminKeyFilter (X-Admin-Key header);
                 // "authenticated" would 403 since no auth mechanism exists yet.
                 .addFilterBefore(adminKeyFilter, UsernamePasswordAuthenticationFilter.class)
+                // Token-bucket throttling of /api, ahead of the admin key check so wrong-key guesses are throttled too
+                .addFilterBefore(rateLimitFilter, AdminKeyFilter.class)
                 // Signed-out API calls answer 401 (not 403) so the frontend knows to show the login page
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
