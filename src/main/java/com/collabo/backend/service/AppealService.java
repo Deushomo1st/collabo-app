@@ -51,7 +51,11 @@ public class AppealService {
         if (note.isEmpty() || note.length() > MAX_NOTE) throw new InvalidProfileException("Say what went wrong, up to " + MAX_NOTE + " characters.");
         if (!r.isBadge()) throw new InvalidProfileException("There is no badge on this record to appeal.");
         if (appeals.findByRecordId(r.getId()).isPresent()) throw new InvalidProfileException("This removal has already been appealed.");
-        Appeal a = appeals.save(new Appeal(r.getId(), me.getId(), note));
+        Appeal a;
+        try { a = appeals.saveAndFlush(new Appeal(r.getId(), me.getId(), note)); }
+        catch (org.springframework.dao.DataIntegrityViolationException e) {   // two at once: the unique record_id wins
+            throw new InvalidProfileException("This removal has already been appealed.");
+        }
         return view(a, r);
     }
 
