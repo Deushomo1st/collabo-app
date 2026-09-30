@@ -25,9 +25,11 @@ async function send(path, { method = 'GET', body } = {}) {
     const write = method !== 'GET';
     if (write && !csrfCookie()) await fetch('/api/auth/csrf');
     const headers = {};
-    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    const raw = body instanceof Blob;   // a picture goes up as-is, everything else as JSON
+    if (raw) headers['Content-Type'] = body.type;
+    else if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (write) headers['X-XSRF-TOKEN'] = csrfCookie();
-    const response = await fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    const response = await fetch(path, { method, headers, body: body === undefined ? undefined : raw ? body : JSON.stringify(body) });
     const data = response.status === 204 ? null : await response.json().catch(() => ({}));
     return { response, data };
 }
@@ -73,3 +75,20 @@ export const yarnRespond = (id, accept) => yarn(`/threads/${id}/respond`, { meth
 export const yarnBlocked = () => yarn('/blocks');
 export const yarnBlock = (userId) => yarn(`/blocks/${userId}`, { method: 'PUT' });
 export const yarnUnblock = (userId) => yarn(`/blocks/${userId}`, { method: 'DELETE' });
+
+// ---- Profiles, follows and credentials --------------------------------------
+const user = (name, path = '') => `/api/users/${encodeURIComponent(name)}${path}`;
+export const profileGet = (name) => call(user(name));
+export const profileUpdate = (fields) => call('/api/users/me', { method: 'PATCH', body: fields }, 'Could not save your profile.');
+export const profileLinks = (links) => call('/api/users/me/links', { method: 'PUT', body: links }, 'Could not save your links.');
+export const avatarUrl = (name, version) => user(name, '/avatar') + (version ? `?v=${version}` : '');
+export const avatarSave = (jpegBlob) => call('/api/users/me/avatar', { method: 'PUT', body: jpegBlob }, 'Could not save the picture.');
+export const avatarRemove = () => call('/api/users/me/avatar', { method: 'DELETE' });
+export const follow = (name) => call(user(name, '/follow'), { method: 'PUT' });
+export const unfollow = (name) => call(user(name, '/follow'), { method: 'DELETE' });
+export const followers = (name) => call(user(name, '/followers'));
+export const following = (name) => call(user(name, '/following'));
+export const credentialsOf = (name) => call(user(name, '/credentials'));
+export const credentialFeature = (id, featured) => call(`/api/credentials/${id}`, { method: 'PATCH', body: { featured } });
+export const credentialShip = (id, title, url) => call(`/api/credentials/${id}/shipped`, { method: 'POST', body: { title, url } });
+export const credentialUnship = (id, linkId) => call(`/api/credentials/${id}/shipped/${linkId}`, { method: 'DELETE' });
