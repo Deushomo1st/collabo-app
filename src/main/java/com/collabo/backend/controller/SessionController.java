@@ -71,7 +71,7 @@ public class SessionController {
     /** 200 with the account when signed in, 401 when not (the frontend uses this to decide what to show). */
     @GetMapping("/me")
     public ResponseEntity<UserResponse> me(Authentication auth) {
-        if (auth == null || auth instanceof AnonymousAuthenticationToken || !auth.isAuthenticated()) {
+        if (auth == null || auth instanceof AnonymousAuthenticationToken || !auth.isAuthenticated() || com.collabo.backend.config.CurrentModerator.isModerator(auth)) {
             return ResponseEntity.status(401).build();
         }
         return users.findByUsername(auth.getName()).map(u -> ResponseEntity.ok(UserResponse.from(u)))

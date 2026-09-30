@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users/verify", "/api/users/resend-otp").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()   // login/logout/me decide for themselves
                         .requestMatchers("/api/admin/**").permitAll()
+                        .requestMatchers("/api/moderator/login", "/api/moderator/logout").permitAll()   // the rest of /api/moderator needs a session
                         // Allow public access to the registration/admin pages and static assets
                         .requestMatchers("/", "/index.html", "/admin.html", "/HTML-pages/**", "/**/*.css", "/**/*.js", "/**/*.html").permitAll()
                         .anyRequest().authenticated()

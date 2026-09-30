@@ -20,7 +20,7 @@ public class CurrentUser {
 
     public User require() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || auth instanceof AnonymousAuthenticationToken || !auth.isAuthenticated()) {
+        if (auth == null || auth instanceof AnonymousAuthenticationToken || !auth.isAuthenticated() || CurrentModerator.isModerator(auth)) {
             throw new UnauthorizedException();
         }
         return users.findByUsername(auth.getName())
