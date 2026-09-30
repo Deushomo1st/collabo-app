@@ -1,6 +1,9 @@
 package com.collabo.backend.service;
 
 import com.collabo.backend.dto.CredentialsResponse;
+import com.collabo.backend.dto.ShippedLinkRequest;
+import com.collabo.backend.entity.ShippedLink;
+import com.collabo.backend.repository.ShippedLinkRepository;
 import com.collabo.backend.entity.CredentialEntry;
 import com.collabo.backend.entity.CredentialKind;
 import com.collabo.backend.entity.User;
@@ -13,7 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /** Credentials: recorded by the system, shown by the owner's privacy setting. */
 @Service
@@ -22,12 +28,15 @@ public class CredentialService {
 
     static final int MAX_TITLE = 120;
     static final int MAX_DETAIL = 300;
+    static final int MAX_SHIPPED = 5;
 
     private final CredentialEntryRepository entries;
+    private final ShippedLinkRepository shipped;
     private final FollowRepository follows;
     private final UserRepository users;
 
-    public CredentialService(CredentialEntryRepository entries, FollowRepository follows, UserRepository users) {
+    public CredentialService(CredentialEntryRepository entries, ShippedLinkRepository shipped, FollowRepository follows, UserRepository users) {
+        this.shipped = shipped;
         this.entries = entries; this.follows = follows; this.users = users;
     }
 
@@ -55,7 +64,49 @@ public class CredentialService {
     public CredentialsResponse view(String username, User viewer) {
         User owner = users.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("No one has that username."));
         if (!canView(owner, viewer)) return CredentialsResponse.hidden();
-        return CredentialsResponse.of(entries.findByUserIdOrderByOccurredAtDesc(owner.getId()));
+        List<CredentialEntry> rows = entries.findByUserIdOrderByOccurredAtDesc(owner.getId());
+        Map<UUID, List<ShippedLink>> shipped = shippedFor(rows);
+        return new CredentialsResponse(true, rows.stream().map(e -> entryView(e, shipped)).toList());
+    }
+
+    // ---- owner-only changes: each answers 404 for someone else's (or a missing) entry --------------------------
+
+    /** Promote to feats (true) or take it back (false). */
+    public CredentialsResponse.Entry setFeatured(User me, UUID entryId, Boolean featured) {
+        if (featured == null) throw new InvalidProfileException("Say whether to feature it.");
+        CredentialEntry e = mine(me, entryId);
+        e.setFeatured(featured);
+        return entryView(entries.save(e), shippedFor(List.of(e)));
+    }
+
+    public CredentialsResponse.Entry addShipped(User me, UUID entryId, ShippedLinkRequest req) {
+        CredentialEntry e = mine(me, entryId);
+        String title = ProfileService.cleanLinkTitle(req.title());
+        String url = ProfileService.cleanUrl(req.url());
+        if (shipped.countByEntryId(entryId) >= MAX_SHIPPED) throw new InvalidProfileException("You can attach at most " + MAX_SHIPPED + " links to one credential.");
+        shipped.save(new ShippedLink(entryId, title, url));
+        return entryView(e, shippedFor(List.of(e)));
+    }
+
+    public CredentialsResponse.Entry removeShipped(User me, UUID entryId, UUID linkId) {
+        CredentialEntry e = mine(me, entryId);
+        shipped.findById(linkId).filter(l -> l.getEntryId().equals(entryId)).ifPresent(shipped::delete);
+        return entryView(e, shippedFor(List.of(e)));
+    }
+
+    private CredentialEntry mine(User me, UUID entryId) {
+        return entries.findById(entryId).filter(e -> e.getUserId().equals(me.getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("No such credential."));
+    }
+
+    private Map<UUID, List<ShippedLink>> shippedFor(List<CredentialEntry> rows) {
+        if (rows.isEmpty()) return Map.of();
+        return shipped.findByEntryIdIn(rows.stream().map(CredentialEntry::getId).toList()).stream()
+                .collect(Collectors.groupingBy(ShippedLink::getEntryId));
+    }
+
+    private static CredentialsResponse.Entry entryView(CredentialEntry e, Map<UUID, List<ShippedLink>> shipped) {
+        return CredentialsResponse.Entry.of(e, shipped.getOrDefault(e.getId(), List.of()));
     }
 
     /** The one function that decides who may see an owner's credentials. The owner always can. */

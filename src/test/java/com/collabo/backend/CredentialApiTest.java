@@ -142,6 +142,65 @@ class CredentialApiTest {
                 .andExpect(status().isBadRequest());
     }
 
+    private String firstEntryId() throws Exception {
+        String json = mvc.perform(get("/api/users/" + owner + "/credentials").cookie(session.get(owner))).andReturn().getResponse().getContentAsString();
+        return com.jayway.jsonpath.JsonPath.read(json, "$.entries[0].id");
+    }
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder as(
+            org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder b, String who) {
+        return b.cookie(XSRF, session.get(who)).header("X-XSRF-TOKEN", "t").contentType("application/json");
+    }
+
+    @Test
+    void ownersPromoteEntriesToFeatsAndTakeThemBack() throws Exception {
+        String id = firstEntryId();
+        mvc.perform(as(patch("/api/credentials/" + id), owner).content("{\"featured\":true}")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.featured").value(true));
+        mvc.perform(get("/api/users/" + owner + "/credentials").cookie(session.get(stranger)))
+                .andExpect(jsonPath("$.entries[?(@.featured==true)]").value(org.hamcrest.Matchers.hasSize(1)));
+        mvc.perform(as(patch("/api/credentials/" + id), owner).content("{\"featured\":false}")).andExpect(jsonPath("$.featured").value(false));
+        mvc.perform(as(patch("/api/credentials/" + id), owner).content("{}")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shippedLinksAttachRemoveAndFlipTheNothingShippedTag() throws Exception {
+        String id = firstEntryId();
+        mvc.perform(get("/api/users/" + owner + "/credentials").cookie(session.get(owner))).andExpect(jsonPath("$.entries[0].nothingShipped").value(true));
+
+        String added = mvc.perform(as(post("/api/credentials/" + id + "/shipped"), owner).content("{\"title\":\"Live site\",\"url\":\"https://ship.dev\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.nothingShipped").value(false))
+                .andExpect(jsonPath("$.shipped[0].title").value("Live site")).andReturn().getResponse().getContentAsString();
+        mvc.perform(get("/api/users/" + owner + "/credentials").cookie(session.get(stranger)))
+                .andExpect(jsonPath("$.entries[0].shipped[0].url").value("https://ship.dev"));
+
+        String linkId = com.jayway.jsonpath.JsonPath.read(added, "$.shipped[0].id");
+        mvc.perform(as(delete("/api/credentials/" + id + "/shipped/" + linkId), owner)).andExpect(status().isOk()).andExpect(jsonPath("$.nothingShipped").value(true));
+        mvc.perform(as(delete("/api/credentials/" + id + "/shipped/" + linkId), owner)).andExpect(status().isOk());   // already gone: quiet
+    }
+
+    @Test
+    void badShippedLinksAreRejectedAndThereIsACap() throws Exception {
+        String id = firstEntryId();
+        mvc.perform(as(post("/api/credentials/" + id + "/shipped"), owner).content("{\"title\":\"x\",\"url\":\"javascript:alert(1)\"}")).andExpect(status().isBadRequest());
+        mvc.perform(as(post("/api/credentials/" + id + "/shipped"), owner).content("{\"title\":\"\",\"url\":\"https://a.dev\"}")).andExpect(status().isBadRequest());
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(as(post("/api/credentials/" + id + "/shipped"), owner).content("{\"title\":\"L" + i + "\",\"url\":\"https://a.dev/" + i + "\"}")).andExpect(status().isOk());
+        }
+        mvc.perform(as(post("/api/credentials/" + id + "/shipped"), owner).content("{\"title\":\"6th\",\"url\":\"https://a.dev/6\"}")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void onlyTheOwnerCanChangeAnEntryAndOthersJustSeeNotFound() throws Exception {
+        String id = firstEntryId();
+        mvc.perform(as(patch("/api/credentials/" + id), stranger).content("{\"featured\":true}")).andExpect(status().isNotFound());
+        mvc.perform(as(post("/api/credentials/" + id + "/shipped"), follower).content("{\"title\":\"x\",\"url\":\"https://a.dev\"}")).andExpect(status().isNotFound());
+        mvc.perform(as(delete("/api/credentials/" + id + "/shipped/" + UUID.randomUUID()), stranger)).andExpect(status().isNotFound());
+        mvc.perform(patch("/api/credentials/" + UUID.randomUUID()).cookie(XSRF).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"featured\":true}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/users/" + owner + "/credentials").cookie(session.get(owner))).andExpect(jsonPath("$.entries[0].featured").value(false));
+    }
+
     @Test
     void signedOutVisitorsAndUnknownUsersAreRefused() throws Exception {
         mvc.perform(get("/api/users/" + owner + "/credentials")).andExpect(status().isUnauthorized());
