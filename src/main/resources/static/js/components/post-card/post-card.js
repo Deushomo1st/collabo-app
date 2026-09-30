@@ -3,6 +3,7 @@
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postShout, postUnshout, postDelete, postWindow, commentsOf, commentAdd, commentDelete } from '/js/services/api.js';
 import { openApply, openReview } from '/js/components/applications/applications.js';
+import { openCollaborators } from '/js/components/collaborators/collaborators.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
 
 const MAX_COMMENT = 500;
@@ -97,6 +98,7 @@ export function postCard(initial, { onGone } = {}) {
                 !p.mine && !closed && !formed && (!p.applied || p.applied === 'WITHDRAWN') && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Apply',
                     onclick: () => openApply(p, (state) => { p = { ...p, applied: state }; draw(); }) }),
                 p.mine && h('button', { class: 'pc-btn', type: 'button', text: `Applicants · ${p.applicants ?? 0}`, onclick: () => openReview(p) }),
+                p.mine && h('button', { class: 'pc-btn', type: 'button', text: 'Collaborators', onclick: () => openCollaborators(p) }),
                 p.mine && formed && h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/space.html?post=${p.id}`, text: 'Open space' }),
                 p.mine && !formed && h('button', { class: 'pc-btn', type: 'button', text: 'Deadline', onclick: editWindow }),
                 p.mine && !formed && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Delete', onclick: remove })),

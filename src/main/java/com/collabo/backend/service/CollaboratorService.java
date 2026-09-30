@@ -72,13 +72,13 @@ public class CollaboratorService {
                 .map(c -> new CollaboratorResponse(PersonDto.of(people.get(c.getUserId())), c.getState().name(), c.getCreatedAt())).toList();
     }
 
-    /** Requests waiting for the viewer. */
+    /** Collaborations the viewer was asked into or has accepted. */
     @Transactional(readOnly = true)
     public List<RequestResponse> mine(User me) {
-        return collaborators.findByUserIdAndStateOrderByCreatedAtDesc(me.getId(), Collaborator.State.INVITED).stream().map(c -> {
+        return collaborators.findByUserIdAndStateInOrderByCreatedAtDesc(me.getId(), List.of(Collaborator.State.INVITED, Collaborator.State.ACTIVE)).stream().map(c -> {
             Post p = posts.findById(c.getPostId()).orElse(null);
             User founder = p == null ? null : users.findById(p.getAuthorId()).orElse(null);
-            return founder == null ? null : new RequestResponse(p.getId(), p.getTitle(), PersonDto.of(founder), c.getCreatedAt());
+            return founder == null ? null : new RequestResponse(p.getId(), p.getTitle(), p.status(), PersonDto.of(founder), c.getState().name(), c.getCreatedAt());
         }).filter(java.util.Objects::nonNull).toList();
     }
 

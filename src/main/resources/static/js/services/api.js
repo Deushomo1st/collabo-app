@@ -121,3 +121,12 @@ export const spaceById = (id) => call(`/api/spaces/${id}`);
 export const spaceJoin = (id) => call(`/api/spaces/${id}/join`, { method: 'POST' });
 export const spaceLeave = (id) => call(`/api/spaces/${id}/leave`, { method: 'POST' });
 export const spaceMembers = (id) => call(`/api/spaces/${id}/members`);
+export const spaceMemberUpdate = (id, username, fields) => call(`/api/spaces/${id}/members/${encodeURIComponent(username)}`, { method: 'PATCH', body: fields });
+export const spaceMemberRemove = (id, username) => call(`/api/spaces/${id}/members/${encodeURIComponent(username)}`, { method: 'DELETE' });
+
+// collaborators: the founder asks; the invitee answers; either side ends it
+export const collaboratorsOf = (postId) => call(post(postId, '/collaborators'));
+export const collaboratorInvite = (postId, username) => call(post(postId, '/collaborators'), { method: 'POST', body: { username } }, 'Could not send the request.');
+export const collaboratorAnswer = (postId, accept) => call(post(postId, accept ? '/collaborators/accept' : '/collaborators/decline'), { method: 'POST' });
+export const collaboratorRemove = (postId, username) => call(post(postId, `/collaborators/${encodeURIComponent(username)}`), { method: 'DELETE' });
+export const collaborationsMine = () => call('/api/collaborations');

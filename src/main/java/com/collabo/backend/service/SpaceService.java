@@ -63,7 +63,7 @@ public class SpaceService {
         post.setFormed(true);
         posts.save(post);
         credentials.record(me.getId(), CredentialKind.SPACE_FORMED, space.getName(), "", "space", space.getId().toString(), null);
-        return response(space, post, "OWNER");
+        return response(space, post, "OWNER", true);
     }
 
     @Transactional(readOnly = true)
@@ -81,7 +81,7 @@ public class SpaceService {
         String role = roleOf(me, s);
         if (role == null) throw new ResourceNotFoundException("No such space.");
         Post post = posts.findById(s.getPostId()).orElseThrow(() -> new ResourceNotFoundException("No such space."));
-        return response(s, post, role);
+        return response(s, post, role, "OWNER".equals(role) || collaborators.existsByPostIdAndUserIdAndState(s.getPostId(), me.getId(), Collaborator.State.ACTIVE));
     }
 
     /** Puts someone in the room with every permission (co-founders), or back in if they were out. */
@@ -113,8 +113,8 @@ public class SpaceService {
         return accepted ? "APPLICANT" : null;
     }
 
-    private SpaceResponse response(Space s, Post post, String role) {
+    private SpaceResponse response(Space s, Post post, String role, boolean canManage) {
         User owner = users.findById(s.getOwnerId()).orElseThrow(() -> new ResourceNotFoundException("No such space."));
-        return new SpaceResponse(s.getId(), s.getPostId(), s.getName(), post.getTitle(), post.getBody(), PersonDto.of(owner), role, s.getCreatedAt());
+        return new SpaceResponse(s.getId(), s.getPostId(), s.getName(), post.getTitle(), post.getBody(), PersonDto.of(owner), role, canManage, s.getCreatedAt());
     }
 }

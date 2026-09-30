@@ -1,7 +1,8 @@
 // A space: the idea it grew from, joining (for accepted applicants), and the people in it.
 // All network calls live in js/services/api.js; text goes in through textContent only.
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
-import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers } from '/js/services/api.js';
+import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
+import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers, spaceMemberUpdate, spaceMemberRemove } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
 const ROLE = { OWNER: 'Owner', MEMBER: 'Member', APPLICANT: 'Accepted' };
@@ -12,7 +13,8 @@ const main = () => document.getElementById('space');
 const toLogin = () => location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
 const say = (text) => main().replaceChildren(h('p', { class: 'gz-empty', text }));
 
-let space, members;
+const WEIGHTY = ['ACCEPT_MEMBERS', 'EDIT_SETTINGS', 'POST_IN_ROOM', 'MANAGE_RECRUITMENT'];
+let space, members, me;
 
 async function refresh() {
     const params = new URLSearchParams(location.search);
@@ -25,12 +27,39 @@ async function act(fn, done) {
     try { await fn(); if (done) toast(done); await refresh(); } catch (err) { toast(err.message); }
 }
 
+/** Role title and permissions for one member. The weighty ones need an explicit tick. */
+async function editMember(m) {
+    const { panel, close } = await openGlassBlurDialog({ size: 'md', label: 'Edit member', html: '<h3 class="glass-blur-dialog__title"></h3><form class="sp-form"></form>' });
+    panel.querySelector('h3').textContent = `Role for ${m.person.username}`;
+    const title = h('input', { class: 'sp-input', maxlength: 40, value: m.title, placeholder: 'Role title, e.g. Sound designer', 'aria-label': 'Role title' });
+    const boxes = Object.entries(PERM).map(([key, text]) => ({ key, box: h('input', { type: 'checkbox', checked: m.permissions.includes(key) }), text }));
+    const confirm = h('input', { type: 'checkbox' });
+    const warn = h('label', { class: 'spc-check pc-error' }, confirm, ' I understand this person can change the team itself.');
+    const err = h('p', { class: 'pc-error', hidden: true });
+    const showWarn = () => { warn.hidden = !boxes.some((b) => WEIGHTY.includes(b.key) && b.box.checked && !m.permissions.includes(b.key)); };
+    boxes.forEach((b) => b.box.addEventListener('change', showWarn));
+    showWarn();
+    const form = panel.querySelector('form');
+    form.append(title, ...boxes.map((b) => h('label', { class: 'spc-check' }, b.box, ` ${b.text}`)), warn, err,
+        h('div', { class: 'glass-blur-dialog__actions' }, h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Save')));
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            await spaceMemberUpdate(space.id, m.person.username, { title: title.value, permissions: boxes.filter((b) => b.box.checked).map((b) => b.key), confirm: confirm.checked });
+            close(); await refresh();
+        } catch (ex) { err.textContent = ex.message; err.hidden = false; }
+    });
+}
+
 function memberRow(m) {
+    const mine = m.person.username === me.username;
     return h('div', { class: 'spc-member' },
         h('a', { class: 'pc-who', href: profileHref(m.person.username), text: m.person.username }),
         m.person.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: m.person.preferredTitle }),
         m.title && h('span', { class: `sp-tag ${m.owner ? 'sp-tag--ok' : 'sp-tag--muted'}`, text: m.title }),
-        !m.owner && m.permissions.length > 0 && h('span', { class: 'spc-perms', text: m.permissions.map((p) => PERM[p] || p).join(' · ') }));
+        !m.owner && m.permissions.length > 0 && h('span', { class: 'spc-perms', text: m.permissions.map((p) => PERM[p] || p).join(' · ') }),
+        space.canManage && !m.owner && h('button', { class: 'pc-btn', type: 'button', text: 'Edit', onclick: () => editMember(m) }),
+        space.canManage && !m.owner && !mine && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Remove', onclick: () => act(() => spaceMemberRemove(space.id, m.person.username), `${m.person.username} was removed.`) }));
 }
 
 function draw() {
@@ -51,12 +80,12 @@ function draw() {
         h('section', { class: 'spc-card sp-glass' },
             h('h2', { text: `The team · ${members.length}` }),
             h('div', { class: 'spc-members' }, ...members.map(memberRow)),
-            space.role === 'MEMBER' && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Leave space',
+            space.role === 'MEMBER' && !space.canManage && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Leave space',
                 onclick: () => act(() => spaceLeave(space.id), 'You left the space.') })))].filter(Boolean));
 }
 
 async function boot() {
-    const me = await currentUser().catch(() => null);
+    me = await currentUser().catch(() => null);
     if (!me) return toLogin();
     try { await refresh(); }
     catch (err) {

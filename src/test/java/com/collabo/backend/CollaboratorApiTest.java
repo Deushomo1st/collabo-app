@@ -108,6 +108,7 @@ class CollaboratorApiTest {
         send(get(url), annS, null).andExpect(jsonPath("$", hasSize(0)));
         invite(bob).andExpect(status().isOk());
         send(post(url + "/accept"), bobS, null).andExpect(status().isOk());
+        send(get("/api/collaborations"), bobS, null).andExpect(jsonPath("$[0].state").value("ACTIVE")).andExpect(jsonPath("$[0].postStatus").value("pending"));
         send(get(url), annS, null).andExpect(jsonPath("$[0].state").value("ACTIVE"));
         send(get(url), bobS, null).andExpect(status().isOk());
         send(get(url), danS, null).andExpect(status().isNotFound());
@@ -146,7 +147,9 @@ class CollaboratorApiTest {
         send(patch("/api/applications/" + catApp), annS, "{\"decision\":\"ACCEPT\"}").andExpect(status().isOk());
         String body = send(post("/api/posts/" + postId + "/space"), annS, "{}").andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         String space = com.jayway.jsonpath.JsonPath.read(body, "$.id");
-        send(get("/api/spaces/" + space), bobS, null).andExpect(status().isOk()).andExpect(jsonPath("$.role").value("MEMBER"));
+        send(get("/api/spaces/" + space), bobS, null).andExpect(status().isOk()).andExpect(jsonPath("$.role").value("MEMBER")).andExpect(jsonPath("$.canManage").value(true));
+        send(get("/api/spaces/" + space), annS, null).andExpect(jsonPath("$.canManage").value(true));
+        send(get("/api/spaces/" + space), catS, null).andExpect(jsonPath("$.canManage").value(false));
         send(get("/api/spaces/" + space + "/members"), annS, null)
                 .andExpect(jsonPath("$[?(@.person.username=='" + bob + "')].title", contains("Collaborator")));
         send(post("/api/spaces/" + space + "/join"), bobS, null).andExpect(status().isBadRequest());

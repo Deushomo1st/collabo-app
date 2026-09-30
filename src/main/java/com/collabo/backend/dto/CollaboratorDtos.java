@@ -11,6 +11,6 @@ public final class CollaboratorDtos {
     /** state: INVITED (asked, not answered) or ACTIVE. */
     public record CollaboratorResponse(PersonDto person, String state, Instant createdAt) {}
 
-    /** A request waiting for the viewer's answer. */
-    public record RequestResponse(UUID postId, String postTitle, PersonDto founder, Instant createdAt) {}
+    /** A collaboration the viewer was asked into (INVITED) or has accepted (ACTIVE). postStatus is the post's pending/closed/formed. */
+    public record RequestResponse(UUID postId, String postTitle, String postStatus, PersonDto founder, String state, Instant createdAt) {}
 }

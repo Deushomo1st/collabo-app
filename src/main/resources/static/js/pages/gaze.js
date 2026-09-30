@@ -4,6 +4,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { openMine } from '/js/components/applications/applications.js';
+import { openCollaborations } from '/js/components/collaborators/collaborators.js';
 import { currentUser, gazeFeed, postCreate } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
@@ -80,4 +81,5 @@ preloadGlassBlurDialog();
 mountThemeSwitcher('#theme-slot', { inline: true });
 document.getElementById('compose-btn').addEventListener('click', compose);
 document.getElementById('mine-btn').addEventListener('click', openMine);
+document.getElementById('collab-btn').addEventListener('click', openCollaborations);
 boot();

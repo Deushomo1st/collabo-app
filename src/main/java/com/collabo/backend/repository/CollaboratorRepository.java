@@ -12,5 +12,5 @@ public interface CollaboratorRepository extends JpaRepository<Collaborator, UUID
     Optional<Collaborator> findByPostIdAndUserId(UUID postId, UUID userId);
     boolean existsByPostIdAndUserIdAndState(UUID postId, UUID userId, Collaborator.State state);
     List<Collaborator> findByPostIdAndStateInOrderByCreatedAtAsc(UUID postId, Collection<Collaborator.State> states);
-    List<Collaborator> findByUserIdAndStateOrderByCreatedAtDesc(UUID userId, Collaborator.State state);
+    List<Collaborator> findByUserIdAndStateInOrderByCreatedAtDesc(UUID userId, Collection<Collaborator.State> states);
 }
