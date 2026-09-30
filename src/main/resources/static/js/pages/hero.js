@@ -52,7 +52,7 @@ function marquees() {
 
 function intro() {
     document.body.classList.remove('is-loading');
-    const title = SplitText.create('#hr-title', { type: 'lines,chars', mask: 'lines' });
+    const title = SplitText.create('#hr-title', { type: 'lines,words,chars', mask: 'lines' });
     const sub = SplitText.create('#hr-sub', { type: 'lines', mask: 'lines' });
     gsap.timeline({ defaults: { ease: 'expo.out' } })
         .to('#veil', { opacity: 0, filter: 'blur(10px)', duration: .9, ease: 'power2.out', onComplete: () => $('veil').remove() })
@@ -63,7 +63,7 @@ function intro() {
         .from('#hr-marquees', { y: '40vh', duration: 1.5, ease: 'power2.out' }, '<40%');
 
     // the closing title: its letters are scrubbed in by the scroll itself
-    const big = SplitText.create('#hr-big', { type: 'lines,chars', mask: 'lines' });
+    const big = SplitText.create('#hr-big', { type: 'lines,words,chars', mask: 'lines' });
     gsap.from(big.chars, { yPercent: 200, ease: 'expo.out', stagger: .04, scrollTrigger: { trigger: '#trigger', start: 'top 60%', end: 'center 40%', scrub: true } });
 }
 

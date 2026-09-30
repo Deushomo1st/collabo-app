@@ -9,7 +9,7 @@
 .hr-bar__nav a:hover { background: var(--sp-panel-hi); }
 
 .hr { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; padding: 96px var(--sp-gutter) 0; overflow: hidden; }
-.hr-title, .hr-big { margin: 0; font: 800 clamp(40px, 9vw, 112px)/.98 var(--sp-font); text-transform: uppercase; letter-spacing: -.02em; }
+.hr-title, .hr-big { overflow-wrap: normal; word-break: keep-all; margin: 0; font: 800 clamp(40px, 9vw, 112px)/.98 var(--sp-font); text-transform: uppercase; letter-spacing: -.02em; }
 .hr-sub { margin: 0; max-width: 520px; color: var(--sp-muted); font: 500 clamp(15px, 2vw, 18px)/1.5 var(--sp-font); }
 .hr-btn {
     position: relative; display: inline-flex; overflow: hidden; padding: 16px 34px; border-radius: 18px; text-decoration: none;
@@ -35,5 +35,8 @@
 .hr-chip b { color: var(--sp-brand); font-weight: 800; }
 
 .hr-next { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; text-align: center; padding: 0 var(--sp-gutter); }
+
+/* the longest word must always fit on one row: its letters are separate pieces, and a too-wide word would break between them */
+@media (max-width: 600px) { .hr-title, .hr-big { font-size: clamp(26px, 10.5vw, 60px); } }
 
 @media (prefers-reduced-motion: reduce) { .hr-veil { display: none; } .hr-dot { animation: none; } .hr-btn, .hr-btn .ch { transition: none; } }
