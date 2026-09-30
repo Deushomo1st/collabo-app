@@ -88,26 +88,31 @@ public class YarnService {
 
     // ---- creating ---------------------------------------------------------
 
-    /**
-     * Someone was accepted: a system yarn lands in the MySpace thread between the decider and the applicant, and the
-     * thread is open for talking (no request step). Quiet if either has blocked the other; the acceptance itself stands.
-     */
+    /** Someone was accepted: the system tells them in MySpace. The acceptance itself stands even if the yarn is skipped. */
     public void notifyAccepted(User decider, User applicant, String postTitle) {
-        if (blocks.existsByBlockerIdAndBlockedId(decider.getId(), applicant.getId()) || blocks.existsByBlockerIdAndBlockedId(applicant.getId(), decider.getId())) return;
-        String key = dmKey(decider.getId(), applicant.getId());
+        systemNote(decider, applicant, "Your application to \"" + postTitle + "\" was accepted by " + decider.getUsername()
+                + ". Open the space to read everything; joining is your call.");
+    }
+
+    /**
+     * A system yarn in the MySpace thread between two people, which is open for talking (no request step). Used where the
+     * platform speaks on someone's behalf: an acceptance, a nudge, a removal reason. Quiet if either has blocked the other.
+     */
+    public void systemNote(User from, User to, String body) {
+        if (blocks.existsByBlockerIdAndBlockedId(from.getId(), to.getId()) || blocks.existsByBlockerIdAndBlockedId(to.getId(), from.getId())) return;
+        String key = dmKey(from.getId(), to.getId());
         YarnThread t = threads.findByDmKey(key).orElseGet(() -> {
             YarnThread fresh = new YarnThread();
             fresh.setTier(Tier.MYSPACE); fresh.setStatus(Status.ACCEPTED);
-            fresh.setCreatedBy(decider.getId()); fresh.setDmKey(key);
+            fresh.setCreatedBy(from.getId()); fresh.setDmKey(key);
             threads.save(fresh);
-            members.save(seat(fresh, decider.getId(), ThreadMember.Role.OWNER));
-            members.save(seat(fresh, applicant.getId(), ThreadMember.Role.MEMBER));
+            members.save(seat(fresh, from.getId(), ThreadMember.Role.OWNER));
+            members.save(seat(fresh, to.getId(), ThreadMember.Role.MEMBER));
             return fresh;
         });
         t.setStatus(Status.ACCEPTED);
         members.findByThreadId(t.getId()).stream().filter(m -> m.isArchived() && !m.isMuted()).forEach(m -> m.setArchivedAt(null));
-        addYarn(t, null, Yarn.Kind.SYSTEM, "Your application to \"" + postTitle + "\" was accepted by " + decider.getUsername()
-                + ". Open the space to read everything; joining is your call.");
+        addYarn(t, null, Yarn.Kind.SYSTEM, body);
     }
 
     public ThreadView startMySpace(User me, String username, String body) {
