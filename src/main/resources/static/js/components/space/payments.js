@@ -51,11 +51,11 @@ export function paymentsSection(space, { canLog, me, members }) {
                 p.payer.username === me.username && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Cancel claim', onclick: act(() => paymentCancel(space.id, p.id)) })));
     }
 
-    root.append(head,
+    root.append(...[head,
         h('p', { class: 'pc-hint', text: 'A record of what people say was paid. COLLABO never handles the money.' }),
         banner,
         canLog && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn', type: 'button', text: 'Log a payment', onclick: () => openClaim(space, members, me, load) })),
-        list);
+        list].filter(Boolean));
     load();
     return root;
 }

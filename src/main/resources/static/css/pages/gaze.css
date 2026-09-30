@@ -66,3 +66,4 @@ a.pc-btn { text-decoration: none; justify-self: start; }
     .gz-nav { padding: 8px 10px; }
 }
 .ap-tools .sp-input:not(.ap-select) { flex: 1; min-width: 0; }
+.ap-clock { max-width: 110px; }

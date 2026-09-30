@@ -62,13 +62,17 @@ export async function openReview(post) {
         if (!anyAccepted) return formBox.replaceChildren(h('p', { class: 'pc-hint', text: 'Accept at least one applicant to form a space.' }));
         const name = h('input', { class: 'sp-input', maxlength: 80, placeholder: post.title, 'aria-label': 'Space name' });
         const err = h('p', { class: 'pc-error', hidden: true });
-        const form = h('form', { class: 'ap-tools' }, name, h('button', { class: 'pc-btn pc-btn--brand', type: 'submit', text: 'Form space' }));
+        const clock = h('input', { class: 'sp-input ap-clock', type: 'number', min: 48, max: 8760, placeholder: '72 h', 'aria-label': 'Response clock in hours' });
+        const pleas = h('input', { type: 'checkbox', checked: true });
+        const form = h('form', { class: 'ap-form' },
+            h('div', { class: 'ap-tools' }, name, clock, h('button', { class: 'pc-btn pc-btn--brand', type: 'submit', text: 'Form space' })),
+            h('label', { class: 'gz-filter' }, pleas, ' Allow pleas'));
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            try { const s = await spaceForm(post.id, name.value); location.href = `/HTML-pages/space.html?id=${s.id}`; }
+            try { const s = await spaceForm(post.id, { name: name.value, responseClockHours: clock.value ? Number(clock.value) : undefined, pleasEnabled: pleas.checked }); location.href = `/HTML-pages/space.html?id=${s.id}`; }
             catch (ex) { err.textContent = ex.message; err.hidden = false; }
         });
-        formBox.replaceChildren(form, h('p', { class: 'pc-hint', text: 'Forming closes the post to new applications and locks your accepted applicants in.' }), err);
+        formBox.replaceChildren(form, h('p', { class: 'pc-hint', text: 'Forming closes the post to new applications and locks your accepted applicants in. The response clock is how long a quiet member has to answer before they can be removed (at least 48 hours, 72 if left empty); pleas let others buy them 12 more.' }), err);
     }
     function card(a) {
         const big = h('p', { class: 'ap-text', text: a.statement });

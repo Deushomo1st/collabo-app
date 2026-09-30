@@ -114,7 +114,13 @@ export const applicationDecide = (id, decision) => call(`/api/applications/${id}
 export const founderCredentials = (id) => call(post(id, '/founder-credentials'));
 
 // spaces: form from a post, open, join/leave, members
-export const spaceForm = (postId, name) => call(post(postId, '/space'), { method: 'POST', body: { name } }, 'Could not form the space.');
+export const spaceForm = (postId, fields) => call(post(postId, '/space'), { method: 'POST', body: fields }, 'Could not form the space.');
+export const spaceSettingsUpdate = (id, fields) => call(`/api/spaces/${id}/settings`, { method: 'PATCH', body: fields }, 'Could not save the settings.');
+export const removalsOf = (id) => call(`/api/spaces/${id}/removals`);
+export const removalStart = (id, username, reason) => call(`/api/spaces/${id}/removals`, { method: 'POST', body: { username, reason } });
+export const removalRespond = (id, rid) => call(`/api/spaces/${id}/removals/${rid}/respond`, { method: 'POST' });
+export const removalPlea = (id, rid) => call(`/api/spaces/${id}/removals/${rid}/plea`, { method: 'POST' });
+export const removalCancel = (id, rid) => call(`/api/spaces/${id}/removals/${rid}/cancel`, { method: 'POST' });
 export const spaceOfPost = (postId) => call(post(postId, '/space'));
 export const spaceById = (id) => call(`/api/spaces/${id}`);
 export const spaceJoin = (id) => call(`/api/spaces/${id}/join`, { method: 'POST' });

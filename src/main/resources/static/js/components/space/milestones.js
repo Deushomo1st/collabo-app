@@ -54,7 +54,7 @@ export function milestonesSection(space, { canLog, me }) {
         e.preventDefault();
         try { await milestoneCreate(space.id, title.value); title.value = ''; await load(); } catch (err) { toast(err.message); }
     });
-    root.append(head, canLog && form, list);
+    root.append(...[head, canLog && form, list].filter(Boolean));
     load();
     return root;
 }

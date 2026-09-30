@@ -4,6 +4,8 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { milestonesSection } from '/js/components/space/milestones.js';
 import { paymentsSection } from '/js/components/space/payments.js';
+import { removalsSection, openFlag } from '/js/components/space/removals.js';
+import { openSettings } from '/js/components/space/settings.js';
 import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers, spaceMemberUpdate, spaceMemberRemove } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
@@ -60,6 +62,7 @@ function memberRow(m) {
         m.person.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: m.person.preferredTitle }),
         m.title && h('span', { class: `sp-tag ${m.owner ? 'sp-tag--ok' : 'sp-tag--muted'}`, text: m.title }),
         !m.owner && m.permissions.length > 0 && h('span', { class: 'spc-perms', text: m.permissions.map((p) => PERM[p] || p).join(' · ') }),
+        space.role !== 'APPLICANT' && !m.owner && !mine && m.title !== 'Collaborator' && h('button', { class: 'pc-btn', type: 'button', text: 'Flag as quiet', onclick: () => openFlag(space, m, refresh) }),
         space.canManage && !m.owner && h('button', { class: 'pc-btn', type: 'button', text: 'Edit', onclick: () => editMember(m) }),
         space.canManage && !m.owner && !mine && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Remove', onclick: () => act(() => spaceMemberRemove(space.id, m.person.username), `${m.person.username} was removed.`) }));
 }
@@ -81,7 +84,9 @@ function draw() {
         h('section', { class: 'spc-card sp-glass' },
             h('h2', { text: space.postTitle }),
             h('p', { class: 'pc-hint' }, 'The idea, by ', h('a', { class: 'pc-who', href: profileHref(space.owner.username), text: space.owner.username })),
-            h('p', { class: 'spc-idea', text: space.postBody })),
+            h('p', { class: 'spc-idea', text: space.postBody }),
+            h('p', { class: 'pc-hint', text: `Response clock: ${space.responseClockHours} hours · Pleas ${space.pleasEnabled ? 'allowed' : 'off'}` }),
+            can('EDIT_SETTINGS') && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn', type: 'button', text: 'Space settings', onclick: () => openSettings(space, refresh) }))),
         space.threadId && h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/yarnspaces.html#t/${space.threadId}`, text: 'Open the room' }),
         h('section', { class: 'spc-card sp-glass' },
             h('h2', { text: `The team · ${members.length}` }),
@@ -89,7 +94,8 @@ function draw() {
             space.role === 'MEMBER' && !space.canManage && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Leave space',
                 onclick: () => act(() => spaceLeave(space.id), 'You left the space.') }))),
         milestonesSection(space, { canLog: can('LOG_MILESTONES'), me }),
-        inRoom && paymentsSection(space, { canLog: can('LOG_PAYMENTS'), me, members })].filter(Boolean));
+        inRoom && paymentsSection(space, { canLog: can('LOG_PAYMENTS'), me, members }),
+        inRoom && removalsSection(space, { me })].filter(Boolean));
 }
 
 async function boot() {
