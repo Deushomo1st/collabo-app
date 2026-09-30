@@ -26,12 +26,14 @@ public final class PostDtos {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record PostResponse(UUID id, PersonDto author, String title, String body, Instant applyBy,
                                String status, Instant createdAt, boolean mine, long shouts, boolean shouted,
-                               PersonDto shoutedBy) {
+                               PersonDto shoutedBy, String applied, Long applicants) {
         /** shoutedBy: who in your network shouted this out, when it appears in Shared Gaze or a Reposts tab. */
-        public static PostResponse of(Post p, User author, User viewer, long shouts, boolean shouted, User shoutedBy) {
+        /** applied: the viewer's own application state. applicants: how many applied, shown to the author only (nobody else learns it). */
+        public static PostResponse of(Post p, User author, User viewer, long shouts, boolean shouted, User shoutedBy,
+                                      String applied, Long applicants) {
             return new PostResponse(p.getId(), PersonDto.of(author), p.getTitle(), p.getBody(), p.getApplyBy(),
                     p.status(), p.getCreatedAt(), author.getId().equals(viewer.getId()), shouts, shouted,
-                    shoutedBy == null ? null : PersonDto.of(shoutedBy));
+                    shoutedBy == null ? null : PersonDto.of(shoutedBy), applied, applicants);
         }
     }
 }

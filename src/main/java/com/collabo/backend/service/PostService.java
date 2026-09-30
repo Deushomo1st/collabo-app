@@ -6,6 +6,8 @@ import com.collabo.backend.entity.Post;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
+import com.collabo.backend.entity.ApplicationState;
+import com.collabo.backend.repository.ApplicationRepository;
 import com.collabo.backend.repository.PostCommentRepository;
 import com.collabo.backend.repository.PostRepository;
 import com.collabo.backend.repository.ShoutRepository;
@@ -35,9 +37,11 @@ public class PostService {
     private final UserBlockRepository blocks;
     private final PostCommentRepository comments;
     private final ShoutRepository shouts;
+    private final ApplicationRepository applications;
 
-    public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts) {
-        this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts;
+    public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts,
+                       ApplicationRepository applications) {
+        this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts; this.applications = applications;
     }
 
     public PostResponse create(User me, PostRequest req) {
@@ -59,6 +63,7 @@ public class PostService {
         Post p = mine(me, id);
         comments.deleteByPostId(id);
         shouts.deleteByPostId(id);
+        applications.deleteByPostId(id);
         posts.delete(p);
     }
 
@@ -101,10 +106,16 @@ public class PostService {
         Map<UUID, Long> counts = new HashMap<>();
         for (Object[] row : shouts.counts(ids)) counts.put((UUID) row[0], (Long) row[1]);
         Set<UUID> mineShouted = new HashSet<>(shouts.shoutedAmong(viewer.getId(), ids));
+        Map<UUID, String> applied = new HashMap<>();
+        for (Object[] row : applications.statesOf(viewer.getId(), ids, ApplicationState.WITHDRAWN)) applied.put((UUID) row[0], row[1].toString());
+        Map<UUID, Long> applicants = new HashMap<>();
+        Set<UUID> mineIds = ps.stream().filter(p -> p.getAuthorId().equals(viewer.getId())).map(Post::getId).collect(Collectors.toSet());
+        if (!mineIds.isEmpty()) for (Object[] row : applications.counts(mineIds, ApplicationState.WITHDRAWN)) applicants.put((UUID) row[0], (Long) row[1]);
         return ps.stream().map(p -> {
             User author = authors.get(p.getAuthorId());
             if (author == null) throw new ResourceNotFoundException("That post is gone.");
-            return PostResponse.of(p, author, viewer, counts.getOrDefault(p.getId(), 0L), mineShouted.contains(p.getId()), shouters.get(p.getId()));
+            return PostResponse.of(p, author, viewer, counts.getOrDefault(p.getId(), 0L), mineShouted.contains(p.getId()), shouters.get(p.getId()),
+                    applied.get(p.getId()), mineIds.contains(p.getId()) ? applicants.getOrDefault(p.getId(), 0L) : null);
         }).toList();
     }
 
