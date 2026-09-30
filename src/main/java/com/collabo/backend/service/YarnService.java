@@ -7,6 +7,7 @@ import com.collabo.backend.entity.Yarn;
 import com.collabo.backend.entity.YarnThread;
 import com.collabo.backend.exception.YarnException;
 import com.collabo.backend.repository.ThreadMemberRepository;
+import com.collabo.backend.repository.UserAvatarRepository;
 import com.collabo.backend.repository.UserBlockRepository;
 import com.collabo.backend.repository.YarnRepository;
 import com.collabo.backend.repository.YarnThreadRepository;
@@ -41,11 +42,12 @@ public class YarnService {
     private final FollowService follows;
     private final SpaceThreadService spaceThreads;
     private final LiveSignals signals;
+    private final UserAvatarRepository avatars;
 
     public YarnService(YarnThreadRepository threads, ThreadMemberRepository members, YarnRepository yarns,
                        UserBlockRepository blocks, UserRepository users, FollowService follows,
-                       SpaceThreadService spaceThreads, LiveSignals signals) {
-        this.spaceThreads = spaceThreads; this.follows = follows; this.signals = signals;
+                       SpaceThreadService spaceThreads, LiveSignals signals, UserAvatarRepository avatars) {
+        this.spaceThreads = spaceThreads; this.follows = follows; this.signals = signals; this.avatars = avatars;
         this.threads = threads; this.members = members; this.yarns = yarns; this.blocks = blocks; this.users = users;
     }
 
@@ -57,7 +59,7 @@ public class YarnService {
         if (s.length() < 2) return List.of();
         return users.findTop10ByUsernameContainingIgnoreCaseAndIdNot(s, me.getId()).stream()
                 .filter(u -> !blocks.existsByBlockerIdAndBlockedId(u.getId(), me.getId()))
-                .map(u -> new PersonView(u.getId(), u.getUsername())).toList();
+                .map(u -> new PersonView(u.getId(), u.getUsername(), null)).toList();
     }
 
     // ---- listing ----------------------------------------------------------
@@ -70,6 +72,7 @@ public class YarnService {
         Map<UUID, YarnThread> byId = threads.findAllById(ids).stream().collect(Collectors.toMap(YarnThread::getId, Function.identity()));
         Map<UUID, List<ThreadMember>> seats = members.findByThreadIdIn(ids).stream().collect(Collectors.groupingBy(ThreadMember::getThreadId));
         Map<UUID, User> people = peopleFor(seats.values().stream().flatMap(List::stream).map(ThreadMember::getUserId).collect(Collectors.toSet()));
+        Map<UUID, Long> pics = picturesOf(people.keySet());
         Set<UUID> iBlocked = blocks.findByBlockerIdOrderByCreatedAtDesc(me.getId()).stream().map(UserBlock::getBlockedId).collect(Collectors.toSet());
         String needle = q == null ? "" : q.trim().toLowerCase();
 
@@ -79,7 +82,7 @@ public class YarnService {
             if (t == null || (tier != null && t.getTier() != tier)) continue;
             UUID other = t.getTier() == Tier.MYSPACE ? otherOf(seats.get(t.getId()), me.getId()) : null;
             if (other != null && iBlocked.contains(other)) continue;   // lives in the Blocked list instead
-            ThreadView v = view(t, seat, me, other, seats.get(t.getId()), people);
+            ThreadView v = view(t, seat, me, other, seats.get(t.getId()), people, pics);
             if (!needle.isEmpty() && !matches(v, needle)) continue;
             out.add(v);
         }
@@ -308,12 +311,20 @@ public class YarnService {
         List<ThreadMember> seats = members.findByThreadId(threadId);
         ThreadMember mine = seats.stream().filter(m -> m.getUserId().equals(me.getId())).findFirst().orElseThrow();
         UUID other = t.getTier() == Tier.MYSPACE ? otherOf(seats, me.getId()) : null;
-        return view(t, mine, me, other, seats, peopleFor(seats.stream().map(ThreadMember::getUserId).collect(Collectors.toSet())));
+        Map<UUID, User> people = peopleFor(seats.stream().map(ThreadMember::getUserId).collect(Collectors.toSet()));
+        return view(t, mine, me, other, seats, people, picturesOf(people.keySet()));
     }
 
-    private ThreadView view(YarnThread t, ThreadMember mine, User me, UUID other, List<ThreadMember> seats, Map<UUID, User> people) {
+    /** Picture versions for a set of people, without loading any image. */
+    private Map<UUID, Long> picturesOf(Collection<UUID> ids) {
+        Map<UUID, Long> out = new HashMap<>();
+        for (Object[] row : avatars.versionsOf(ids)) out.put((UUID) row[0], ((java.time.Instant) row[1]).toEpochMilli());
+        return out;
+    }
+
+    private ThreadView view(YarnThread t, ThreadMember mine, User me, UUID other, List<ThreadMember> seats, Map<UUID, User> people, Map<UUID, Long> pics) {
         List<PersonView> who = seats.stream().map(s -> people.get(s.getUserId())).filter(Objects::nonNull)
-                .map(u -> new PersonView(u.getId(), u.getUsername())).toList();
+                .map(u -> new PersonView(u.getId(), u.getUsername(), pics.get(u.getId()))).toList();
         boolean requester = t.getCreatedBy().equals(me.getId());
         User last = t.getLastSenderId() == null ? null : people.get(t.getLastSenderId());
         String name = other != null && people.containsKey(other) ? people.get(other).getUsername() : t.getName();

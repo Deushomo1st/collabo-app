@@ -56,6 +56,17 @@
 /* The wrench sits inside the chat tablet, at its right edge, past the unread badge. */
 .yn-item:has(.yn-wrench) { position: relative; }
 .yn-item:has(.yn-wrench) .yn-row { padding-right: 64px; }
+/* pictures: a real photo covers the initial circle */
+.yn-face-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.sp-avatar { position: relative; overflow: hidden; }
+.yn-headfaces { display: flex; flex: none; align-items: center; }
+.yn-headfaces[hidden] { display: none; }
+.yn-headfaces a { display: block; border-radius: 50%; margin-left: -12px; }
+.yn-headfaces a:first-child { margin-left: 0; }
+.yn-headfaces a:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
+.yn-headfaces .sp-avatar { --_size: 46px; border: 2px solid var(--sp-bg); }
+.nav-selector-fluid-hold__link .yn-navface { --_size: 26px; border: 0; font-style: normal; }
+
 .yn-wrench {
     position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: grid; place-items: center;
     width: 36px; height: 36px; padding: 0; border-radius: 50%; background: transparent;

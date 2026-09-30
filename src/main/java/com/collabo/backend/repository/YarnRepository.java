@@ -18,8 +18,10 @@ public interface YarnRepository extends JpaRepository<Yarn, UUID> {
 
     List<Yarn> findByThreadIdAndCreatedAtBetweenOrderByCreatedAtAsc(UUID threadId, Instant from, Instant to);
 
-    /** Yarns I have not read: newer than my marker and not sent by me (system yarns count). */
+    /** Messages I have not read: newer than my marker and written by someone else. System notes ("bob joined") are not messages. */
+    default long countUnread(UUID threadId, Instant after, UUID me) { return countUnreadOfKind(threadId, after, me, Yarn.Kind.USER); }
+
     @Query("select count(y) from Yarn y where y.threadId = :threadId and y.createdAt > :after "
-            + "and (y.senderId is null or y.senderId <> :me)")
-    long countUnread(@Param("threadId") UUID threadId, @Param("after") Instant after, @Param("me") UUID me);
+            + "and y.kind = :kind and y.senderId <> :me")
+    long countUnreadOfKind(@Param("threadId") UUID threadId, @Param("after") Instant after, @Param("me") UUID me, @Param("kind") Yarn.Kind kind);
 }

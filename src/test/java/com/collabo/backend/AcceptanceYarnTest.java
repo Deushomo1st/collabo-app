@@ -97,7 +97,7 @@ class AcceptanceYarnTest {
         accept(annS).andExpect(status().isOk());
         myspaces(catS).andExpect(jsonPath("$", hasSize(1))).andExpect(jsonPath("$[0].name").value(ann))
                 .andExpect(jsonPath("$[0].status").value("ACCEPTED")).andExpect(jsonPath("$[0].incomingRequest").value(false))
-                .andExpect(jsonPath("$[0].unread").value(1)).andExpect(jsonPath("$[0].lastBody", containsString("Idea")));
+                .andExpect(jsonPath("$[0].unread").value(0)).andExpect(jsonPath("$[0].lastBody", containsString("Idea")));   // a system note is shown, but it is not an unread message
         myspaces(annS).andExpect(jsonPath("$", hasSize(1))).andExpect(jsonPath("$[0].name").value(cat));
         String thread = com.jayway.jsonpath.JsonPath.read(myspaces(catS).andReturn().getResponse().getContentAsString(), "$[0].id");
         send(get("/api/yarns/threads/" + thread + "/yarns"), catS, null)

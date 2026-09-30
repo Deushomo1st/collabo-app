@@ -139,7 +139,9 @@ class YarnServiceTest {
         yarns.setPrefs(bo, older, new Prefs(null, true, null));
         assertEquals("Older", inbox(bo).get(0).name());
 
-        assertTrue(inbox(bo).get(0).unread() > 0);
+        assertEquals(0, inbox(bo).get(0).unread());   // the room's own "opened" note is not a message
+        yarns.send(ada, older, "anyone here?");
+        assertEquals(1, inbox(bo).get(0).unread());
         yarns.markRead(bo, older);
         assertEquals(0, inbox(bo).get(0).unread());
         assertEquals(1, yarns.list(bo, false, Tier.WESPACE, null).size());   // tier filter

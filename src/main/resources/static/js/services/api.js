@@ -29,7 +29,13 @@ async function send(path, { method = 'GET', body } = {}) {
     if (raw) headers['Content-Type'] = body.type;
     else if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (write) headers['X-XSRF-TOKEN'] = csrfCookie();
-    const response = await fetch(path, { method, headers, body: body === undefined ? undefined : raw ? body : JSON.stringify(body) });
+    let response;
+    try { response = await fetch(path, { method, headers, body: body === undefined ? undefined : raw ? body : JSON.stringify(body) }); }
+    catch {   // the browser only says "Failed to fetch": offline, or the server is restarting
+        const err = new Error('Cannot reach the server. Check your connection; this page will keep trying.');
+        err.status = 0;
+        throw err;
+    }
     const data = response.status === 204 ? null : await response.json().catch(() => ({}));
     return { response, data };
 }

@@ -12,7 +12,8 @@ import java.util.UUID;
 public final class YarnDtos {
     private YarnDtos() {}
 
-    public record PersonView(UUID id, String username) {}
+    /** avatar is the picture's version (add it to the picture URL as ?v=), or null when they have none. */
+    public record PersonView(UUID id, String username, Long avatar) {}
 
     public record ThreadView(UUID id, String tier, String name, String status,
                              boolean iAmRequester, boolean incomingRequest,

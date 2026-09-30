@@ -42,7 +42,7 @@ public class YarnController {
     @GetMapping("/me")
     public PersonView me() {
         var me = caller.require();
-        return new PersonView(me.getId(), me.getUsername());
+        return new PersonView(me.getId(), me.getUsername(), null);
     }
 
     @GetMapping("/directory")
