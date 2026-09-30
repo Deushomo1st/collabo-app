@@ -121,4 +121,17 @@ class ModeratorAccountTest {
         as(put("/api/moderator/password"), s, "{\"current\":\"Reset-by-admin-1\",\"password\":\"Brand-new-pass-2\"}").andExpect(status().isNoContent());
         as(post("/api/moderator/login"), null, "{\"identifier\":\"" + email + "\",\"password\":\"Brand-new-pass-2\"}").andExpect(status().isOk());
     }
+
+    @Test
+    void aModeratorSessionIsRefusedEverywhereUsersGo() throws Exception {
+        Cookie s = login(email0(), PASSWORD);
+        String id = java.util.UUID.randomUUID().toString();
+        for (String path : new String[]{"/api/gaze", "/api/notifications", "/api/notifications/unread-count", "/api/yarns/threads", "/api/yarns/me", "/api/spaces/" + id,
+                "/api/posts/" + id, "/api/users/me", "/api/users/anyone", "/api/users/anyone/removals", "/api/users/anyone/followers"})
+            as(get(path), s, null).andExpect(status().isUnauthorized());
+        as(post("/api/yarns/threads/" + id + "/report"), s, "{\"reason\":\"x\"}").andExpect(status().isUnauthorized());   // reporting is a member act
+        as(get("/api/admin/investigations"), s, null).andExpect(status().isForbidden());          // and the admin key is a different door
+    }
+
+    private String email0() throws Exception { String e = email(); create(e); return e; }
 }
