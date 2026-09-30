@@ -17,11 +17,13 @@
     box-shadow: 0 10px 30px color-mix(in srgb, var(--sp-brand) 35%, transparent); transition: transform .3s cubic-bezier(.16, 1, .3, 1);
 }
 .hr-btn:hover { transform: translateY(-2px) scale(1.02); }
-.hr-btn span { display: inline-flex; overflow: hidden; }
-/* each character has a twin below it; on hover the row rolls up, letter by letter (the delays are set in hero.js) */
-.hr-btn .ch { display: inline-block; position: relative; transition: transform .45s cubic-bezier(.16, 1, .3, 1); white-space: pre; }
-.hr-btn .ch::after { content: attr(data-c); position: absolute; left: 0; top: 100%; }
-.hr-btn:hover .ch { transform: translateY(-100%); }
+.hr-btn > span { display: grid; overflow: hidden; }
+/* both lines share one cell; the hover line waits below and rolls up as the label rolls out (delays are set in hero.js) */
+.hr-btn .ln { grid-area: 1 / 1; justify-self: center; display: inline-flex; white-space: pre; }
+.hr-btn .ch { display: inline-block; transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+.hr-btn .ln--in .ch { transform: translateY(110%); }
+.hr-btn:hover .ln--out .ch, .hr-btn:focus-visible .ln--out .ch { transform: translateY(-110%); }
+.hr-btn:hover .ln--in .ch, .hr-btn:focus-visible .ln--in .ch { transform: none; }
 .hr-live { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--sp-muted); font: 500 12px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
 .hr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sp-ok); box-shadow: 0 0 10px var(--sp-ok); animation: hr-pulse 1.6s ease-in-out infinite; }
 @keyframes hr-pulse { 50% { opacity: .35; } }

@@ -12,16 +12,25 @@ function fillTrack(track, offset) {
     track.innerHTML = chips + chips;   // twice, so the loop has no seam
 }
 
-// Buttons: every character gets a twin below it, so hover rolls the label up letter by letter.
+// Buttons: the label and its hover text (data-hover, else the same words) sit in one cell. On hover the label's characters
+// roll up and out while the hover text's roll in from below, letter by letter.
 function rollButtons() {
-    document.querySelectorAll('[data-chars] span').forEach((el) => {
-        const text = el.textContent;
-        el.textContent = '';
+    const line = (text, cls) => {
+        const row = document.createElement('span');
+        row.className = 'ln ' + cls; row.setAttribute('aria-hidden', 'true');
         [...text].forEach((c, i) => {
             const s = document.createElement('span');
-            s.className = 'ch'; s.textContent = c; s.dataset.c = c; s.style.transitionDelay = i * 0.012 + 's';
-            el.appendChild(s);
+            s.className = 'ch'; s.textContent = c; s.style.transitionDelay = i * 0.02 + 's';
+            row.appendChild(s);
         });
+        return row;
+    };
+    document.querySelectorAll('[data-chars]').forEach((btn) => {
+        const label = btn.querySelector('span');
+        const text = label.textContent;
+        btn.setAttribute('aria-label', text);   // screen readers get the label once, not letter by letter
+        label.textContent = '';
+        label.append(line(text, 'ln--out'), line(btn.dataset.hover || text, 'ln--in'));
     });
 }
 
