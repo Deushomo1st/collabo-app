@@ -105,3 +105,11 @@ export const postUnshout = (id) => call(post(id, '/shout'), { method: 'DELETE' }
 export const commentsOf = (id) => call(post(id, '/comments'));
 export const commentAdd = (id, body) => call(post(id, '/comments'), { method: 'POST', body: { body } });
 export const commentDelete = (id, commentId) => call(post(id, `/comments/${commentId}`), { method: 'DELETE' });
+
+// applications: apply/withdraw/mine for applicants; stack/decide/founderCredentials for the review side
+export const applyTo = (id, statement) => call(post(id, '/applications'), { method: 'POST', body: { statement } }, 'Could not send your application.');
+export const applicationWithdraw = (id) => call(`/api/applications/${id}/withdraw`, { method: 'POST' });
+export const applicationsMine = () => call('/api/applications/mine');
+export const applicationStack = (id, sort, filter) => call(post(id, `/applications?sort=${sort}${filter ? `&filter=${filter}` : ''}`));
+export const applicationDecide = (id, decision) => call(`/api/applications/${id}`, { method: 'PATCH', body: { decision } });
+export const founderCredentials = (id) => call(post(id, '/founder-credentials'));

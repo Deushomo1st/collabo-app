@@ -45,6 +45,12 @@
 .pc-btn:hover { background: var(--sp-panel-hi); }
 .pc-btn.is-on { border-color: var(--sp-brand); color: var(--sp-brand); }
 .pc-btn--danger { color: var(--sp-danger); }
+.pc-btn--brand { background: var(--sp-brand); border-color: var(--sp-brand); color: var(--sp-brand-ink); }
+.ap-list, .ap-body { display: grid; gap: 10px; }
+.ap-tools { display: flex; gap: 8px; }
+.ap-select { width: auto; }
+.ap-card { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
+.ap-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pc-link { justify-self: start; padding: 0; border: 0; background: none; color: var(--sp-muted); font: 600 12px var(--sp-font); cursor: pointer; }
 .pc-link:hover { color: var(--sp-danger); }
 

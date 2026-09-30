@@ -2,6 +2,7 @@
 // postCard(post, { onGone }) returns an element that keeps itself up to date; onGone() runs after a delete.
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postShout, postUnshout, postDelete, postWindow, commentsOf, commentAdd, commentDelete } from '/js/services/api.js';
+import { openApply, openReview } from '/js/components/applications/applications.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
 
 const MAX_COMMENT = 500;
@@ -91,6 +92,10 @@ export function postCard(initial, { onGone } = {}) {
                     text: `${p.shouted ? 'Shouted out' : 'Shout out'} · ${p.shouts}`, onclick: () => act(() => (p.shouted ? postUnshout : postShout)(p.id)) }),
                 p.mine && p.shouts > 0 && h('span', { class: 'pc-hint', text: `${p.shouts} shout-out${p.shouts === 1 ? '' : 's'}` }),
                 h('button', { class: 'pc-btn', type: 'button', 'aria-expanded': String(open), text: open ? 'Hide comments' : 'Comments', onclick: toggleComments }),
+                !p.mine && p.applied && p.applied !== 'WITHDRAWN' && h('span', { class: 'sp-tag sp-tag--ok', text: 'Applied' }),
+                !p.mine && !closed && (!p.applied || p.applied === 'WITHDRAWN') && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Apply',
+                    onclick: () => openApply(p, (state) => { p = { ...p, applied: state }; draw(); }) }),
+                p.mine && h('button', { class: 'pc-btn', type: 'button', text: `Applicants · ${p.applicants ?? 0}`, onclick: () => openReview(p) }),
                 p.mine && h('button', { class: 'pc-btn', type: 'button', text: 'Deadline', onclick: editWindow }),
                 p.mine && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Delete', onclick: remove })),
             open && comments && commentBox()].filter(Boolean));
