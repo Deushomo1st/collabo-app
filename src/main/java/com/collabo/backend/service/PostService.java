@@ -6,6 +6,7 @@ import com.collabo.backend.entity.Post;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
+import com.collabo.backend.repository.PostCommentRepository;
 import com.collabo.backend.repository.PostRepository;
 import com.collabo.backend.repository.UserBlockRepository;
 import com.collabo.backend.repository.UserRepository;
@@ -28,9 +29,10 @@ public class PostService {
     private final PostRepository posts;
     private final UserRepository users;
     private final UserBlockRepository blocks;
+    private final PostCommentRepository comments;
 
-    public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks) {
-        this.posts = posts; this.users = users; this.blocks = blocks;
+    public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments) {
+        this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments;
     }
 
     public PostResponse create(User me, PostRequest req) {
@@ -49,7 +51,9 @@ public class PostService {
     }
 
     public void delete(User me, UUID id) {
-        posts.delete(mine(me, id));
+        Post p = mine(me, id);
+        comments.deleteByPostId(id);
+        posts.delete(p);
     }
 
     /** null = indefinite. Extending is free; shortening waits at least 24 hours so nobody is closed out mid-draft. */

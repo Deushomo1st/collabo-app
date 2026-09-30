@@ -15,6 +15,10 @@ public final class PostDtos {
     /** applyBy null = indefinite. */
     public record WindowRequest(Instant applyBy) {}
 
+    public record CommentRequest(String body) {}
+
+    public record CommentResponse(UUID id, PersonDto author, String body, Instant createdAt, boolean mine) {}
+
     /** One page of a feed. next is the cursor for the following page, absent on the last one. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record FeedPage(java.util.List<PostResponse> items, Instant next) {}
