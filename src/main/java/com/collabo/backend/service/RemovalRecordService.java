@@ -46,8 +46,12 @@ public class RemovalRecordService {
     @Transactional(readOnly = true)
     public List<RecordView> of(User me, String username) {
         User who = users.findByUsername(username == null ? "" : username.trim()).orElseThrow(() -> new ResourceNotFoundException("No such person."));
-        if (!who.getId().equals(me.getId()) && !me.isPremium()) throw new ForbiddenException("Other people's removal records are a premium feature.");
-        return present(records.findTop50ByRemovedIdOrderByCreatedAtDesc(who.getId()));
+        List<RemovalRecord> rows = records.findTop50ByRemovedIdOrderByCreatedAtDesc(who.getId());
+        if (who.getId().equals(me.getId()) || me.isPremium()) return present(rows);
+        // everyone else sees only the removals they carried out themselves (they are a party and may address them)
+        List<RemovalRecord> mine = rows.stream().filter(r -> r.getRemovedById().equals(me.getId())).toList();
+        if (mine.isEmpty()) throw new ForbiddenException("Other people's removal records are a premium feature.");
+        return present(mine);
     }
 
     public AddressView address(User me, UUID recordId, String raw) {

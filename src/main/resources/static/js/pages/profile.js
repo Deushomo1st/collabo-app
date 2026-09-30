@@ -4,6 +4,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
 import { postCard } from '/js/components/post-card/post-card.js';
+import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
     follow, unfollow, followers, following, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts,
@@ -19,6 +20,7 @@ const KIND = { SPACE_FORMED: 'Space formed', MILESTONE_CREDITED: 'Milestone' };
 let profile = null;      // ProfileResponse of the person being viewed
 let credentials = null;  // CredentialsResponse, loaded with the profile
 let tab = 'credentials';
+let viewer = '';        // the signed-in username
 let feeds = {};         // Posts / Reposts pages loaded so far: { posts: { items, next, error }, reposts: {...} }
 
 // ---- tiny DOM helper -------------------------------------------------------
@@ -193,6 +195,7 @@ function renderTabs() {
     });
     let body;
     if (tab === 'posts' || tab === 'reposts') body = postList(tab);
+    else if (tab === 'removals') body = removalRecordsSection(profile, viewer);
     else if (!credentials.visible) body = h('p', { class: 'pf-empty', text: 'Credentials are private.' });
     else {
         const shown = tab === 'feats' ? feats : all;
@@ -204,7 +207,7 @@ function renderTabs() {
     }
     box.replaceChildren(
         h('div', { class: 'pf-tabs', role: 'tablist' }, tabBtn('credentials', `Credentials · ${credentials.visible ? all.length : 0}`),
-            tabBtn('feats', `Feats · ${credentials.visible ? feats.length : 0}`), tabBtn('posts', 'Posts'), tabBtn('reposts', 'Reposts')),
+            tabBtn('feats', `Feats · ${credentials.visible ? feats.length : 0}`), tabBtn('posts', 'Posts'), tabBtn('reposts', 'Reposts'), tabBtn('removals', 'Removals')),
         body);
 }
 
@@ -259,6 +262,7 @@ async function boot() {
     try {
         const me = await currentUser();
         if (!me) return toLogin();
+        viewer = me.username;
         await load(usernameInUrl() || me.username);
     } catch (err) { fail(err); }
 }

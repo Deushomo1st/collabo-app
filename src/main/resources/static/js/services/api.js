@@ -147,3 +147,14 @@ export const paymentsOf = (id) => call(sp(id, '/payments'));
 export const paymentClaim = (id, fields) => call(sp(id, '/payments'), { method: 'POST', body: fields });
 export const paymentConfirm = (id, pid) => call(sp(id, `/payments/${pid}/confirm`), { method: 'POST' });
 export const paymentCancel = (id, pid) => call(sp(id, `/payments/${pid}/cancel`), { method: 'POST' });
+
+// ---- notifications, removal records, appeals, moderation -----------------------
+export const notificationsList = (filter) => call(`/api/notifications${q({ filter })}`);
+export const notificationRead = (id) => call(`/api/notifications/${id}/read`, { method: 'POST' });
+export const notificationsReadAll = () => call('/api/notifications/read-all', { method: 'POST' });
+export const removalRecordsOf = (name) => call(user(name, '/removals'));
+export const removalAddress = (recordId, body) => call(`/api/removals/${recordId}/addresses`, { method: 'POST', body: { body } }, 'Could not post your address.');
+export const removalAppeal = (recordId, note) => call(`/api/removals/${recordId}/appeal`, { method: 'POST', body: { note } }, 'Could not send your appeal.');
+export const appealQueue = () => call('/api/moderation/appeals');
+export const appealDetail = (id) => call(`/api/moderation/appeals/${id}`);
+export const appealDecide = (id, outcome) => call(`/api/moderation/appeals/${id}/decide`, { method: 'POST', body: { outcome } });

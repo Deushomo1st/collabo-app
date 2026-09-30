@@ -143,6 +143,12 @@ class RemovalRecordTest {
     }
 
     @Test
+    void theOneWhoRemovedSeesTheirOwnRecordWithoutPremium() throws Exception {
+        removeBob();
+        recordsOf(bob, annS).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
+    }
+
+    @Test
     void thePartiesAddressEachOtherAndEachIsNotified() throws Exception {
         removeBob();
         String id = recordId();
