@@ -1,0 +1,13 @@
+/* The space page: the idea it grew from, the join step, and the people in it. Loaded after workspace.css and gaze.css. */
+
+.spc-card { display: grid; gap: 10px; padding: 16px 18px; border-radius: 20px; }
+.spc-card h2 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+.spc-idea { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.spc-members { display: grid; gap: 8px; }
+.spc-member { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
+.spc-perms { margin-left: auto; color: var(--sp-muted); font: 500 11px var(--sp-mono); }
+.spc-join { border-color: var(--sp-brand); }
+.sp-form label.spc-check { display: flex; flex-direction: row; align-items: center; gap: 8px; color: var(--sp-muted); font-size: 13px; cursor: pointer; }
+.spc-ms { display: grid; gap: 6px; }
+.spc-credited { margin: 0; }
+.spc-ms > .sp-tag { justify-self: start; }

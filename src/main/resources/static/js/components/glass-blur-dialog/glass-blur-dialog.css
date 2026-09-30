@@ -73,16 +73,10 @@
     box-shadow: var(--_gbd-shadow);
     transform: translateY(8px) scale(.98);
     transition: transform .22s cubic-bezier(.25, 1, .5, 1);
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, var(--_gbd-brand) 40%, transparent) transparent;
+    scrollbar-width: none;            /* content still scrolls; the bar no longer pokes out past the rounded corners */
 }
 .glass-blur-dialog__panel:focus { outline: none; }
-.glass-blur-dialog__panel::-webkit-scrollbar { width: 6px; }
-.glass-blur-dialog__panel::-webkit-scrollbar-thumb {
-    background-color: color-mix(in srgb, var(--_gbd-brand) 40%, transparent);
-    border-radius: 999px;
-}
-.glass-blur-dialog__panel::-webkit-scrollbar-track { background: transparent; }
+.glass-blur-dialog__panel::-webkit-scrollbar { display: none; }
 
 /* Gloss sheen: the diagonal highlight that sells the glass */
 .glass-blur-dialog__panel::before {

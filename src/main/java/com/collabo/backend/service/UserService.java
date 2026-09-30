@@ -63,6 +63,13 @@ public class UserService {
         return AdminUserResponse.from(userRepository.save(user));
     }
 
+    public AdminUserResponse setPremium(UUID id, boolean premium) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        user.setPremium(premium);
+        return AdminUserResponse.from(userRepository.save(user));
+    }
+
     public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found: " + id);

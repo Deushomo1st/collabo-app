@@ -56,7 +56,8 @@ export function preloadThemeSwitcher() {
     return fragmentPromise;
 }
 
-// opts: { inline, onChange(theme) }. Returns { element, destroy }.
+// opts: { inline, collapse, plain, onChange(theme) }. Returns { element, destroy }.
+// `collapse` hides an inline switcher on small screens, where the theme lives in the page's Settings (see mountThemeRow).
 export async function mountThemeSwitcher(target, opts = {}) {
     const host = typeof target === 'string' ? document.querySelector(target) : target;
     if (!host) throw new Error(`theme-switcher: no element matches ${target}`);
@@ -66,6 +67,7 @@ export async function mountThemeSwitcher(target, opts = {}) {
     tpl.innerHTML = (await preloadThemeSwitcher()).trim();
     const root = tpl.content.firstElementChild;
     if (opts.inline) root.classList.add('theme-switcher--inline');
+    if (opts.collapse) root.classList.add('theme-switcher--collapse');
 
     const label = root.querySelector('.theme-switcher__label');
     const icon = root.querySelector('.theme-switcher__icon');
@@ -95,6 +97,23 @@ export async function mountThemeSwitcher(target, opts = {}) {
             root.remove();
         },
     };
+}
+
+// A "Theme" row for a Settings dialog: the switcher always shows here, even where the header's is folded away.
+export async function mountThemeRow(target) {
+    const host = typeof target === 'string' ? document.querySelector(target) : target;
+    const row = document.createElement('div');
+    row.className = 'theme-switcher__row';
+    row.innerHTML = '<span>Theme</span><span></span>';
+    host.appendChild(row);
+    await mountThemeSwitcher(row.lastChild, { inline: true, plain: true });
+}
+
+// A Settings dialog holding just the theme, for pages with no settings of their own.
+export async function openThemeSettings() {
+    const { openGlassBlurDialog } = await import('/js/components/glass-blur-dialog/glass-blur-dialog.js');
+    const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Settings', html: '<h3 class="glass-blur-dialog__title">Settings</h3><div></div>' });
+    await mountThemeRow(panel.lastElementChild);
 }
 
 function loadStylesOnce(href, componentName) {

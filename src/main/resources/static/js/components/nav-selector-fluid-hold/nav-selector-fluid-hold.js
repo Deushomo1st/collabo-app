@@ -74,7 +74,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
                 num.textContent = String(getLinks().indexOf(active) + 1);
                 navIcon.appendChild(num);
             } else {
-                const svg = active.querySelector('svg');
+                const svg = active.querySelector('svg, i');   // <i> = a picture icon (e.g. a profile face)
                 if (svg) navIcon.appendChild(svg.cloneNode(true));
             }
             navIcon.dataset.for = key;
@@ -114,6 +114,10 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         else if (dy < -2) { expand(); armIdle(); }
     }
     scrollRoot.addEventListener('scroll', onScroll, { passive: true });
+
+    // Pressing anywhere outside the nav (another surface) tucks it away at once.
+    const onOutside = (e) => { if (!root.contains(e.target) && !isIconized()) iconize(); };
+    document.addEventListener('pointerdown', onOutside, true);
 
     navIcon.addEventListener('click', () => { expand(); armIdle(); });
     root.addEventListener('mouseenter', () => clearTimeout(idleTimer));
@@ -202,6 +206,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         destroy() {
             clearTimeout(idleTimer);
             scrollRoot.removeEventListener('scroll', onScroll);
+            document.removeEventListener('pointerdown', onOutside, true);
             window.removeEventListener('resize', update);
             wrap.remove();
         },

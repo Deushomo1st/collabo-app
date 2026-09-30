@@ -1,0 +1,91 @@
+/* Yarnspaces hub. Loaded after workspace.css (shared palette, glass, avatars, tags); only hub-specific bits here. */
+
+.yn-header { flex-direction: column; align-items: stretch; gap: 10px; }
+.yn-header__top { display: flex; align-items: center; gap: 14px; }
+.yn-gear {
+    display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px;
+    border: 1px solid var(--sp-line); background: var(--sp-panel);
+}
+.yn-gear:hover { background: var(--sp-panel-hi); }
+.yn-hint { margin: 0; opacity: .7; font-size: 13px; }
+.yn-search {
+    width: 100%; padding: 10px 14px; border-radius: 14px; font: inherit; color: inherit;
+    border: 1px solid var(--sp-line); background: var(--sp-panel);
+}
+.yn-search::placeholder { color: var(--sp-muted); }
+
+.sp-top { margin-bottom: 0; }
+#section { display: grid; gap: 14px; }
+.yn-group, .yn-list { display: grid; gap: 8px; }
+
+.yn-row {
+    display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; padding: 12px 14px; text-align: left;
+    border-radius: 18px; border: 1px solid var(--sp-line); background: var(--sp-panel);
+    backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+    transition: transform .2s, background .2s;
+}
+.yn-row:hover { background: var(--sp-panel-hi); transform: translateY(-2px); }
+.yn-faces { display: flex; flex: none; }
+.yn-faces .sp-avatar { margin-left: -8px; border: 2px solid var(--sp-bg); }
+.yn-faces .sp-avatar:first-child { margin-left: 0; }
+.yn-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.yn-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.yn-line strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yn-line .sp-tag { flex: none; }
+.yn-line time { margin-left: auto; flex: none; color: var(--sp-muted); font: 500 11px var(--sp-mono); }
+.yn-last { color: var(--sp-muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.is-unread .yn-last { color: var(--sp-text); }
+.yn-badge {
+    flex: none; min-width: 22px; padding: 3px 7px; border-radius: 999px; text-align: center;
+    font: 700 11px/1.2 var(--sp-font); background: var(--sp-brand); color: var(--sp-brand-ink);
+}
+.yn-empty { margin: 30px 0; text-align: center; color: var(--sp-muted); }
+
+@media (prefers-reduced-motion: reduce) { .yn-row { transition: none; } }
+
+/* row + quick action (Archive / Restore / Unblock) */
+.yn-item { display: flex; align-items: stretch; gap: 8px; }
+.yn-row--static:hover { transform: none; }
+.yn-quick {
+    flex: none; padding: 0 12px; border-radius: 16px; font-size: 12.5px; font-weight: 700;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-muted);
+}
+.yn-quick:hover { background: var(--sp-panel-hi); color: var(--sp-text); }
+.yn-flags { color: var(--sp-muted); font: 500 10.5px var(--sp-mono); letter-spacing: .04em; text-transform: uppercase; }
+
+/* The wrench sits inside the chat tablet, at its right edge, past the unread badge. */
+.yn-item:has(.yn-wrench) { position: relative; }
+.yn-item:has(.yn-wrench) .yn-row { padding-right: 64px; }
+/* pictures: a real photo covers the initial circle */
+.yn-face-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.sp-avatar { position: relative; overflow: hidden; }
+.yn-headfaces { display: flex; flex: none; align-items: center; }
+.yn-headfaces[hidden] { display: none; }
+.yn-headfaces a { display: block; border-radius: 50%; margin-left: -12px; }
+.yn-headfaces a:first-child { margin-left: 0; }
+.yn-headfaces a:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
+.yn-headfaces .sp-avatar { --_size: 46px; border: 2px solid var(--sp-bg); }
+.nav-selector-fluid-hold__link .yn-navface { --_size: 26px; border: 0; font-style: normal; }
+.nav-selector-fluid-hold__icon .yn-navface { --_size: 32px; border: 0; font-style: normal; }
+
+.yn-wrench {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: grid; place-items: center;
+    width: 36px; height: 36px; padding: 0; border-radius: 50%; background: transparent;
+}
+.yn-wrench svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.yn-gear[hidden] { display: none; }
+
+/* the settings dialog: one tablet per action */
+.yn-settings { display: grid; gap: 8px; }
+.yn-setting {
+    display: grid; gap: 2px; width: 100%; text-align: left; padding: 11px 14px; border-radius: 14px; cursor: pointer;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text); font: inherit;
+}
+.yn-setting strong { font-size: 14px; }
+.yn-setting span { color: var(--sp-muted); font-size: 12.5px; }
+.yn-setting:hover { background: var(--sp-panel-hi); }
+.yn-setting:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
+.yn-setting--danger strong { color: var(--sp-danger); }
+.yn-settings__sep { margin: 8px 2px 0; }
+.yn-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
+#header-sub a { color: inherit; text-decoration: underline dotted; } #header-sub a:hover { color: var(--sp-text); }

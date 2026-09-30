@@ -1,0 +1,66 @@
+package com.collabo.backend.live;
+
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
+import java.util.Collection;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+/**
+ * "Change out": the one place services announce that something changed. A signal carries ids and never content: the browser
+ * refetches the thing over the normal API, so permissions and privacy stay where they already are, and a missed signal corrupts nothing.
+ * Sent only after the change is committed, so nobody is told about something the database might still roll back.
+ */
+@Component
+public class LiveSignals {
+
+    private final LiveHub hub;
+
+    public LiveSignals(LiveHub hub) { this.hub = hub; }
+
+    /** A yarn landed in a Yarnspace: everyone listed should refresh that thread, and acknowledge delivery. */
+    public void yarn(UUID thread, UUID yarn, Collection<UUID> users) {
+        send(users, "{\"t\":\"yarn\",\"thread\":\"" + thread + "\",\"yarn\":\"" + yarn + "\"}");
+    }
+
+    /** Delivered or read marks moved in a Yarnspace: the listed people should refresh their ticks. */
+    public void receipt(UUID thread, Collection<UUID> users) {
+        send(users, "{\"t\":\"receipt\",\"thread\":\"" + thread + "\"}");
+    }
+
+    /** Someone's notifications changed (a new one, one settled, or read elsewhere): their bell should look again. */
+    public void notification(UUID user) { send(java.util.List.of(user), "{\"t\":\"notification\"}"); }
+
+    /** A moderator's case list changed (assigned, swapped away, closed, decided): their desk should reload it. */
+    public void moderatorCases(UUID moderator) { sendTo(java.util.Set.of(LiveHub.moderatorKey(moderator)), "{\"t\":\"case\"}"); }
+
+    /** The admin's investigation queue changed (a report or appeal came in, findings arrived, or it was assigned, closed or decided). */
+    public void adminQueue() { sendTo(java.util.Set.of(AdminSocket.ACCOUNT), "{\"t\":\"queue\"}"); }
+
+    /** A new idea was posted: open Gazes may have something newer to offer. No ids, no content: they ask the server how many. */
+    public void gaze() { afterCommit(() -> hub.broadcastUsers("{\"t\":\"gaze\"}")); }
+
+    /** An idea was deleted: any Gaze showing it should drop it. */
+    public void postGone(UUID post) { afterCommit(() -> hub.broadcastUsers("{\"t\":\"post-gone\",\"post\":\"" + post + "\"}")); }
+
+    private void afterCommit(Runnable run) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() { @Override public void afterCommit() { run.run(); } });
+        } else run.run();
+    }
+
+    private void send(Collection<UUID> users, String json) {
+        sendTo(users.stream().map(LiveHub::userKey).collect(Collectors.toSet()), json);
+    }
+
+    private void sendTo(Collection<String> accounts, String json) {
+        if (accounts.isEmpty()) return;
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCommit() { hub.send(accounts, json); }
+            });
+        } else hub.send(accounts, json);
+    }
+}

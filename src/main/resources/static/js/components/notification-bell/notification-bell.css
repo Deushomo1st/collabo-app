@@ -185,3 +185,22 @@
     .notification-bell__button--swinging,
     .notification-bell__button--ringing svg { animation: none; }
 }
+
+/* type chips (optional `filters`) and the pinned marker on action-required items */
+.notification-bell__chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+.notification-bell__chip {
+    padding: 5px 12px; border-radius: 999px; font: 600 12px inherit; cursor: pointer;
+    border: 1px solid var(--_nb-line); background: transparent; color: var(--_nb-muted);
+}
+.notification-bell__chip[aria-pressed="true"] { color: var(--_nb-brand); border-color: var(--_nb-brand); }
+.notification-bell__chip:focus-visible { outline: 2px solid var(--_nb-brand); outline-offset: 2px; }
+.notification-bell__item--actionable .notification-bell__item-title::before {
+    content: "Action needed"; margin-right: 8px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+    color: var(--_nb-brand); border: 1px solid var(--_nb-brand); vertical-align: 1px;
+}
+
+.notification-bell__footer {
+    display: block; margin: 12px auto 0; padding: 4px 8px; border: 0; background: none; cursor: pointer;
+    color: inherit; font: 600 13px inherit; text-decoration: underline; opacity: .8;
+}
+.notification-bell__footer:hover { opacity: 1; }

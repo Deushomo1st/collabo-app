@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>COLLABO — Post</title>
+<link rel="stylesheet" href="/css/global/global.css">
+<!-- Apply the saved theme before first paint (see theme-switcher README) -->
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/gaze.css">
+<link rel="stylesheet" href="/css/pages/post.css">
+</head>
+<body>
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
+
+<!-- A page of its own: no nav bars here, only the way back. -->
+<div class="sp-shell">
+    <div class="sp-top">
+        <header class="sp-header sp-glass">
+            <button type="button" class="sp-back" id="back" aria-label="Back">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="sp-title"><h1>Post</h1></div>
+            <button type="submit" form="post-form" class="gz-nav gz-nav--brand" id="publish">Publish</button>
+        </header>
+    </div>
+
+    <main class="ps-main">
+        <form id="post-form" class="ps-form sp-glass" novalidate>
+            <label for="ps-title">Title</label>
+            <input class="sp-input" id="ps-title" maxlength="120" placeholder="What are you building?" autocomplete="off">
+            <label for="ps-body">Description</label>
+            <textarea class="sp-input" id="ps-body" rows="7" maxlength="2000" placeholder="Who do you need, and what will you make together?"></textarea>
+
+            <div class="ps-media" id="ps-media" aria-live="polite"></div>
+            <input type="file" id="ps-file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm" multiple hidden>
+
+            <label for="ps-by">Applications close (optional)</label>
+            <input class="sp-input" id="ps-by" type="datetime-local">
+            <p class="gz-error" id="ps-error" role="alert" hidden></p>
+        </form>
+    </main>
+</div>
+
+<!-- Pinned to the bottom: hashtags, then Comment · Shoutout · Save · Share spread evenly -->
+<div class="ps-dock">
+    <div class="ps-dock__in sp-glass">
+        <div class="ps-tags" id="ps-tags"></div>
+        <div class="ps-actions" id="ps-actions"></div>
+    </div>
+</div>
+
+<div class="sp-toast" id="toast" role="status"></div>
+
+<script type="module" src="/js/pages/post.js"></script>
+</body>
+</html>

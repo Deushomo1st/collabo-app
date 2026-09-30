@@ -40,7 +40,7 @@ export function preloadNotificationBell() {
     return partsPromise;
 }
 
-// opts: { loadItems, onRead(item), onSelect(item), isActionable(item), pollMs (default 60000, 0 = off), inline }
+// opts: { loadItems, onRead(item), onSelect(item), isActionable(item), filters [{ id, label, match(item) | view(container) }], footer { label, onClick }, pollMs (default 60000, 0 = off), inline }
 // Returns { refresh, open, destroy, element }.
 export async function mountNotificationBell(target, opts = {}) {
     const host = typeof target === 'string' ? document.querySelector(target) : target;
@@ -96,12 +96,19 @@ export async function mountNotificationBell(target, opts = {}) {
         const search = dlg.panel.querySelector('.notification-bell__search');
         const filterBtn = dlg.panel.querySelector('.notification-bell__filter');
         let query = '';
+        let filter = null;              // the chosen entry of opts.filters, if any
         let from = null;
         let to = null;
 
         function render() {
+            if (filter && filter.view) {      // a filter that draws its own content instead of the notifications
+                if (list.dataset.view !== filter.id) { list.dataset.view = filter.id; list.replaceChildren(); filter.view(list); }
+                return;
+            }
+            delete list.dataset.view;
             const shown = items.filter((n) => {
                 if (query && !`${n.title || ''} ${n.body || ''}`.toLowerCase().includes(query)) return false;
+                if (filter && filter.match && !filter.match(n)) return false;
                 const day = dayOf(n.createdAt);
                 if (from && (!day || day < from)) return false;
                 if (to && (!day || day > to)) return false;
@@ -136,6 +143,37 @@ export async function mountNotificationBell(target, opts = {}) {
             }));
         }
         rerenderPanel = render;
+
+        if (opts.filters && opts.filters.length) {           // chips: { id, label, match(item) }; the first one starts selected
+            filter = opts.filters[0];
+            const chips = document.createElement('div');
+            chips.className = 'notification-bell__chips';
+            chips.setAttribute('role', 'group');
+            chips.setAttribute('aria-label', 'Notification type');
+            for (const f of opts.filters) {
+                const c = document.createElement('button');
+                c.type = 'button';
+                c.className = 'notification-bell__chip';
+                c.textContent = f.label;
+                c.setAttribute('aria-pressed', String(f === filter));
+                c.addEventListener('click', () => {
+                    filter = f;
+                    chips.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === c)));
+                    render();
+                });
+                chips.append(c);
+            }
+            list.before(chips);
+        }
+
+        if (opts.footer) {
+            const link = document.createElement('button');
+            link.type = 'button';
+            link.className = 'notification-bell__footer';
+            link.textContent = opts.footer.label;
+            link.addEventListener('click', () => { dlg.close(); opts.footer.onClick(); });
+            list.after(link);
+        }
 
         search.addEventListener('input', (e) => { query = e.target.value.trim().toLowerCase(); render(); });
         filterBtn.addEventListener('click', () => {

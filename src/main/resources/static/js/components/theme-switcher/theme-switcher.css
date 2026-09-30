@@ -72,3 +72,7 @@
 @media (prefers-reduced-motion: reduce) {
     .theme-switcher, .theme-switcher__label { transition: none; }
 }
+
+/* Small screens: a header's switcher folds away; the theme lives in Settings (profile, yarns) */
+.theme-switcher__row { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; font-weight: 700; }
+@media (max-width: 560px) { .theme-switcher--collapse { display: none; } }

@@ -27,7 +27,7 @@ public class CorsConfig {
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         // X-Admin-Key must be listed or browsers block the admin panel's preflight
-        config.setAllowedHeaders(List.of("Content-Type", "X-Admin-Key"));
+        config.setAllowedHeaders(List.of("Content-Type", "X-Admin-Key", "X-XSRF-TOKEN"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);

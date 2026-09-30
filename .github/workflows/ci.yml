@@ -1,0 +1,50 @@
+name: CI (tests only)
+
+# Runs the test suite on feature branches and pull requests. No image is built or pushed and nothing is deployed;
+# that stays in docker-build.yml, which only runs on main.
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: collabo
+          POSTGRES_USER: collabo_user
+          POSTGRES_PASSWORD: ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U collabo_user -d collabo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # only CollaboBackendApplicationTests.contextLoads uses these; the other tests run on H2
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/collabo
+      SPRING_DATASOURCE_USERNAME: collabo_user
+      SPRING_DATASOURCE_PASSWORD: ci-password
+      RESEND_API_KEY: ci-not-a-real-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Run tests
+        shell: bash
+        run: ./mvnw -B test 2>&1 | tee mvn.log
+      - name: Show why it failed
+        if: failure()
+        shell: bash
+        run: |
+          # error annotations are readable without a login (checks API), unlike the raw job log
+          grep -a -E "ERROR|Caused by|Tests run:.*(Failures: [1-9]|Errors: [1-9])" mvn.log | head -25 | cut -c1-300 \
+            | sed ':a;N;$!ba;s/\n/%0A/g' | sed 's/^/::error title=Test failure::/'

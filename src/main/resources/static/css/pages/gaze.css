@@ -1,0 +1,117 @@
+/* The Gaze page and the post card (also used on profiles). Loaded after workspace.css (shared palette, glass, tags). */
+
+.sp-top { margin-bottom: 0; }
+.gz-nav {
+    padding: 8px 14px; border-radius: 12px; font: 700 13px var(--sp-font); cursor: pointer; text-decoration: none;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text); white-space: nowrap;
+}
+.gz-nav:hover { background: var(--sp-panel-hi); }
+.gz-nav--brand { background: var(--sp-brand); border-color: var(--sp-brand); color: var(--sp-brand-ink); }
+.gz-nav--brand:hover { background: var(--sp-brand); filter: brightness(1.08); }
+
+.gz-controls { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 12px 0; }
+.gz-tabs { display: flex; gap: 6px; }
+.gz-tab {
+    padding: 8px 16px; border-radius: 999px; font: 700 13px var(--sp-font); cursor: pointer;
+    border: 1px solid var(--sp-line); background: transparent; color: var(--sp-muted);
+}
+.gz-tab[aria-selected="true"] { background: var(--sp-panel-hi); color: var(--sp-text); border-color: var(--sp-brand); }
+.gz-filter { display: flex; gap: 6px; align-items: center; color: var(--sp-muted); font-size: 13px; cursor: pointer; }
+
+.gz-list { display: grid; gap: 12px; }
+.gz-empty { margin: 26px 0; text-align: center; color: var(--sp-muted); }
+.gz-btn {
+    justify-self: center; padding: 9px 16px; border-radius: 12px; font: 700 13px var(--sp-font); cursor: pointer;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text);
+}
+.gz-btn:hover { background: var(--sp-panel-hi); }
+.gz-error, .pc-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
+
+/* post card */
+.pc { display: grid; gap: 8px; padding: 16px 18px; border-radius: 20px; }
+.pc-shouted { margin: 0; color: var(--sp-muted); font-size: 12.5px; }
+.pc-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pc-who { font-weight: 800; color: inherit; text-decoration: none; }
+.pc-who:hover { text-decoration: underline; }
+.pc-time { margin-left: auto; color: var(--sp-muted); font: 500 11px var(--sp-mono); }
+.pc-title { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.pc-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pc-hint { margin: 0; color: var(--sp-muted); font-size: 12.5px; }
+.pc-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.pc-btn {
+    padding: 7px 13px; border-radius: 12px; font: 700 12.5px var(--sp-font); cursor: pointer;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text);
+}
+.pc-btn:hover { background: var(--sp-panel-hi); }
+a.pc-btn { text-decoration: none; justify-self: start; }
+.pc-btn.is-on { border-color: var(--sp-brand); color: var(--sp-brand); }
+.pc-btn--danger { color: var(--sp-danger); }
+.pc-btn--brand { background: var(--sp-brand); border-color: var(--sp-brand); color: var(--sp-brand-ink); }
+.ap-list, .ap-body, .ap-form { display: grid; gap: 10px; }
+.ap-tools { display: flex; gap: 8px; }
+.ap-select { width: auto; }
+.ap-card { display: grid; gap: 6px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
+.ap-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pc-link { justify-self: start; padding: 0; border: 0; background: none; color: var(--sp-muted); font: 600 12px var(--sp-font); cursor: pointer; }
+.pc-link:hover { color: var(--sp-danger); }
+
+.pc-comments { display: grid; gap: 10px; padding-top: 6px; border-top: 1px solid var(--sp-line); }
+.pc-comment { display: grid; gap: 2px; }
+.pc-comment p { margin: 0; overflow-wrap: anywhere; }
+.pc-comment .pc-time { margin-left: 4px; }
+.pc-cform { display: flex; gap: 8px; }
+.pc-cform .sp-input { flex: 1; min-width: 0; }
+
+@media (max-width: 560px) {
+    .gz-nav { padding: 8px 10px; }
+}
+.ap-tools .sp-input:not(.ap-select) { flex: 1; min-width: 0; }
+.ap-clock { max-width: 110px; }
+
+/* "N new" and "See old": one slot, pinned just under the header. Zero height, so it never pushes the feed. */
+.gz-bar { position: sticky; top: 76px; z-index: 19; height: 0; display: flex; justify-content: center; gap: 8px; pointer-events: none; }
+.gz-pill {
+    pointer-events: auto; height: 34px; padding: 0 16px; border-radius: 999px; font: 800 13px var(--sp-font); cursor: pointer;
+    border: 1px solid var(--sp-brand); background: var(--sp-brand); color: var(--sp-brand-ink); box-shadow: 0 6px 20px rgba(0,0,0,.28);
+    animation: gz-drop .22s cubic-bezier(.25,1,.5,1);
+}
+.gz-pill--quiet { background: var(--sp-panel-hi); color: var(--sp-text); border-color: var(--sp-line); backdrop-filter: blur(16px); }
+@keyframes gz-drop { from { opacity: 0; transform: translateY(-8px); } }
+@media (prefers-reduced-motion: reduce) { .gz-pill { animation: none; } }
+.gz-old, .gz-fresh { display: grid; gap: 12px; }
+.gz-old { margin-bottom: 12px; overflow-anchor: none; }
+.gz-old[hidden] { display: none; }
+.gz-old::after { content: 'You were here'; justify-self: center; color: var(--sp-muted); font: 600 11px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
+.gz-sentinel { min-height: 1px; text-align: center; color: var(--sp-muted); font-size: 12.5px; padding: 6px 0 18px; }
+
+/* the header (title, bell, theme) folds away on scroll-down and only the feed pill stays on top; scroll up brings it back */
+.gz-hdr { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .3s ease, opacity .25s ease; }
+.gz-hdr > div { min-height: 0; overflow: hidden; padding-bottom: 8px; }
+.sp-top.is-hidden .gz-hdr { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
+.gz-filters { display: flex; justify-content: center; --nav-padding: 3px; }
+.gz-filters .nav-selector-fluid-hold-wrap { position: static; padding: 0; }
+.gz-filters .nav-selector-fluid-hold { height: 42px; }
+.gz-filters .nav-selector-fluid-hold.iconized { max-width: 42px; }
+.gz-filters .nav-selector-fluid-hold__nav { padding-inline: 0; }
+.gz-filters .nav-selector-fluid-hold__arrow { display: none; }   /* 3 links: no arrows or fades */
+.gz-filters .nav-selector-fluid-hold__clip::before, .gz-filters .nav-selector-fluid-hold__clip::after { display: none; }
+.gz-filters .nav-selector-fluid-hold__viewport { overflow: hidden; }
+.sp-header { flex-wrap: nowrap; }
+.sp-header .sp-title { flex: 1 1 0; }
+.gz-list { padding-bottom: 96px; }
+@media (max-width: 560px) { #bottom-nav { --nav-link-padding: 9px 7px; --nav-font-size: 13px; }
+    #bottom-nav .nav-selector-fluid-hold__nav { padding-inline: 0; } }
+@media (max-width: 560px) {
+    .sp-header .sp-tag { display: none; }
+    .sp-header { gap: 8px; }
+}
+#bottom-nav, .gz-filters { --nav-link-padding: 9px 12px; --nav-font-size: 14px; }
+
+/* pictures, videos and hashtags on a post card */
+.pc-media { display: grid; gap: 6px; border-radius: 14px; overflow: hidden; }
+.pc-media--2 { grid-template-columns: 1fr 1fr; }
+.pc-media--3 { grid-template-columns: 1fr 1fr 1fr; }
+.pc-media img, .pc-media video { width: 100%; max-height: 420px; object-fit: cover; display: block; background: #000; border-radius: 12px; }
+.pc-media--2 img, .pc-media--2 video, .pc-media--3 img, .pc-media--3 video { aspect-ratio: 1; max-height: none; }
+.pc-tags { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--sp-brand); font-weight: 700; font-size: 13px; }
+.gz-linked { display: grid; }

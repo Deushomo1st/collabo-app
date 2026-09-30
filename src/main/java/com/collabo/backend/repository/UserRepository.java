@@ -15,6 +15,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // This checks if an email already exists "na just registration yarns"
     boolean existsByEmail(String email);
 
+    long countByVerifiedTrue();
+
+    long countByPremiumTrue();
+
     // Same check for username (used by the admin create-user endpoint)
     boolean existsByUsername(String username);
+
+    Optional<User> findByUsername(String username);
+
+    java.util.List<User> findTop10ByUsernameContainingIgnoreCaseAndIdNot(String fragment, UUID id);
 }

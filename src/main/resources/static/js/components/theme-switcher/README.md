@@ -32,7 +32,8 @@ What each theme *looks like* is decided by `css/global/theme.css`, not by this c
 
 | Export | Does |
 |---|---|
-| `mountThemeSwitcher(target, { inline, onChange })` | Mounts a switcher. Returns `{ element, destroy }`. `inline` puts it in normal flow instead of fixed bottom-right. |
+| `mountThemeSwitcher(target, { inline, collapse, onChange })` | Mounts a switcher. Returns `{ element, destroy }`. `inline` puts it in normal flow instead of fixed bottom-right. `collapse` hides an inline one at 560px and below; the theme then lives in Profile > Settings and Yarns > Settings. |
+| `mountThemeRow(target)` | Appends a "Theme" row (always visible) to a Settings dialog. |
 | `getTheme()` | `'light'` or `'dusk'` |
 | `setTheme(theme, { persist = true })` | Applies a theme, saves it, and fires `collabo:themechange` |
 | `initTheme()` | Applies the saved theme if the page hasn't set one. Called by `mountThemeSwitcher`. |

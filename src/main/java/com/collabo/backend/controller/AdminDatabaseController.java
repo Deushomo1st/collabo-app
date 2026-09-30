@@ -27,9 +27,18 @@ public class AdminDatabaseController {
         return adminDatabaseService.listTables();
     }
 
+    /** Read-only page of rows; secret columns come back masked. */
+    @GetMapping("/{tableKey}/rows")
+    public ResponseEntity<?> rows(@PathVariable String tableKey, @RequestParam(defaultValue = "50") int limit, @RequestParam(defaultValue = "0") int offset) {
+        if (!adminDatabaseService.isAllowed(tableKey)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "no such table: " + tableKey));
+        }
+        return ResponseEntity.ok(adminDatabaseService.rows(tableKey, limit, offset));
+    }
+
     @PostMapping("/{tableKey}/truncate")
     public ResponseEntity<?> truncate(@PathVariable String tableKey) {
-        if (!adminDatabaseService.isAllowed(tableKey)) {
+        if (!adminDatabaseService.isCleanable(tableKey)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "table not allowed: " + tableKey));
         }

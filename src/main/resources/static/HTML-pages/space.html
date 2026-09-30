@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>COLLABO — Space</title>
+<link rel="stylesheet" href="/css/global/global.css">
+<!-- Apply the saved theme before first paint (see theme-switcher README) -->
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/gaze.css">
+<link rel="stylesheet" href="/css/pages/space.css">
+</head>
+<body>
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
+
+<div class="sp-shell">
+    <div class="sp-top">
+        <header class="sp-header sp-glass">
+            <div class="sp-title">
+                <div class="sp-title__row"><h1 id="space-name">Space</h1><span class="sp-tag sp-tag--brand" id="space-role" hidden></span></div>
+            </div>
+            <a class="gz-nav" href="/HTML-pages/gaze.html">The Gaze</a>
+            <a class="gz-nav" href="/HTML-pages/yarnspaces.html">Yarns</a>
+            <span id="bell-slot"></span>
+            <div id="theme-slot"></div>
+        </header>
+    </div>
+
+    <main id="space" class="sp-section gz-list" aria-live="polite"><p class="gz-empty">Loading…</p></main>
+</div>
+
+<div class="sp-toast" id="toast" role="status"></div>
+
+<script type="module" src="/js/pages/space.js"></script>
+<script type="module" src="/js/services/bell.js"></script>
+</body>
+</html>
