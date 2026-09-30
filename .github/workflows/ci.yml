@@ -39,4 +39,12 @@ jobs:
           java-version: '17'
           cache: maven
       - name: Run tests
-        run: ./mvnw -B test
+        shell: bash
+        run: ./mvnw -B test 2>&1 | tee mvn.log
+      - name: Show why it failed
+        if: failure()
+        shell: bash
+        run: |
+          # error annotations are readable without a login (checks API), unlike the raw job log
+          grep -a -E "ERROR|Caused by|Tests run:.*(Failures: [1-9]|Errors: [1-9])" mvn.log | head -25 | cut -c1-300 \
+            | sed ':a;N;$!ba;s/\n/%0A/g' | sed 's/^/::error title=Test failure::/'
