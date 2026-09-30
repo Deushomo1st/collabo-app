@@ -62,6 +62,11 @@ public class SpaceThreadService {
         threads.findByPostIdAndTier(postId, YarnThread.Tier.WESPACE).ifPresent(t -> exit(t, userId));
     }
 
+    /** The Workspace thread carries the space's name. */
+    public void renameWorkspace(Space space) {
+        threads.findByPostIdAndTier(space.getPostId(), YarnThread.Tier.WORKSPACE).ifPresent(t -> { t.setName(space.getName()); threads.save(t); });
+    }
+
     /** A space's room is held while a payment claim in it is waiting to be confirmed or cancelled. */
     @Transactional(readOnly = true)
     public boolean isHeld(YarnThread t) {

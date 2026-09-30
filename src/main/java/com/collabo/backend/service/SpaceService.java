@@ -25,6 +25,16 @@ import java.util.UUID;
 public class SpaceService {
 
     static final int MAX_NAME = 80;
+    static final int MIN_CLOCK_HOURS = 48;
+    static final int MAX_CLOCK_HOURS = 8760;
+    static final int DEFAULT_CLOCK_HOURS = 72;
+
+    /** The response clock has a hard floor so it cannot become a way to purge people. */
+    static void checkClock(int hours) {
+        if (hours < MIN_CLOCK_HOURS || hours > MAX_CLOCK_HOURS) {
+            throw new InvalidProfileException("The response clock must be between " + MIN_CLOCK_HOURS + " and " + MAX_CLOCK_HOURS + " hours.");
+        }
+    }
 
     private final SpaceRepository spaces;
     private final PostRepository posts;
@@ -42,7 +52,7 @@ public class SpaceService {
     }
 
     /** The post's author forms the space, once, when at least one applicant has been accepted. */
-    public SpaceResponse form(User me, UUID postId, String requestedName) {
+    public SpaceResponse form(User me, UUID postId, String requestedName, Integer clockHours, Boolean pleas) {
         Post post = posts.findById(postId).filter(p -> p.getAuthorId().equals(me.getId()))
                 .orElseThrow(() -> new ResourceNotFoundException("That post is gone."));
         if (spaces.existsByPostId(postId)) throw new InvalidProfileException("This idea already has a space.");
@@ -54,7 +64,12 @@ public class SpaceService {
             if (requestedName == null || requestedName.isBlank()) name = name.substring(0, MAX_NAME);   // a long post title is cut, not refused
             else throw new InvalidProfileException("Keep the space name under " + MAX_NAME + " characters.");
         }
-        Space space = spaces.save(new Space(postId, me.getId(), name));
+        int clock = clockHours == null ? DEFAULT_CLOCK_HOURS : clockHours;
+        checkClock(clock);
+        Space created = new Space(postId, me.getId(), name);
+        created.setResponseClockHours(clock);
+        created.setPleasEnabled(pleas == null || pleas);
+        Space space = spaces.save(created);
         SpaceMember founder = new SpaceMember(space.getId(), me.getId());
         founder.setTitle("Owner");
         founder.setPermissions(java.util.EnumSet.allOf(SpacePermission.class));
@@ -127,6 +142,7 @@ public class SpaceService {
 
     private SpaceResponse response(Space s, Post post, String role, boolean canManage, UUID threadId) {
         User owner = users.findById(s.getOwnerId()).orElseThrow(() -> new ResourceNotFoundException("No such space."));
-        return new SpaceResponse(s.getId(), s.getPostId(), s.getName(), post.getTitle(), post.getBody(), PersonDto.of(owner), role, canManage, threadId, s.getCreatedAt());
+        return new SpaceResponse(s.getId(), s.getPostId(), s.getName(), post.getTitle(), post.getBody(), PersonDto.of(owner), role, canManage, threadId,
+                s.getResponseClockHours(), s.isPleasEnabled(), s.getCreatedAt());
     }
 }
