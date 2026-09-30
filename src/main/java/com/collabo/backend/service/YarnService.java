@@ -38,10 +38,12 @@ public class YarnService {
     private final UserBlockRepository blocks;
     private final UserRepository users;
     private final FollowService follows;
+    private final SpaceThreadService spaceThreads;
 
     public YarnService(YarnThreadRepository threads, ThreadMemberRepository members, YarnRepository yarns,
-                       UserBlockRepository blocks, UserRepository users, FollowService follows) {
-        this.follows = follows;
+                       UserBlockRepository blocks, UserRepository users, FollowService follows,
+                       SpaceThreadService spaceThreads) {
+        this.spaceThreads = spaceThreads; this.follows = follows;
         this.threads = threads; this.members = members; this.yarns = yarns; this.blocks = blocks; this.users = users;
     }
 
@@ -142,6 +144,9 @@ public class YarnService {
         YarnThread t = threads.findById(threadId).orElseThrow();
         String body = rawBody == null ? "" : rawBody.trim();
         if (body.isEmpty()) throw new YarnException(HttpStatus.BAD_REQUEST, "Write a yarn first.");
+        if (spaceThreads.isHeld(t)) {
+            throw new YarnException(HttpStatus.CONFLICT, "A payment claim is waiting. The room reopens once it is confirmed or cancelled.");
+        }
         if (t.getTier() == Tier.MYSPACE) {
             requireNotBlocked(me.getId(), otherOf(members.findByThreadId(threadId), me.getId()));
             if (t.getStatus() == Status.DECLINED) throw new YarnException(HttpStatus.FORBIDDEN, CANT_DELIVER);

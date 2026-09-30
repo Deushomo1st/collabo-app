@@ -1,6 +1,8 @@
 package com.collabo.backend.service;
 
 import com.collabo.backend.entity.*;
+import com.collabo.backend.repository.PaymentRecordRepository;
+import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.ThreadMemberRepository;
 import com.collabo.backend.repository.UserRepository;
 import com.collabo.backend.repository.YarnRepository;
@@ -23,9 +25,12 @@ public class SpaceThreadService {
     private final ThreadMemberRepository seats;
     private final YarnRepository yarns;
     private final UserRepository users;
+    private final SpaceRepository spaces;
+    private final PaymentRecordRepository payments;
 
-    public SpaceThreadService(YarnThreadRepository threads, ThreadMemberRepository seats, YarnRepository yarns, UserRepository users) {
-        this.threads = threads; this.seats = seats; this.yarns = yarns; this.users = users;
+    public SpaceThreadService(YarnThreadRepository threads, ThreadMemberRepository seats, YarnRepository yarns, UserRepository users,
+                              SpaceRepository spaces, PaymentRecordRepository payments) {
+        this.spaces = spaces; this.payments = payments; this.threads = threads; this.seats = seats; this.yarns = yarns; this.users = users;
     }
 
     /** The space's Workspace thread, or null before it exists. */
@@ -55,6 +60,13 @@ public class SpaceThreadService {
 
     public void leaveWeSpace(UUID postId, UUID userId) {
         threads.findByPostIdAndTier(postId, YarnThread.Tier.WESPACE).ifPresent(t -> exit(t, userId));
+    }
+
+    /** A space's room is held while a payment claim in it is waiting to be confirmed or cancelled. */
+    @Transactional(readOnly = true)
+    public boolean isHeld(YarnThread t) {
+        if (t.getTier() != YarnThread.Tier.WORKSPACE || t.getPostId() == null) return false;
+        return spaces.findByPostId(t.getPostId()).map(s -> payments.existsBySpaceIdAndState(s.getId(), PaymentRecord.State.CLAIMED)).orElse(false);
     }
 
     /** A system yarn in the space's room, for things the team should see happen (a milestone, a payment). */
