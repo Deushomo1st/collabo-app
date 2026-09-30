@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>COLLABO Moderator</title>
+<link rel="stylesheet" href="/css/pages/moderator.css">
+</head>
+<body>
+
+<section id="signin" class="md-signin" hidden>
+    <form id="signin-form" class="md-signin__card">
+        <h1>COLLABO <span>Moderator desk</span></h1>
+        <p>Accounts are created by the platform admin. Ask them if you cannot sign in.</p>
+        <label>Email <input id="signin-email" type="email" autocomplete="username" required></label>
+        <label>Password <input id="signin-password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">Sign in</button>
+        <p id="signin-error" class="md-error" role="alert"></p>
+    </form>
+</section>
+
+<div id="desk" class="md-desk" hidden>
+    <header class="md-top">
+        <strong>COLLABO <span>Moderator desk</span></strong>
+        <span class="md-top__who"><span id="who"></span>
+            <button id="password-btn" type="button" class="md-link">Change password</button>
+            <button id="signout" type="button" class="md-link">Sign out</button></span>
+    </header>
+    <div class="md-split">
+        <aside class="md-list" aria-label="Your cases"><h2>Your cases</h2><div id="cases"></div></aside>
+        <main id="case" class="md-case"></main>
+    </div>
+</div>
+
+<dialog id="password-dialog" class="md-dialog">
+    <form id="password-form" method="dialog">
+        <h3>Change password</h3>
+        <label>Current password <input id="pw-current" type="password" autocomplete="current-password" required></label>
+        <label>New password (10+ characters) <input id="pw-new" type="password" autocomplete="new-password" minlength="10" required></label>
+        <p id="pw-error" class="md-error" role="alert"></p>
+        <div class="md-actions"><button type="button" id="pw-cancel" class="md-ghost">Cancel</button><button type="submit">Change</button></div>
+    </form>
+</dialog>
+
+<div id="toast" class="md-toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:24px">The moderator desk needs JavaScript.</p></noscript>
+<script type="module" src="/js/pages/moderator/moderator.js"></script>
+</body>
+</html>
