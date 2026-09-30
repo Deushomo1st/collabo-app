@@ -5,7 +5,9 @@ import com.collabo.backend.dto.LinkDto;
 import com.collabo.backend.dto.ProfileResponse;
 import com.collabo.backend.dto.UpdateProfileRequest;
 import com.collabo.backend.entity.UserAvatar;
+import com.collabo.backend.dto.CredentialsResponse;
 import com.collabo.backend.dto.PersonDto;
+import com.collabo.backend.service.CredentialService;
 import com.collabo.backend.service.AvatarService;
 import com.collabo.backend.service.FollowService;
 import com.collabo.backend.service.ProfileService;
@@ -27,9 +29,12 @@ public class UserController {
     private final ProfileService profiles;
     private final AvatarService avatars;
     private final FollowService follows;
+    private final CredentialService credentials;
     private final CurrentUser current;
 
-    public UserController(ProfileService profiles, AvatarService avatars, FollowService follows, CurrentUser current) {
+    public UserController(ProfileService profiles, AvatarService avatars, FollowService follows,
+                          CredentialService credentials, CurrentUser current) {
+        this.credentials = credentials;
         this.follows = follows;
         this.avatars = avatars;
         this.profiles = profiles;
@@ -100,6 +105,11 @@ public class UserController {
     @GetMapping("/{username}/following")
     public List<PersonDto> following(@PathVariable String username) {
         return follows.following(username, current.require());
+    }
+
+    @GetMapping("/{username}/credentials")
+    public CredentialsResponse credentials(@PathVariable String username) {
+        return credentials.view(username, current.require());
     }
 
     @GetMapping("/{username}")
