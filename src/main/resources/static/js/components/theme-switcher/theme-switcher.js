@@ -109,6 +109,13 @@ export async function mountThemeRow(target) {
     await mountThemeSwitcher(row.lastChild, { inline: true, plain: true });
 }
 
+// A Settings dialog holding just the theme, for pages with no settings of their own.
+export async function openThemeSettings() {
+    const { openGlassBlurDialog } = await import('/js/components/glass-blur-dialog/glass-blur-dialog.js');
+    const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Settings', html: '<h3 class="glass-blur-dialog__title">Settings</h3><div></div>' });
+    await mountThemeRow(panel.lastElementChild);
+}
+
 function loadStylesOnce(href, componentName) {
     const existing = document.querySelector(`link[data-component="${componentName}"]`);
     if (existing) return existing.sheet ? Promise.resolve() : new Promise((r) => existing.addEventListener('load', r, { once: true }));

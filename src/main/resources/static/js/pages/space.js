@@ -1,7 +1,7 @@
 // A space: the idea it grew from, joining (for accepted applicants), and the people in it.
 // All network calls live in js/services/api.js; text goes in through textContent only.
 import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
+import { mountThemeSwitcher, openThemeSettings } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { milestonesSection } from '/js/components/space/milestones.js';
 import { paymentsSection } from '/js/components/space/payments.js';
@@ -87,7 +87,7 @@ function draw() {
             h('p', { class: 'pc-hint' }, 'The idea, by ', h('a', { class: 'pc-who', href: profileHref(space.owner.username), text: space.owner.username })),
             h('p', { class: 'spc-idea', text: space.postBody }),
             h('p', { class: 'pc-hint', text: `Response clock: ${space.responseClockHours} hours · Pleas ${space.pleasEnabled ? 'allowed' : 'off'}` }),
-            can('EDIT_SETTINGS') && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn', type: 'button', text: 'Space settings', onclick: () => openSettings(space, refresh) }))),
+            h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn', type: 'button', text: 'Settings', onclick: () => can('EDIT_SETTINGS') ? openSettings(space, refresh) : openThemeSettings() }))),
         space.threadId && h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/yarnspaces.html#t/${space.threadId}`, text: 'Open the room' }),
         h('section', { class: 'spc-card sp-glass' },
             h('h2', { text: `The team · ${members.length}` }),

@@ -1,6 +1,7 @@
 // Space settings: the name, the response clock and whether pleas are allowed. Every change is announced in the room.
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { spaceSettingsUpdate } from '/js/services/api.js';
+import { mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
 import { h } from '/js/services/dom.js';
 
 export async function openSettings(space, onDone) {
@@ -13,8 +14,10 @@ export async function openSettings(space, onDone) {
     form.append(h('label', {}, 'Name', name),
         h('label', {}, 'Response clock (hours, at least 48)', clock),
         h('label', { class: 'spc-check' }, pleas, ' Allow pleas (anyone can buy a quiet member 12 more hours)'),
+        h('div', { class: 'spc-theme' }),
         h('p', { class: 'pc-hint', text: 'Everyone in the room sees each change you make here.' }), err,
         h('div', { class: 'glass-blur-dialog__actions' }, h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Save')));
+    await mountThemeRow(form.querySelector('.spc-theme'));
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         try { await spaceSettingsUpdate(space.id, { name: name.value, responseClockHours: Number(clock.value), pleasEnabled: pleas.checked }); close(); onDone(); }
