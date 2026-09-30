@@ -7,7 +7,7 @@ import { createActionBanner, preloadActionBanner } from '/js/components/action-b
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import {
-    logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnCreateGroup, yarnHistory, yarnSend,
+    logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock,
 } from '/js/services/api.js';
 import { SECTIONS, TIER_LABEL, inSection, unreadTotal, matches, ago, hue } from '/js/pages/yarnspaces-data.js';
@@ -155,7 +155,7 @@ function renderSection() {
         rest.length ? h('section', { class: 'yn-group' },
             h('h2', { class: 'sp-h2', text: sec.id === 'all' ? 'Recent yarns' : sec.label }),
             h('div', { class: 'yn-list' }, ...rest.map((t) => row(t, archiveQuick(t))))) : null,
-        list.length ? null : h('p', { class: 'yn-empty', text: query ? 'No yarns match that search.' : sec.id === 'archive' ? 'Nothing archived.' : 'No yarns here yet. Tap + to start one.' }));
+        list.length ? null : h('p', { class: 'yn-empty', text: query ? 'No yarns match that search.' : sec.id === 'archive' ? 'Nothing archived.' : sec.id === 'wespace' ? 'The collaborators room opens here once someone accepts your request.' : sec.id === 'workspace' ? 'A Workspace opens here when a space forms and you are in it.' : 'No yarns here yet. Tap + to start one.' }));
 }
 
 function renderBlocked(root) {
@@ -223,40 +223,25 @@ function renderThread() {
 }
 
 // ---- dialogs ---------------------------------------------------------------
+// A new yarn is always one person: WeSpaces and Workspaces open by themselves from posts and spaces.
 async function openNew() {
     const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'New yarn', html: '<h3 class="glass-blur-dialog__title">New yarn</h3><form class="sp-form"></form>' });
-    const mode = h('select', { class: 'sp-input', id: 'new-mode', 'aria-label': 'Kind of yarn' },
-        h('option', { value: 'MYSPACE', text: 'MySpace: one person' }),
-        h('option', { value: 'WESPACE', text: 'WeSpace: a group' }),
-        h('option', { value: 'WORKSPACE', text: 'Workspace: a work group' }));
-    const name = h('input', { class: 'sp-input', id: 'new-name', maxlength: '80', placeholder: 'Name it' });
     const who = h('input', { class: 'sp-input', id: 'new-who', list: 'yn-people', autocomplete: 'off', placeholder: 'username', required: true });
     const people = h('datalist', { id: 'yn-people' });
     const first = h('textarea', { class: 'sp-input', id: 'new-body', rows: '3', maxlength: '2000', placeholder: 'Your first yarn', required: true });
-    const whoText = document.createTextNode('Who?');
-    const whoLabel = h('label', { for: 'new-who' }, whoText, who, people);
-    const nameLabel = h('label', { for: 'new-name', hidden: true }, 'Name', name);
-    const bodyLabel = h('label', { for: 'new-body' }, 'First yarn', first);
     const err = h('p', { class: 'yn-error', role: 'alert', hidden: true });
-    const solo = () => mode.value === 'MYSPACE';
-    mode.addEventListener('change', () => {
-        nameLabel.hidden = solo(); bodyLabel.hidden = !solo();
-        who.placeholder = solo() ? 'username' : 'usernames, comma separated';
-        whoText.textContent = solo() ? 'Who?' : 'Who is in it?';
-        name.required = !solo(); first.required = solo();
-    });
     let timer;
-    who.addEventListener('input', () => {   // suggest people as they type the last name in the box
+    who.addEventListener('input', () => {   // suggest people as they type
         clearTimeout(timer);
-        const last = who.value.split(',').pop().trim();
+        const q = who.value.trim();
         timer = setTimeout(async () => {
-            const found = last.length >= 2 ? await yarnDirectory(last).catch(() => []) : [];
-            const head = who.value.includes(',') ? who.value.slice(0, who.value.lastIndexOf(',') + 1) + ' ' : '';
-            people.replaceChildren(...found.map((p) => h('option', { value: head + p.username })));
+            const found = q.length >= 2 ? await yarnDirectory(q).catch(() => []) : [];
+            people.replaceChildren(...found.map((p) => h('option', { value: p.username })));
         }, 250);
     });
     const form = panel.querySelector('.sp-form');
-    form.append(mode, nameLabel, whoLabel, bodyLabel, err,
+    form.append(h('label', { for: 'new-who' }, 'Who?', who, people), h('label', { for: 'new-body' }, 'First yarn', first), err,
+        h('p', { class: 'yn-hint', text: 'Group rooms open on their own: a WeSpace when someone becomes your collaborator, a Workspace when a space forms.' }),
         h('div', { class: 'glass-blur-dialog__actions' },
             h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: close }, 'Cancel'),
             h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Start')));
@@ -264,9 +249,7 @@ async function openNew() {
         e.preventDefault();
         err.hidden = true;
         try {
-            const t = solo()
-                ? await yarnStartMySpace(who.value.trim(), first.value)
-                : await yarnCreateGroup(mode.value, name.value, who.value.split(',').map((s) => s.trim()).filter(Boolean));
+            const t = await yarnStartMySpace(who.value.trim(), first.value);
             close();
             await loadAll();
             location.hash = '#t/' + t.id;

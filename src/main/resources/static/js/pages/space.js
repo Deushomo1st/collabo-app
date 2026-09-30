@@ -77,6 +77,7 @@ function draw() {
             h('h2', { text: space.postTitle }),
             h('p', { class: 'pc-hint' }, 'The idea, by ', h('a', { class: 'pc-who', href: profileHref(space.owner.username), text: space.owner.username })),
             h('p', { class: 'spc-idea', text: space.postBody })),
+        space.threadId && h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/yarnspaces.html#t/${space.threadId}`, text: 'Open the room' }),
         h('section', { class: 'spc-card sp-glass' },
             h('h2', { text: `The team · ${members.length}` }),
             h('div', { class: 'spc-members' }, ...members.map(memberRow)),
