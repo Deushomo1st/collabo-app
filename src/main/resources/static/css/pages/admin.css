@@ -123,3 +123,21 @@ main { padding: 24px; max-width: 1100px; }
     .ad-strip { padding: 10px 14px; }
     main { padding: 16px 14px; }
 }
+
+/* ---------- investigations ---------- */
+.ad-tag.is-bad { color: var(--ad-bad); border-color: var(--ad-bad); }
+.ad-tag.is-info { color: var(--ad-brand); border-color: var(--ad-brand); }
+.ad-row-link { cursor: pointer; }
+.ad-row-link:focus-visible { outline: 2px solid var(--ad-brand); outline-offset: -2px; }
+.ad-panel { background: var(--ad-panel); border: 1px solid var(--ad-line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; }
+.ad-panel h3 { font-size: .95rem; }
+.ad-quote { border-left: 3px solid var(--ad-warn); padding-left: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ad-transcript { max-height: 340px; overflow-y: auto; background: var(--ad-bg); border: 1px solid var(--ad-line); border-radius: 6px; padding: 6px 12px; }
+.ad-yarn { display: grid; grid-template-columns: 9em 1fr; gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--ad-line); }
+.ad-yarn:last-child { border-bottom: 0; }
+.ad-yarn.is-system span:last-child { color: var(--ad-muted); font-style: italic; }
+.ad-yarn > span:first-child { color: var(--ad-muted); font-size: 12.5px; }
+.ad-yarn > span:last-child { white-space: pre-wrap; overflow-wrap: anywhere; }
+.ad-thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.ad-thumb { width: 120px; height: 84px; border: 1px solid var(--ad-line); border-radius: 6px; background: var(--ad-bg) center / cover; cursor: zoom-in; padding: 0; color: var(--ad-muted); font-size: 12px; }
+.ad-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

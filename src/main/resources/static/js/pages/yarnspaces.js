@@ -8,7 +8,7 @@ import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import {
     logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
-    yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock,
+    yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock, yarnReport,
 } from '/js/services/api.js';
 import { SECTIONS, TIER_LABEL, inSection, unreadTotal, matches, ago, hue } from '/js/pages/yarnspaces-data.js';
 
@@ -190,6 +190,7 @@ function renderThread() {
         h('button', { class: 'sp-btn', type: 'button', text: t.pinned ? 'Unpin' : 'Pin', onclick: () => tweak({ pinned: !t.pinned }) }),
         h('button', { class: 'sp-btn', type: 'button', text: t.muted ? 'Unmute' : 'Mute', onclick: () => tweak({ muted: !t.muted }) }),
         h('button', { class: 'sp-btn', type: 'button', text: t.archived ? 'Restore' : 'Archive', onclick: () => tweak({ archived: !t.archived }, true) }),
+        h('button', { class: 'sp-btn', type: 'button', text: 'Report', onclick: report }),
         t.otherUserId ? h('button', { class: 'sp-btn sp-btn--danger', type: 'button', text: 'Block', onclick: block }) : null);
 
     async function tweak(prefs, leave) {
@@ -198,6 +199,24 @@ function renderThread() {
             if (leave) { await loadAll(); toast(t.archived ? 'Archived. A new yarn brings it back.' : 'Restored to your inbox.'); return go('#' + lastSection); }
             paintActions();
         } catch (err) { toast(err.message); }
+    }
+    // Any tier can be reported. The admin sends a moderator, and everyone in the Yarnspace is told one was introduced.
+    async function report() {
+        const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'Report this Yarnspace', html: '<h3 class="glass-blur-dialog__title">Report this Yarnspace</h3><form class="sp-form"></form>' });
+        const box = h('textarea', { class: 'sp-input', rows: 5, maxlength: 1000, required: true, placeholder: 'What is wrong? Say what happened and who was involved.' });
+        const err = h('p', { class: 'yn-error', role: 'alert', hidden: true });
+        const form = panel.querySelector('.sp-form');
+        form.append(box, err,
+            h('p', { class: 'yn-hint', text: 'The platform admin reviews it and may assign a moderator, who can read this Yarnspace (and nothing else of yours) while it is looked at. Everyone in it is told a moderator was introduced, not who reported.' }),
+            h('div', { class: 'glass-blur-dialog__actions' },
+                h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: close }, 'Cancel'),
+                h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Send report')));
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            err.hidden = true;
+            try { await yarnReport(t.id, box.value); close(); toast('Report sent. The admin will look at it.'); }
+            catch (ex) { err.textContent = ex.message; err.hidden = false; }
+        });
     }
     async function block() {
         if (!(await glassBlurConfirm(`Block ${t.name}? They are not told. Neither of you can send new MySpace yarns until you unblock them in Blocked.`, { title: 'Block this person?', okText: 'Block', danger: true }))) return;

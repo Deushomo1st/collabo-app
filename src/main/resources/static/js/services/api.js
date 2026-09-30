@@ -72,6 +72,7 @@ export const yarnMarkRead = (id) => yarn(`/threads/${id}/read`, { method: 'POST'
 export const yarnPrefs = (id, prefs) => yarn(`/threads/${id}/prefs`, { method: 'PATCH', body: prefs });
 export const yarnRespond = (id, accept) => yarn(`/threads/${id}/respond`, { method: 'POST', body: { accept } });
 export const yarnBlocked = () => yarn('/blocks');
+export const yarnReport = (threadId, reason) => yarn(`/threads/${threadId}/report`, { method: "POST", body: { reason } });
 export const yarnBlock = (userId) => yarn(`/blocks/${userId}`, { method: 'PUT' });
 export const yarnUnblock = (userId) => yarn(`/blocks/${userId}`, { method: 'DELETE' });
 

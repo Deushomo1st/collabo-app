@@ -40,3 +40,17 @@ export const resetModeratorPassword = (id, password) => call(`/moderators/${id}/
 export const tables = () => call('/db/tables');
 export const tableRows = (name, limit, offset) => call(`/db/tables/${encodeURIComponent(name)}/rows?limit=${limit}&offset=${offset}`);
 export const cleanTable = (name) => call(`/db/tables/${encodeURIComponent(name)}/truncate`, { method: 'POST' });
+
+export const investigations = (status = 'active') => call(`/investigations?status=${status}`);
+export const investigation = (id) => call(`/investigations/${id}`);
+export const assignInvestigation = (id, moderatorId) => call(`/investigations/${id}/assign`, { method: 'POST', body: { moderatorId } });
+export const closeInvestigation = (id) => call(`/investigations/${id}/close`, { method: 'POST' });
+export const decideInvestigation = (id, outcome) => call(`/investigations/${id}/decide`, { method: 'POST', body: { outcome } });
+
+/** A screenshot needs the admin key header, which an <img src> cannot send, so it comes down as a blob. Returns an object URL. */
+export async function screenshotUrl(id) {
+    const res = await fetch(`/api/admin/investigations/screenshots/${id}`, { headers: { 'X-Admin-Key': getKey() } });
+    if (res.status === 403) throw new AdminAuthError('wrong');
+    if (!res.ok) throw new Error('Could not load the screenshot.');
+    return URL.createObjectURL(await res.blob());
+}
