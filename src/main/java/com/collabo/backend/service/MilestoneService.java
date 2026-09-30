@@ -31,10 +31,11 @@ public class MilestoneService {
     private final SpaceService spaceAccess;
     private final SpaceThreadService spaceThreads;
     private final CredentialService credentials;
+    private final NotificationService notifications;
 
     public MilestoneService(SpaceRepository spaces, MilestoneRepository milestones, MilestoneCreditRepository credits, SpaceMemberRepository members,
-                            UserRepository users, SpaceService spaceAccess, SpaceThreadService spaceThreads, CredentialService credentials) {
-        this.spaces = spaces; this.milestones = milestones; this.credits = credits; this.members = members;
+                            UserRepository users, SpaceService spaceAccess, SpaceThreadService spaceThreads, CredentialService credentials, NotificationService notifications) {
+        this.notifications = notifications; this.spaces = spaces; this.milestones = milestones; this.credits = credits; this.members = members;
         this.users = users; this.spaceAccess = spaceAccess; this.spaceThreads = spaceThreads; this.credentials = credentials;
     }
 
@@ -71,6 +72,7 @@ public class MilestoneService {
         for (SpaceMember member : members.findBySpaceIdAndStateOrderByJoinedAtAsc(s.getId(), SpaceMember.State.ACTIVE)) {
             credits.save(new MilestoneCredit(m.getId(), member.getUserId()));
             credentials.record(member.getUserId(), CredentialKind.MILESTONE_CREDITED, m.getTitle(), s.getName(), "milestone", m.getId().toString(), null);
+            notifications.notify(member.getUserId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "Milestone fulfilled: " + m.getTitle(), "It is on your credentials, from " + s.getName() + ".", "/HTML-pages/space.html?id=" + s.getId());
         }
         spaceThreads.announce(s, "Milestone fulfilled: " + m.getTitle() + (note.isEmpty() ? "." : ". " + note));
         return one(m);

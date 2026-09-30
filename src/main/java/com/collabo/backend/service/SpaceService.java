@@ -44,11 +44,12 @@ public class SpaceService {
     private final SpaceMemberRepository members;
     private final CollaboratorRepository collaborators;
     private final SpaceThreadService spaceThreads;
+    private final NotificationService notifications;
 
     public SpaceService(SpaceRepository spaces, PostRepository posts, ApplicationRepository applications, UserRepository users,
                         CredentialService credentials, SpaceMemberRepository members,
-                        CollaboratorRepository collaborators, SpaceThreadService spaceThreads) {
-        this.spaceThreads = spaceThreads; this.collaborators = collaborators; this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
+                        CollaboratorRepository collaborators, SpaceThreadService spaceThreads, NotificationService notifications) {
+        this.notifications = notifications; this.spaceThreads = spaceThreads; this.collaborators = collaborators; this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
     }
 
     /** The post's author forms the space, once, when at least one applicant has been accepted. */
@@ -80,6 +81,11 @@ public class SpaceService {
         post.setFormed(true);
         posts.save(post);
         credentials.record(me.getId(), CredentialKind.SPACE_FORMED, space.getName(), "", "space", space.getId().toString(), null);
+        // the window closed for everyone who was not picked
+        applications.findByPostIdAndStateNotOrderByCreatedAtAsc(postId, ApplicationState.ACCEPTED).stream()
+                .filter(a -> a.getState() != ApplicationState.WITHDRAWN)
+                .forEach(a -> notifications.notify(a.getApplicantId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "\"" + post.getTitle() + "\" closed",
+                        "The window closed: a space formed without you.", "/HTML-pages/gaze.html"));
         return response(space, post, "OWNER", true, spaceThreads.workspaceId(postId));
     }
 

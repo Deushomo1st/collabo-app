@@ -40,11 +40,12 @@ public class RemovalService {
     private final SpaceService spaceService;
     private final SpaceThreadService spaceThreads;
     private final YarnService yarns;
+    private final NotificationService notifications;
 
     public RemovalService(SpaceRepository spaces, RemovalProcessRepository processes, PleaRepository pleas, SpaceMemberRepository members,
                           CollaboratorRepository collaborators, UserRepository users, SpaceService spaceService, SpaceThreadService spaceThreads,
-                          YarnService yarns) {
-        this.spaces = spaces; this.processes = processes; this.pleas = pleas; this.members = members; this.collaborators = collaborators;
+                          YarnService yarns, NotificationService notifications) {
+        this.notifications = notifications; this.spaces = spaces; this.processes = processes; this.pleas = pleas; this.members = members; this.collaborators = collaborators;
         this.users = users; this.spaceService = spaceService; this.spaceThreads = spaceThreads; this.yarns = yarns;
     }
 
@@ -70,6 +71,8 @@ public class RemovalService {
                 + s.getResponseClockHours() + " hours to respond.");
         yarns.systemNote(me, target, me.getUsername() + " says you have gone quiet in \"" + s.getName() + "\": " + reason
                 + ". Respond in the space within " + s.getResponseClockHours() + " hours to stay.");
+        notifications.require(target.getId(), "removal:" + p.getId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "You were flagged as quiet in \"" + s.getName() + "\"",
+                me.getUsername() + ": " + reason + ". Respond within " + s.getResponseClockHours() + " hours to stay.", "/HTML-pages/space.html?id=" + s.getId());
         return one(p);
     }
 
@@ -88,6 +91,7 @@ public class RemovalService {
         if (!p.getTargetId().equals(me.getId())) throw new ForbiddenException("Only the flagged person can answer.");
         p.resolve(RemovalProcess.State.RESPONDED);
         processes.save(p);
+        notifications.resolve("removal:" + p.getId());
         spaceThreads.announce(s, me.getUsername() + " responded. The removal process ended.");
         return one(p);
     }
@@ -109,6 +113,7 @@ public class RemovalService {
         pleas.save(new Plea(p.getId(), s.getId(), me.getId(), now, now.plusSeconds(3600 * PLEA_HOURS)));
         p.extend(PLEA_HOURS);
         processes.save(p);
+        notifications.notify(p.getTargetId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "Someone entered a plea for you", me.getUsername() + " bought you " + PLEA_HOURS + " more hours in \"" + s.getName() + "\".", "/HTML-pages/space.html?id=" + s.getId());
         spaceThreads.announce(s, me.getUsername() + " entered a plea for " + name(p.getTargetId()) + ": " + PLEA_HOURS + " more hours to reach them.");
         return one(p);
     }
@@ -120,6 +125,7 @@ public class RemovalService {
         if (!s.getOwnerId().equals(me.getId())) throw new ForbiddenException("Only the founder can cancel this.");
         p.resolve(RemovalProcess.State.CANCELLED);
         processes.save(p);
+        notifications.resolve("removal:" + p.getId());
         spaceThreads.announce(s, me.getUsername() + " cancelled the removal process for " + name(p.getTargetId()) + ".");
         return one(p);
     }
@@ -138,9 +144,11 @@ public class RemovalService {
         User by = users.findById(p.getInitiatorId()).orElse(null);
         p.resolve(RemovalProcess.State.COMPLETED);
         processes.save(p);
+        notifications.resolve("removal:" + p.getId());
         if (s == null || target == null || by == null) return;
         spaceService.unseat(s, target.getId());
         spaceThreads.announce(s, by.getUsername() + " removed " + target.getUsername() + " for: " + p.getReason());
+        notifications.notify(target.getId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "You were removed from \"" + s.getName() + "\"", by.getUsername() + ": " + p.getReason(), "/HTML-pages/yarnspaces.html");
         yarns.systemNote(by, target, "You were removed from \"" + s.getName() + "\" for: " + p.getReason());
     }
 

@@ -33,10 +33,11 @@ public class PaymentRecordService {
     private final UserRepository users;
     private final SpaceService spaceAccess;
     private final SpaceThreadService spaceThreads;
+    private final NotificationService notifications;
 
     public PaymentRecordService(SpaceRepository spaces, PaymentRecordRepository payments, SpaceMemberRepository members, UserRepository users,
-                                SpaceService spaceAccess, SpaceThreadService spaceThreads) {
-        this.spaces = spaces; this.payments = payments; this.members = members; this.users = users;
+                                SpaceService spaceAccess, SpaceThreadService spaceThreads, NotificationService notifications) {
+        this.notifications = notifications; this.spaces = spaces; this.payments = payments; this.members = members; this.users = users;
         this.spaceAccess = spaceAccess; this.spaceThreads = spaceThreads;
     }
 
@@ -59,6 +60,9 @@ public class PaymentRecordService {
         PaymentRecord p = payments.save(new PaymentRecord(s.getId(), me.getId(), recipient.getId(), amount.setScale(2), currency, note));
         spaceThreads.announce(s, me.getUsername() + " logged a payment claim: " + p.getAmount() + " " + currency + " to " + recipient.getUsername()
                 + ". Claimed, not yet confirmed. The room is held until it is confirmed or cancelled.");
+        notifications.require(recipient.getId(), "payment:" + p.getId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "Confirm a payment you received",
+                me.getUsername() + " says they paid you " + p.getAmount() + " " + currency + " in " + s.getName() + ". The room is held until you confirm or they cancel.",
+                "/HTML-pages/space.html?id=" + s.getId());
         return one(p);
     }
 
@@ -79,6 +83,7 @@ public class PaymentRecordService {
         if (!p.getRecipientId().equals(me.getId())) throw new ForbiddenException("Only the person who was paid can confirm it.");
         p.resolve(PaymentRecord.State.CONFIRMED);
         payments.save(p);
+        notifications.resolve("payment:" + p.getId());
         spaceThreads.announce(s, me.getUsername() + " confirmed receiving " + p.getAmount() + " " + p.getCurrency() + " from " + name(p.getPayerId()) + ".");
         return one(p);
     }
@@ -90,6 +95,7 @@ public class PaymentRecordService {
         if (!p.getPayerId().equals(me.getId())) throw new ForbiddenException("Only the person who logged the claim can cancel it.");
         p.resolve(PaymentRecord.State.CANCELLED);
         payments.save(p);
+        notifications.resolve("payment:" + p.getId());
         spaceThreads.announce(s, me.getUsername() + " cancelled the payment claim of " + p.getAmount() + " " + p.getCurrency() + " to " + name(p.getRecipientId()) + ".");
         return one(p);
     }

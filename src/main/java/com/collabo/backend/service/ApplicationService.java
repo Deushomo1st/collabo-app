@@ -41,12 +41,13 @@ public class ApplicationService {
     private final SpaceRepository spaces;
     private final CollaboratorRepository collaborators;
     private final YarnService yarnService;
+    private final NotificationService notifications;
 
     public ApplicationService(ApplicationRepository applications, PostService postService, PostRepository posts,
                               UserRepository users, UserBlockRepository blocks, SpaceRepository spaces,
                               CollaboratorRepository collaborators,
-                              YarnService yarnService) {
-        this.yarnService = yarnService; this.collaborators = collaborators;
+                              YarnService yarnService, NotificationService notifications) {
+        this.notifications = notifications; this.yarnService = yarnService; this.collaborators = collaborators;
         this.applications = applications; this.postService = postService; this.posts = posts;
         this.users = users; this.blocks = blocks; this.spaces = spaces;
     }
@@ -139,7 +140,11 @@ public class ApplicationService {
         boolean newlyAccepted = next == ApplicationState.ACCEPTED && a.getState() != ApplicationState.ACCEPTED;
         a.setState(next);
         User applicant = users.findById(a.getApplicantId()).orElseThrow(() -> new ResourceNotFoundException("No such application."));
-        if (newlyAccepted) yarnService.notifyAccepted(me, applicant, post.getTitle());
+        if (newlyAccepted) {
+            yarnService.notifyAccepted(me, applicant, post.getTitle());
+            notifications.notify(applicant.getId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "You were accepted to \"" + post.getTitle() + "\"",
+                    me.getUsername() + " accepted your application. Joining is your call.", "/HTML-pages/space.html?post=" + post.getId());
+        }
         return review(applications.save(a), applicant);
     }
 
