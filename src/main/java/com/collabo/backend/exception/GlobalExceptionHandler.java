@@ -142,6 +142,11 @@ public class GlobalExceptionHandler {
      * absent index.html) can't be found; without this handler the catch-all
      * would mask every 404 as an internal error.
      */
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Map<String, String>> handleUnsupportedType(org.springframework.web.HttpMediaTypeNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(Map.of("message", "That file type isn't supported here."));
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Map<String, String>> handleNoResource(NoResourceFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Not found"));

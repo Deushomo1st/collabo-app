@@ -15,10 +15,13 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 
 import java.util.UUID;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -136,6 +139,48 @@ class ProfileApiTest {
         String one = "{\"title\":\"L\",\"url\":\"https://l.dev\"}";
         mvc.perform(putLinks("[" + String.join(",", java.util.Collections.nCopies(12, one)) + "]")).andExpect(status().isOk());
         mvc.perform(putLinks("[" + String.join(",", java.util.Collections.nCopies(13, one)) + "]")).andExpect(status().isBadRequest());
+    }
+
+    private static byte[] image(String format) throws Exception {
+        var img = new java.awt.image.BufferedImage(64, 48, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        var out = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(img, format, out);
+        return out.toByteArray();
+    }
+
+    private MockHttpServletRequestBuilder putAvatar(String type, byte[] body) {
+        return put("/api/users/me/avatar").cookie(XSRF, session).header("X-XSRF-TOKEN", "t").contentType(type).content(body);
+    }
+
+    @Test
+    void aJpegPictureIsStoredServedWithCachingAndCanBeRemoved() throws Exception {
+        byte[] jpeg = image("jpg");
+        mvc.perform(get("/api/users/" + name + "/avatar").cookie(otherSession)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/users/me").cookie(session)).andExpect(jsonPath("$.avatarVersion").doesNotExist());
+
+        mvc.perform(putAvatar("image/jpeg", jpeg)).andExpect(status().isOk()).andExpect(jsonPath("$.avatarVersion").isNumber());
+        mvc.perform(get("/api/users/" + name + "/avatar").cookie(otherSession)).andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "image/jpeg")).andExpect(header().exists("ETag"))
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("max-age=86400")))
+                .andExpect(content().bytes(jpeg));
+        mvc.perform(get("/api/users/" + name).cookie(otherSession)).andExpect(jsonPath("$.avatarVersion").isNumber());
+        mvc.perform(get("/api/users/" + name + "/avatar")).andExpect(status().isUnauthorized());
+
+        mvc.perform(delete("/api/users/me/avatar").cookie(XSRF, session).header("X-XSRF-TOKEN", "t")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.avatarVersion").doesNotExist());
+        mvc.perform(get("/api/users/" + name + "/avatar").cookie(otherSession)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void picturesThatAreNotRealSmallJpegsAreRejected() throws Exception {
+        mvc.perform(putAvatar("image/jpeg", image("png"))).andExpect(status().isBadRequest());          // PNG labelled as JPEG
+        mvc.perform(putAvatar("image/png", image("png"))).andExpect(status().isUnsupportedMediaType());   // wrong declared type
+        byte[] fake = new byte[2000];
+        fake[0] = (byte) 0xFF; fake[1] = (byte) 0xD8; fake[2] = (byte) 0xFF; fake[3] = (byte) 0xE0;
+        mvc.perform(putAvatar("image/jpeg", fake)).andExpect(status().isBadRequest());                   // JPEG header, garbage body
+        mvc.perform(putAvatar("image/jpeg", new byte[300 * 1024 + 1])).andExpect(status().isBadRequest());
+        mvc.perform(putAvatar("image/jpeg", new byte[0])).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/users/me").cookie(session)).andExpect(jsonPath("$.avatarVersion").doesNotExist());
     }
 
     @Test

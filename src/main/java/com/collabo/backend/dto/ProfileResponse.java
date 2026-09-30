@@ -17,10 +17,11 @@ public record ProfileResponse(
         boolean self,
         CredentialsPrivacy credentialsPrivacy,
         LocalDateTime joined,
-        List<LinkDto> links) {
+        List<LinkDto> links,
+        Long avatarVersion) {   // null = no picture; otherwise add it to the picture URL as ?v=
 
-    public static ProfileResponse of(User user, boolean self, List<LinkDto> links) {
+    public static ProfileResponse of(User user, boolean self, List<LinkDto> links, Long avatarVersion) {
         return new ProfileResponse(user.getUsername(), user.getPreferredTitle(), user.getBio(), self,
-                self ? user.getCredentialsPrivacy() : null, user.getCreatedAt(), links);
+                self ? user.getCredentialsPrivacy() : null, user.getCreatedAt(), links, avatarVersion);
     }
 }
