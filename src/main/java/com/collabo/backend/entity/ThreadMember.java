@@ -29,6 +29,10 @@ public class ThreadMember {
     @Column(name = "last_read_at", nullable = false)
     private Instant lastReadAt = Instant.EPOCH;
 
+    /** Delivered watermark: the newest yarn whose arrival this person's browser confirmed. Nullable so old rows load (null = never). */
+    @Column(name = "last_delivered_at")
+    private Instant lastDeliveredAt;
+
     @Column(name = "archived_at")
     private Instant archivedAt;
 
@@ -49,6 +53,13 @@ public class ThreadMember {
     public Role getRole() { return role; }
     public Instant getLastReadAt() { return lastReadAt; }
     public void setLastReadAt(Instant lastReadAt) { this.lastReadAt = lastReadAt; }
+    public Instant getLastDeliveredAt() { return lastDeliveredAt == null ? Instant.EPOCH : lastDeliveredAt; }
+    /** Watermarks only move forward. True when this call advanced it. */
+    public boolean deliveredUpTo(Instant at) {
+        if (!at.isAfter(getLastDeliveredAt())) return false;
+        this.lastDeliveredAt = at;
+        return true;
+    }
     public Instant getArchivedAt() { return archivedAt; }
     public void setArchivedAt(Instant archivedAt) { this.archivedAt = archivedAt; }
     public boolean isArchived() { return archivedAt != null; }

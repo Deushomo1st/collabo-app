@@ -26,7 +26,13 @@
 }
 .yarn-thread__name { font-size: 12px; color: var(--_yt-accent); }
 .yarn-thread__text { white-space: pre-wrap; }
-.yarn-thread__time { align-self: flex-end; font-size: 10.5px; opacity: .65; }
+.yarn-thread__time { font-size: 10.5px; opacity: .65; }
+.yarn-thread__meta { align-self: flex-end; display: flex; align-items: center; gap: 6px; }
+/* Ticks sit in a small dark chip so they read on the orange bubble in every theme: white until read, then glowing green. */
+.yarn-thread__ticks { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 999px; background: rgba(12, 14, 20, .55); color: rgba(255, 255, 255, .92); transition: color .25s, filter .25s; }
+.yarn-thread__ticks svg { width: 15px; height: 10px; display: block; }
+.yarn-thread__ticks.is-read { color: #2dff8a; filter: drop-shadow(0 0 4px rgba(45, 255, 138, .85)); }
+@media (prefers-reduced-motion: reduce) { .yarn-thread__ticks { transition: none; } }
 .yarn-thread__system { align-self: center; margin: 4px 0; padding: 4px 12px; border-radius: 999px; font-size: 12px; color: var(--_yt-muted); border: 1px solid var(--_yt-line); }
 .yarn-thread__more { align-self: center; padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 12.5px; color: var(--_yt-muted); background: transparent; border: 1px solid var(--_yt-line); cursor: pointer; }
 

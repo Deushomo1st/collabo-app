@@ -45,6 +45,9 @@ public class TokenBucketLimiter {
         return wait[0];
     }
 
+    /** Drops a key's bucket (a closed socket, say) so the map does not keep it. */
+    public void forget(String key) { buckets.remove(key); }
+
     private double refilled(Bucket b, long now) { return Math.min(capacity, b.tokens() + (now - b.lastNanos()) * refillPerNano); }
 
     /** A bucket that has refilled completely is the same as no bucket, so it can go. */

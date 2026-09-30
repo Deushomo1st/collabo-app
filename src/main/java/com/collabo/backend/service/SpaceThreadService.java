@@ -1,6 +1,7 @@
 package com.collabo.backend.service;
 
 import com.collabo.backend.entity.*;
+import com.collabo.backend.live.LiveSignals;
 import com.collabo.backend.repository.PaymentRecordRepository;
 import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.ThreadMemberRepository;
@@ -27,10 +28,11 @@ public class SpaceThreadService {
     private final UserRepository users;
     private final SpaceRepository spaces;
     private final PaymentRecordRepository payments;
+    private final LiveSignals signals;
 
     public SpaceThreadService(YarnThreadRepository threads, ThreadMemberRepository seats, YarnRepository yarns, UserRepository users,
-                              SpaceRepository spaces, PaymentRecordRepository payments) {
-        this.spaces = spaces; this.payments = payments; this.threads = threads; this.seats = seats; this.yarns = yarns; this.users = users;
+                              SpaceRepository spaces, PaymentRecordRepository payments, LiveSignals signals) {
+        this.signals = signals; this.spaces = spaces; this.payments = payments; this.threads = threads; this.seats = seats; this.yarns = yarns; this.users = users;
     }
 
     /** The space's Workspace thread, or null before it exists. */
@@ -107,6 +109,7 @@ public class SpaceThreadService {
         Yarn y = yarns.save(new Yarn(t.getId(), null, Yarn.Kind.SYSTEM, body));
         t.recordYarn(null, body, y.getCreatedAt());
         threads.save(t);
+        signals.yarn(t.getId(), y.getId(), seats.findByThreadId(t.getId()).stream().map(ThreadMember::getUserId).toList());
     }
 
     private String nameOf(UUID userId) { return users.findById(userId).map(User::getUsername).orElse("Someone"); }

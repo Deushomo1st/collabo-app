@@ -1,5 +1,6 @@
 // Profile page: identity, links, follow, Credentials / Feats tabs, edit dialog. Reached as profile.html?u=<username>
 // (no ?u= shows your own). All network calls live in js/services/api.js; text goes in through textContent only.
+import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';

@@ -1,5 +1,6 @@
 // The Gaze: everyone's ideas newest first, or Shared Gaze (your network only). Compose, filter, page.
 // All network calls live in js/services/api.js; text goes in through textContent only.
+import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';

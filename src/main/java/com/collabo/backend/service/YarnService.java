@@ -1,6 +1,7 @@
 package com.collabo.backend.service;
 
 import com.collabo.backend.entity.ThreadMember;
+import com.collabo.backend.live.LiveSignals;
 import com.collabo.backend.entity.UserBlock;
 import com.collabo.backend.entity.Yarn;
 import com.collabo.backend.entity.YarnThread;
@@ -39,11 +40,12 @@ public class YarnService {
     private final UserRepository users;
     private final FollowService follows;
     private final SpaceThreadService spaceThreads;
+    private final LiveSignals signals;
 
     public YarnService(YarnThreadRepository threads, ThreadMemberRepository members, YarnRepository yarns,
                        UserBlockRepository blocks, UserRepository users, FollowService follows,
-                       SpaceThreadService spaceThreads) {
-        this.spaceThreads = spaceThreads; this.follows = follows;
+                       SpaceThreadService spaceThreads, LiveSignals signals) {
+        this.spaceThreads = spaceThreads; this.follows = follows; this.signals = signals;
         this.threads = threads; this.members = members; this.yarns = yarns; this.blocks = blocks; this.users = users;
     }
 
@@ -140,8 +142,9 @@ public class YarnService {
         seat(threadId, me.getId());
         Map<UUID, User> people = peopleFor(members.findByThreadId(threadId).stream().map(ThreadMember::getUserId).collect(Collectors.toSet()));
         Instant cursor = before == null ? Instant.now().plusSeconds(86_400) : before;
+        List<ThreadMember> others = members.findByThreadId(threadId).stream().filter(m -> !m.getUserId().equals(me.getId())).toList();
         return yarns.findByThreadIdAndCreatedAtBeforeOrderByCreatedAtDesc(threadId, cursor, PageRequest.of(0, Math.max(1, Math.min(limit, 100))))
-                .stream().map(y -> yarnView(y, people)).toList();
+                .stream().map(y -> yarnView(y, people, y.getKind() == Yarn.Kind.USER && me.getId().equals(y.getSenderId()) ? receiptOf(y, others) : null)).toList();
     }
 
     public YarnView send(User me, UUID threadId, String rawBody) {
@@ -166,11 +169,36 @@ public class YarnService {
         members.findByThreadId(threadId).stream()
                 .filter(m -> !m.getUserId().equals(me.getId()) && m.isArchived() && !m.isMuted() && t.getStatus() != Status.DECLINED)
                 .forEach(m -> m.setArchivedAt(null));
-        return yarnView(y, peopleFor(Set.of(me.getId())));
+        announce(t, y, me.getId());
+        return yarnView(y, peopleFor(Set.of(me.getId())), "SENT");
     }
 
+    /** Opening a thread: everything in it up to now is read (and so delivered). Tells the others only if that moved anything for them. */
     public void markRead(User me, UUID threadId) {
-        seat(threadId, me.getId()).setLastReadAt(Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS));
+        ThreadMember mine = seat(threadId, me.getId());
+        YarnThread t = threads.findById(threadId).orElseThrow();
+        Instant before = mine.getLastReadAt(), now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
+        mine.setLastReadAt(now);
+        mine.deliveredUpTo(now);
+        boolean news = t.getLastYarnAt().isAfter(before) && !me.getId().equals(t.getLastSenderId());
+        if (news) signals.receipt(threadId, othersOf(threadId, me.getId()));
+    }
+
+    /** Someone's browser just connected: everything waiting for them in their threads has now reached them, so the senders' ticks move. */
+    public void deliverPending(UUID userId) {
+        for (ThreadMember seat : members.findByUserId(userId)) {
+            YarnThread t = threads.findById(seat.getThreadId()).orElse(null);
+            if (t == null || userId.equals(t.getLastSenderId())) continue;
+            if (seat.deliveredUpTo(t.getLastYarnAt())) signals.receipt(t.getId(), othersOf(t.getId(), userId));
+        }
+    }
+
+    /** A browser confirms it has received a yarn: the delivered mark moves up to that yarn. Only the yarn's own thread and only forward. */
+    public void markDelivered(UUID userId, UUID threadId, UUID yarnId) {
+        ThreadMember mine = members.findByThreadIdAndUserId(threadId, userId).orElse(null);
+        Yarn y = yarns.findById(yarnId).filter(x -> x.getThreadId().equals(threadId)).orElse(null);
+        if (mine == null || y == null) return;
+        if (mine.deliveredUpTo(y.getCreatedAt())) signals.receipt(threadId, othersOf(threadId, userId));
     }
 
     // ---- per-person state -------------------------------------------------
@@ -242,7 +270,25 @@ public class YarnService {
     private Yarn addYarn(YarnThread t, UUID sender, Yarn.Kind kind, String body) {
         Yarn y = yarns.save(new Yarn(t.getId(), sender, kind, body));
         t.recordYarn(sender, body, y.getCreatedAt());
+        if (kind == Yarn.Kind.SYSTEM) announce(t, y, null);
         return y;
+    }
+
+    /** Tells everyone else in the thread a yarn arrived, once the transaction commits. */
+    private void announce(YarnThread t, Yarn y, UUID except) {
+        signals.yarn(t.getId(), y.getId(), othersOf(t.getId(), except));
+    }
+
+    private List<UUID> othersOf(UUID threadId, UUID except) {
+        return members.findByThreadId(threadId).stream().map(ThreadMember::getUserId).filter(u -> !u.equals(except)).toList();
+    }
+
+    /** SENT until every other member's browser has it, DELIVERED until every one of them has opened it, then READ. */
+    private static String receiptOf(Yarn y, List<ThreadMember> others) {
+        if (others.isEmpty()) return "SENT";
+        if (others.stream().allMatch(m -> !m.getLastReadAt().isBefore(y.getCreatedAt()))) return "READ";
+        if (others.stream().allMatch(m -> !m.getLastDeliveredAt().isBefore(y.getCreatedAt()))) return "DELIVERED";
+        return "SENT";
     }
 
     private static String dmKey(UUID a, UUID b) {
@@ -284,8 +330,8 @@ public class YarnService {
                 || v.members().stream().anyMatch(p -> p.username().toLowerCase().contains(needle));
     }
 
-    private static YarnView yarnView(Yarn y, Map<UUID, User> people) {
+    private static YarnView yarnView(Yarn y, Map<UUID, User> people, String receipt) {
         User s = y.getSenderId() == null ? null : people.get(y.getSenderId());
-        return new YarnView(y.getId(), y.getSenderId(), s == null ? "System" : s.getUsername(), y.getKind().name(), y.getBody(), y.getCreatedAt());
+        return new YarnView(y.getId(), y.getSenderId(), s == null ? "System" : s.getUsername(), y.getKind().name(), y.getBody(), y.getCreatedAt(), receipt);
     }
 }

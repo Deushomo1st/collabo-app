@@ -118,6 +118,7 @@ class FindingTest {
         send(get("/api/moderator/investigations"), otherS, null).andExpect(jsonPath("$", hasSize(0)));
         send(get("/api/moderator/investigations/" + inv), modS, null).andExpect(status().isOk())
                 .andExpect(jsonPath("$.yarns[*].body", hasItem("hey bob"))).andExpect(jsonPath("$.members", containsInAnyOrder(ann, bob)));
+        send(get("/api/yarns/threads/" + dm + "/yarns"), annS, null).andExpect(jsonPath("$[0].receipt").value("SENT"));   // the moderator reading left no tick behind
         send(get("/api/moderator/investigations/" + inv), otherS, null).andExpect(status().isNotFound());
         send(get("/api/moderator/investigations/" + inv), danS, null).andExpect(status().isUnauthorized());   // a user is not a moderator
         send(post("/api/yarns/threads/" + dm + "/yarns"), modS, "{\"body\":\"hi\"}").andExpect(status().isUnauthorized());   // and a moderator cannot write

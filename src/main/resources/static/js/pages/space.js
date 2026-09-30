@@ -1,5 +1,6 @@
 // A space: the idea it grew from, joining (for accepted applicants), and the people in it.
 // All network calls live in js/services/api.js; text goes in through textContent only.
+import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { milestonesSection } from '/js/components/space/milestones.js';

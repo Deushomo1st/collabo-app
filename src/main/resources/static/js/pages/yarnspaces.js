@@ -6,6 +6,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
+import { live } from '/js/services/live.js';
 import {
     logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock, yarnReport,
@@ -231,6 +232,13 @@ function renderThread() {
         load: (before) => yarnHistory(t.id, before),
         send: (body) => yarnSend(t.id, body),
         onRead: () => yarnMarkRead(t.id).catch(() => {}),
+        // The server says when this room changes (a yarn arrived, or ticks moved); the thread refetches itself, silently.
+        signals: (refresh) => {
+            const same = (s) => { if (s.thread === t.id) refresh(); };
+            const offs = [live.on('yarn', same), live.on('receipt', same), live.onResync(refresh)];
+            return () => offs.forEach((off) => off());
+        },
+        isLive: () => live.connected,
     });
     fill(document.getElementById('section'),
         actions,
@@ -315,11 +323,22 @@ async function boot() {
     document.getElementById('search').addEventListener('input', (e) => { query = e.target.value; if (!openThread && me) renderSection(); });
     document.getElementById('header-back').addEventListener('click', (e) => { if (openThread) { e.preventDefault(); go('#' + lastSection); } });
     window.addEventListener('hashchange', () => { if (me) route(); });
-    setInterval(() => {   // keep the lists fresh while you are looking at them
-        if (me && !openThread && document.visibilityState === 'visible') {
+    // The lists (unread counts, last yarn, new requests) refresh when the server says a yarn arrived, and again after a reconnect.
+    // The timer is only the net underneath: every 15s with no live socket, every 60s with one.
+    let listTimer = null;
+    const refreshLists = () => {
+        clearTimeout(listTimer);
+        listTimer = setTimeout(() => {
+            if (!me) return;
             loadAll().then(() => { if (!openThread) { setHeader(null); renderSection(); } }).catch(() => {});
-        }
-    }, 15000);
+        }, 250);   // a burst of signals becomes one refresh
+    };
+    live.on('yarn', refreshLists); live.on('receipt', refreshLists); live.onResync(refreshLists);
+    let lastTick = 0;
+    setInterval(() => {
+        const every = live.connected ? 60_000 : 15_000;
+        if (me && !openThread && document.visibilityState === 'visible' && Date.now() - lastTick >= every) { lastTick = Date.now(); refreshLists(); }
+    }, 5000);
     start();
 }
 boot();

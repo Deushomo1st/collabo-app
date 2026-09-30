@@ -20,7 +20,8 @@ public final class YarnDtos {
                              boolean pinned, boolean muted, boolean archived,
                              UUID otherUserId, List<PersonView> members) {}
 
-    public record YarnView(UUID id, UUID senderId, String sender, String kind, String body, Instant at) {}
+    /** receipt is only set on the caller's own yarns: SENT (saved), DELIVERED (every other member's browser has it) or READ (every other member has opened it). */
+    public record YarnView(UUID id, UUID senderId, String sender, String kind, String body, Instant at, String receipt) {}
 
     public record BlockView(UUID userId, String username, Instant since) {}
 

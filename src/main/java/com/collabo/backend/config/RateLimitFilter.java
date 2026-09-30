@@ -54,7 +54,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !enabled || !request.getRequestURI().startsWith("/api/") || HttpMethod.OPTIONS.matches(request.getMethod());
+        return !enabled || !(request.getRequestURI().startsWith("/api/") || request.getRequestURI().startsWith("/ws/")) || HttpMethod.OPTIONS.matches(request.getMethod());
     }
 
     @Override
