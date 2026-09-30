@@ -31,5 +31,7 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
             + "and p.authorId = :author and a.state <> :withdrawn")
     boolean liveBetween(@Param("applicant") UUID applicantId, @Param("author") UUID authorId, @Param("withdrawn") ApplicationState withdrawn);
 
+    boolean existsByPostIdAndState(UUID postId, ApplicationState state);
+
     void deleteByPostId(UUID postId);
 }

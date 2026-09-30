@@ -28,6 +28,10 @@ public class Post {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    /** Set once a space has been formed from this post. */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean formed;
+
     public Post() {}
     public Post(UUID authorId, String title, String body, Instant applyBy) {
         this.authorId = authorId; this.title = title; this.body = body; this.applyBy = applyBy;
@@ -40,7 +44,9 @@ public class Post {
     public Instant getApplyBy() { return applyBy; }
     public void setApplyBy(Instant applyBy) { this.applyBy = applyBy; }
     public Instant getCreatedAt() { return createdAt; }
+    public boolean isFormed() { return formed; }
+    public void setFormed(boolean formed) { this.formed = formed; }
 
-    /** pending while the window is open; closed once it ends. ("space formed" arrives with spaces.) */
-    public String status() { return applyBy == null || applyBy.isAfter(Instant.now()) ? "pending" : "closed"; }
+    /** formed once a space exists; otherwise pending while the window is open and closed once it ends. */
+    public String status() { return formed ? "formed" : applyBy == null || applyBy.isAfter(Instant.now()) ? "pending" : "closed"; }
 }

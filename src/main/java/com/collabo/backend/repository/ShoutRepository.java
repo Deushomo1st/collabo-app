@@ -26,7 +26,7 @@ public interface ShoutRepository extends JpaRepository<Shout, UUID> {
 
     /** Shout-outs by a network of people, newest first, skipping posts by hidden authors. */
     @Query("select s from Shout s, Post p where p.id = s.postId and s.createdAt < :before and s.userId in :network "
-            + "and p.authorId not in :hidden and (:pendingOnly = false or p.applyBy is null or p.applyBy > :now) order by s.createdAt desc")
+            + "and p.authorId not in :hidden and (:pendingOnly = false or (p.formed = false and (p.applyBy is null or p.applyBy > :now))) order by s.createdAt desc")
     List<Shout> byNetwork(@Param("before") Instant before, @Param("network") Collection<UUID> network,
                           @Param("hidden") Collection<UUID> hidden, @Param("pendingOnly") boolean pendingOnly,
                           @Param("now") Instant now, Pageable page);

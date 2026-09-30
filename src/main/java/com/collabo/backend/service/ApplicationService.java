@@ -11,6 +11,7 @@ import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.repository.ApplicationRepository;
 import com.collabo.backend.repository.PostRepository;
+import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.UserBlockRepository;
 import com.collabo.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -35,11 +36,12 @@ public class ApplicationService {
     private final PostRepository posts;
     private final UserRepository users;
     private final UserBlockRepository blocks;
+    private final SpaceRepository spaces;
 
     public ApplicationService(ApplicationRepository applications, PostService postService, PostRepository posts,
-                              UserRepository users, UserBlockRepository blocks) {
+                              UserRepository users, UserBlockRepository blocks, SpaceRepository spaces) {
         this.applications = applications; this.postService = postService; this.posts = posts;
-        this.users = users; this.blocks = blocks;
+        this.users = users; this.blocks = blocks; this.spaces = spaces;
     }
 
     public ApplicationResponse apply(User me, UUID postId, String text) {
@@ -115,6 +117,9 @@ public class ApplicationService {
         Application a = applications.findById(applicationId).orElseThrow(() -> new ResourceNotFoundException("No such application."));
         ownPost(me, a.getPostId());
         if (a.getState() == ApplicationState.WITHDRAWN) throw new InvalidProfileException("This application was withdrawn.");
+        if (a.getState() == ApplicationState.ACCEPTED && spaces.existsByPostId(a.getPostId())) {
+            throw new InvalidProfileException("This applicant is already part of a space.");
+        }
         ApplicationState next = switch (decision == null ? "" : decision) {
             case "ACCEPT" -> ApplicationState.ACCEPTED;
             case "DECLINE" -> ApplicationState.DECLINED;

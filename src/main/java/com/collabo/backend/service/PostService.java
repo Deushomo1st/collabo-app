@@ -61,6 +61,7 @@ public class PostService {
 
     public void delete(User me, UUID id) {
         Post p = mine(me, id);
+        if (p.isFormed()) throw new InvalidProfileException("A space was formed from this post, so it stays.");
         comments.deleteByPostId(id);
         shouts.deleteByPostId(id);
         applications.deleteByPostId(id);

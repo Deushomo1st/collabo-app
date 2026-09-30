@@ -15,13 +15,13 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
 
     /** The Gaze: everyone's posts, newest first, minus authors the viewer has a block with. */
     @Query("select p from Post p where p.createdAt < :before and p.authorId not in :hidden "
-            + "and (:pendingOnly = false or p.applyBy is null or p.applyBy > :now) order by p.createdAt desc")
+            + "and (:pendingOnly = false or (p.formed = false and (p.applyBy is null or p.applyBy > :now))) order by p.createdAt desc")
     List<Post> gaze(@Param("before") Instant before, @Param("hidden") Collection<UUID> hidden,
                     @Param("pendingOnly") boolean pendingOnly, @Param("now") Instant now, Pageable page);
 
     /** Shared Gaze: only posts by the given network of authors. */
     @Query("select p from Post p where p.createdAt < :before and p.authorId in :network "
-            + "and (:pendingOnly = false or p.applyBy is null or p.applyBy > :now) order by p.createdAt desc")
+            + "and (:pendingOnly = false or (p.formed = false and (p.applyBy is null or p.applyBy > :now))) order by p.createdAt desc")
     List<Post> network(@Param("before") Instant before, @Param("network") Collection<UUID> network,
                        @Param("pendingOnly") boolean pendingOnly, @Param("now") Instant now, Pageable page);
 
