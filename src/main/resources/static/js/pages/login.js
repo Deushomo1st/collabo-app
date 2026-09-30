@@ -2,7 +2,7 @@
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { loginUser, currentUser } from '/js/services/api.js';
 
-const DEFAULT_NEXT = '/HTML-pages/yarnspaces.html';
+const DEFAULT_NEXT = '/HTML-pages/gaze.html';
 
 // Only same-site paths are allowed as a destination, so a crafted ?next= can't send people elsewhere.
 function safeNext() {

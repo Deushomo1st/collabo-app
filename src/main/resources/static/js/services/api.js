@@ -92,3 +92,16 @@ export const credentialsOf = (name) => call(user(name, '/credentials'));
 export const credentialFeature = (id, featured) => call(`/api/credentials/${id}`, { method: 'PATCH', body: { featured } });
 export const credentialShip = (id, title, url) => call(`/api/credentials/${id}/shipped`, { method: 'POST', body: { title, url } });
 export const credentialUnship = (id, linkId) => call(`/api/credentials/${id}/shipped/${linkId}`, { method: 'DELETE' });
+
+// ---- Posts and The Gaze ------------------------------------------------------
+const post = (id, path = '') => `/api/posts/${id}${path}`;
+export const gazeFeed = (feed, { pending, before } = {}) => call(`/api/gaze${q({ feed, pending: pending ? 'true' : '', before })}`);
+export const userPosts = (name, tab, before) => call(user(name, '/posts') + q({ tab, before }));
+export const postCreate = (title, body, applyBy) => call('/api/posts', { method: 'POST', body: { title, body, applyBy } }, 'Could not post your idea.');
+export const postDelete = (id) => call(post(id), { method: 'DELETE' });
+export const postWindow = (id, applyBy) => call(post(id, '/window'), { method: 'PATCH', body: { applyBy } });
+export const postShout = (id) => call(post(id, '/shout'), { method: 'PUT' });
+export const postUnshout = (id) => call(post(id, '/shout'), { method: 'DELETE' });
+export const commentsOf = (id) => call(post(id, '/comments'));
+export const commentAdd = (id, body) => call(post(id, '/comments'), { method: 'POST', body: { body } });
+export const commentDelete = (id, commentId) => call(post(id, `/comments/${commentId}`), { method: 'DELETE' });
