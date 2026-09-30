@@ -154,4 +154,12 @@ public class CredentialService {
                 .orElseThrow(() -> new ResourceNotFoundException("No one has that username."));
         return record(user.getId(), kind, title, detail, sourceType, sourceId, occurredAt);
     }
+
+    /** Takes back an entry the system recorded (a member opting out of a milestone). Nothing happens if there is none. */
+    public void withdraw(UUID userId, String sourceType, String sourceId) {
+        entries.findBySourceTypeAndSourceIdAndUserId(sourceType, sourceId, userId).ifPresent(e -> {
+            shipped.deleteByEntryId(e.getId());
+            entries.delete(e);
+        });
+    }
 }

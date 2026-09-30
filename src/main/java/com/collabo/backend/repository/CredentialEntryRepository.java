@@ -8,5 +8,6 @@ import java.util.UUID;
 
 public interface CredentialEntryRepository extends JpaRepository<CredentialEntry, UUID> {
     List<CredentialEntry> findByUserIdOrderByOccurredAtDesc(UUID userId);
+    java.util.Optional<CredentialEntry> findBySourceTypeAndSourceIdAndUserId(String sourceType, String sourceId, UUID userId);
     boolean existsBySourceTypeAndSourceIdAndUserId(String sourceType, String sourceId, UUID userId);
 }

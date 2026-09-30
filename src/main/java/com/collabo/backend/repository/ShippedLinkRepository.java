@@ -10,4 +10,5 @@ import java.util.UUID;
 public interface ShippedLinkRepository extends JpaRepository<ShippedLink, UUID> {
     List<ShippedLink> findByEntryIdIn(Collection<UUID> entryIds);
     long countByEntryId(UUID entryId);
+    void deleteByEntryId(UUID entryId);
 }

@@ -87,6 +87,13 @@ public class SpaceService {
                 "APPLICANT".equals(role) ? null : spaceThreads.workspaceId(s.getPostId()));
     }
 
+    /** The owner can do anything; a member can do what they were given. */
+    boolean can(User me, Space s, SpacePermission p) {
+        if (s.getOwnerId().equals(me.getId())) return true;
+        return members.findBySpaceIdAndUserId(s.getId(), me.getId())
+                .filter(m -> m.getState() == SpaceMember.State.ACTIVE && m.getPermissions().contains(p)).isPresent();
+    }
+
     /** Puts someone in the room with every permission (co-founders), or back in if they were out. */
     void seat(Space s, UUID userId, String title) {
         SpaceMember m = members.findBySpaceIdAndUserId(s.getId(), userId).orElseGet(() -> new SpaceMember(s.getId(), userId));

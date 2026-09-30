@@ -57,6 +57,11 @@ public class SpaceThreadService {
         threads.findByPostIdAndTier(postId, YarnThread.Tier.WESPACE).ifPresent(t -> exit(t, userId));
     }
 
+    /** A system yarn in the space's room, for things the team should see happen (a milestone, a payment). */
+    public void announce(Space space, String body) {
+        threads.findByPostIdAndTier(space.getPostId(), YarnThread.Tier.WORKSPACE).ifPresent(t -> say(t, body));
+    }
+
     private YarnThread open(YarnThread.Tier tier, UUID postId, UUID ownerId, String name) {
         YarnThread t = new YarnThread();
         t.setTier(tier); t.setName(name); t.setCreatedBy(ownerId); t.setPostId(postId);
