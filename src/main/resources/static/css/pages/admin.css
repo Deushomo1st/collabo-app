@@ -41,7 +41,7 @@ small { color: var(--ad-muted); font-weight: 500; }
 
 /* ---------- shell ---------- */
 .ad-app { min-height: 100vh; }
-.ad-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--sp-gutter); }
+.ad-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 64px; padding: 0 var(--sp-gutter); }
 .ad-top__end { display: flex; align-items: center; gap: 10px; }   /* theme switch and sign out sit on the right edge */
 .ad-nav { display: flex; justify-content: center; padding: 0 var(--sp-gutter); position: sticky; top: 8px; z-index: 5; }
 .ad-brand { font-weight: 700; letter-spacing: .04em; }
@@ -144,3 +144,8 @@ main { padding: 24px; max-width: 1100px; }
 .ad-dialog, .ad-notice { background: linear-gradient(var(--ad-panel), var(--ad-panel)), var(--sp-bg); border-radius: 16px; }
 .ad-dialog::backdrop { background: rgba(0, 0, 0, .55); backdrop-filter: blur(4px); }
 .ad-brand { font-weight: 800; letter-spacing: .14em; }
+
+/* the pill nav: when it folds to its icon it rises into the top bar's row, in the middle */
+.ad-nav { height: 54px; }
+.ad-nav .nav-selector-fluid-hold-wrap { padding-top: 0; top: 10px; transition: margin-top .35s cubic-bezier(.16, 1, .3, 1); }
+.ad-nav .nav-selector-fluid-hold-wrap:has(.iconized) { margin-top: -55px; }
