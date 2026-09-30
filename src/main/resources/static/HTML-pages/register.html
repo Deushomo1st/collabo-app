@@ -94,6 +94,7 @@
         messageBox.textContent = msg;
         messageBox.className = isError ? 'message error' : 'message success';
         messageBox.style.display = 'block';
+        messageBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function hideMessage() { messageBox.style.display = 'none'; }
