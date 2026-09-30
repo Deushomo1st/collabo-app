@@ -2,11 +2,105 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>COLLABO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>COLLABO: your people are out there</title>
+<meta name="description" content="Where ideas get built, not just posted. Post an idea, pick your team, and build it together.">
 <link rel="stylesheet" href="/css/global/global.css">
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/hero.css">
+<link rel="stylesheet" href="/css/pages/pitch.css">
 </head>
-<body>
-<h1>COLLABO Frontend - Coming Soon</h1>
+<body class="hero-page">
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
+<div class="hr-veil" id="veil" aria-hidden="true"></div>
+
+<header class="hr-bar">
+    <a class="hr-logo" href="/HTML-pages/index.html" aria-label="COLLABO">COLLABO</a>
+    <nav class="hr-bar__nav"><a class="hr-bar__plain" href="/HTML-pages/why.html">Why</a><a class="hr-bar__plain" href="/HTML-pages/how.html">How it works</a><a href="/HTML-pages/login.html">Sign in</a></nav>
+</header>
+
+<main>
+    <section class="hr" id="hero">
+        <h1 class="hr-title" id="hr-title">Your people are out there.<br>Let's collabo.</h1>
+        <p class="hr-sub" id="hr-sub">Where ideas get built, not just posted.</p>
+        <a class="hr-btn" id="hr-btn" href="/HTML-pages/register.html" data-chars data-hover="Na So!!!"><span>Get started</span></a>
+        <p class="hr-live" id="hr-live"><i class="hr-dot"></i><span>Spaces forming now</span></p>
+
+        <div class="hr-marquees" id="hr-marquees" aria-hidden="true">
+            <div class="hr-marquee" data-dir="-1"><div class="hr-track"></div></div>
+            <div class="hr-marquee" data-dir="1"><div class="hr-track"></div></div>
+        </div>
+    </section>
+
+    <section class="pt" id="machine">
+        <p class="pt-eyebrow">The machine, working</p>
+        <h2>An idea goes in. A team comes out.</h2>
+        <p class="pt-lead">Post it to The Gaze, read the pitches of the people who apply, and pick your team yourself. No algorithm chooses for you.</p>
+        <div class="pt-grid">
+            <article class="pt-card">
+                <h3>A space, with its team in it</h3>
+                <p>Every accepted person, their role, what they may do.</p>
+                <div class="pt-screen" aria-hidden="true">
+                    <div class="pt-row"><span class="pt-who">ada</span><span class="pt-tag pt-tag--ok">Owner</span><span class="pt-tag pt-tag--brand">Founder</span></div>
+                    <div class="pt-row"><span class="pt-who">tunde</span><span class="pt-tag">Backend dev</span></div>
+                    <div class="pt-row"><span class="pt-who">ife</span><span class="pt-tag">Illustrator</span></div>
+                    <div class="pt-row"><span class="pt-who">kemi</span><span class="pt-tag">Video editor</span></div>
+                </div>
+            </article>
+            <article class="pt-card">
+                <h3>Roles, filled</h3>
+                <p>See what the team still needs, and who already has it covered.</p>
+                <div class="pt-screen" aria-hidden="true"><div class="pt-cols">
+                    <div class="pt-col"><b>Filled</b><span class="pt-slot">Designer · ife</span><span class="pt-slot">Developer · tunde</span></div>
+                    <div class="pt-col"><b>Open</b><span class="pt-slot pt-slot--open">Marketer</span><span class="pt-slot pt-slot--open">Writer</span></div>
+                </div></div>
+            </article>
+            <article class="pt-card">
+                <h3>A private yarn thread</h3>
+                <p>Yarn is our word for message. Talk it out where the team is.</p>
+                <div class="pt-screen" aria-hidden="true">
+                    <span class="pt-msg">Logo drafts are up. Thoughts?</span>
+                    <span class="pt-msg pt-msg--me">Love the second one. Ship it.</span>
+                    <span class="pt-msg">On it.</span>
+                </div>
+            </article>
+        </div>
+        <div class="pt-actions">
+            <a class="pt-cta" href="/HTML-pages/register.html">Create an account</a>
+            <a class="pt-cta pt-cta--ghost" href="/HTML-pages/how.html">See how it works</a>
+        </div>
+    </section>
+
+    <section class="pt">
+        <p class="pt-eyebrow">Why it is different</p>
+        <h2>Ideas here can't just be talk.</h2>
+        <p class="pt-lead">Anyone can post an idea. COLLABO shows whether it was ever built.</p>
+        <div class="pt-grid">
+            <article class="pt-card"><h3>Space not created</h3><p>Post an idea and never pick a team, and your post says so in public.</p></article>
+            <article class="pt-card"><h3>Removal records</h3><p>When someone is removed, there is a record with a reason, and a way to appeal.</p></article>
+            <article class="pt-card"><h3>Credentials</h3><p>A profile shows what you have actually built, not what you claim.</p></article>
+        </div>
+        <a class="pt-cta pt-cta--ghost" href="/HTML-pages/why.html">Read why</a>
+    </section>
+
+    <section class="hr-next" id="trigger">
+        <h2 class="hr-big" id="hr-big">There's no hiding<br>from greatness.</h2>
+        <a class="hr-btn" href="/HTML-pages/register.html" data-chars data-hover="Get in Joor!!!"><span>Create an account</span></a>
+    </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script type="module" src="/js/pages/hero.js"></script>
 </body>
 </html>
