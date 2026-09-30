@@ -70,10 +70,25 @@ function render() {
     drawBar();
 }
 
+// The header (title, bell, theme) folds away while you scroll down and returns the moment you scroll up; the feed pill stays.
+const placeBar = () => { document.getElementById('gz-bar').style.top = `${(document.querySelector('.sp-top')?.offsetHeight || 60) + 18}px`; };
+{
+    const top = document.querySelector('.sp-top');
+    let lastY = window.scrollY;
+    window.addEventListener('scroll', () => {
+        const y = window.scrollY, dy = y - lastY;
+        if (Math.abs(dy) < 6) return;   // ignore jitter
+        lastY = y;
+        top.classList.toggle('is-hidden', dy > 0 && y > 80);
+    }, { passive: true });
+    top.addEventListener('transitionend', placeBar, true);
+    top.addEventListener('transitionrun', () => { const t = setInterval(placeBar, 30); setTimeout(() => clearInterval(t), 350); }, true);
+}
+
 // "N new" and "See old" share one slot at the top of the screen.
 function drawBar() {
     const bar = document.getElementById('gz-bar');
-    bar.style.top = `${(document.querySelector('.sp-top')?.offsetHeight || 60) + 18}px`;   // just under the header, however tall it wraps
+    placeBar();   // just under the pinned top, however tall it is right now
     bar.replaceChildren(...[
         newCount > 0 && h('button', { class: 'gz-pill', type: 'button', text: `${newCount >= 50 ? '50+' : newCount} new`, onclick: restart }),
         old.length > 0 && !unlocked && h('button', { class: 'gz-pill gz-pill--quiet', type: 'button', text: `See old (${old.length})`, onclick: unlock }),

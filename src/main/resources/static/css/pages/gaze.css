@@ -84,27 +84,25 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .gz-old::after { content: 'You were here'; justify-self: center; color: var(--sp-muted); font: 600 11px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
 .gz-sentinel { min-height: 1px; text-align: center; color: var(--sp-muted); font-size: 12.5px; padding: 6px 0 18px; }
 
-/* the feed switcher lives in the header; the bottom nav needs room under the last card */
-.gz-filters .nav-selector-fluid-hold-wrap { position: static; padding: 0; margin-left: auto; }
-.gz-list { padding-bottom: 96px; }
-/* header stays on ONE row (bell + theme never drop under the title); 3 links, so no arrows/fades and a slim fit */
-.sp-header:has(.gz-filters) { flex-wrap: nowrap; }
-.sp-header:has(.gz-filters) .sp-title { flex: 1 1 0; }
-.gz-filters { display: flex; align-items: center; flex: 0 0 auto; --nav-padding: 3px; }
+/* the header (title, bell, theme) folds away on scroll-down and only the feed pill stays on top; scroll up brings it back */
+.gz-hdr { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .3s ease, opacity .25s ease; }
+.gz-hdr > div { min-height: 0; overflow: hidden; padding-bottom: 8px; }
+.sp-top.is-hidden .gz-hdr { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
+.gz-filters { display: flex; justify-content: center; --nav-padding: 3px; }
+.gz-filters .nav-selector-fluid-hold-wrap { position: static; padding: 0; }
 .gz-filters .nav-selector-fluid-hold { height: 42px; }
 .gz-filters .nav-selector-fluid-hold.iconized { max-width: 42px; }
 .gz-filters .nav-selector-fluid-hold__nav { padding-inline: 0; }
-.gz-filters .nav-selector-fluid-hold__arrow { display: none; }
+.gz-filters .nav-selector-fluid-hold__arrow { display: none; }   /* 3 links: no arrows or fades */
 .gz-filters .nav-selector-fluid-hold__clip::before, .gz-filters .nav-selector-fluid-hold__clip::after { display: none; }
 .gz-filters .nav-selector-fluid-hold__viewport { overflow: hidden; }
-@media (max-width: 420px) { #bottom-nav { --nav-link-padding: 9px 7px; --nav-font-size: 13px; }
+.sp-header { flex-wrap: nowrap; }
+.sp-header .sp-title { flex: 1 1 0; }
+.gz-list { padding-bottom: 96px; }
+@media (max-width: 560px) { #bottom-nav { --nav-link-padding: 9px 7px; --nav-font-size: 13px; }
     #bottom-nav .nav-selector-fluid-hold__nav { padding-inline: 0; } }
 @media (max-width: 560px) {
-    .sp-header:has(.gz-filters) .sp-tag { display: none; }
-    .gz-filters .nav-selector-fluid-hold__link span { display: none; }
-    .gz-filters { --nav-link-padding: 9px 11px; }
-    .sp-header:has(.gz-filters) .theme-switcher__label { display: none; }
-    .sp-header:has(.gz-filters) .sp-title h1 { white-space: nowrap; }
-    .sp-header:has(.gz-filters) { gap: 8px; }
+    .sp-header .sp-tag, .sp-header .theme-switcher__label { display: none; }
+    .sp-header { gap: 8px; }
 }
 #bottom-nav, .gz-filters { --nav-link-padding: 9px 12px; --nav-font-size: 14px; }
