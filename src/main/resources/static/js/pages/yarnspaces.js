@@ -63,9 +63,10 @@ function setHeader(t) {
     const n = unreadTotal(inbox);
     document.getElementById('header-title').textContent = t ? t.name : 'Yarns';
     document.getElementById('header-tag').textContent = t ? TIER_LABEL[t.tier] : 'Yarnspaces';
-    document.getElementById('header-sub').textContent = t
-        ? t.members.map((m) => m.username).join(', ')
-        : (n ? `${n} unread ${n === 1 ? 'yarn' : 'yarns'}` : 'All caught up');
+    const sub = document.getElementById('header-sub');
+    if (t) {   // each member links to their profile
+        sub.replaceChildren(...t.members.flatMap((m, i) => [i ? ', ' : '', h('a', { href: `/HTML-pages/profile.html?u=${encodeURIComponent(m.username)}`, text: m.username })]).filter(Boolean));
+    } else sub.textContent = n ? `${n} unread ${n === 1 ? 'yarn' : 'yarns'}` : 'All caught up';
     document.getElementById('search').hidden = !!t;
 }
 
@@ -279,7 +280,7 @@ async function openSettings() {
     panel.querySelector('.sp-form').append(
         h('label', { for: 'default-chat' }, 'Default chat', pick),
         h('p', { class: 'yn-hint', text: 'What opens first when you tap Yarns from the Dash.' }),
-        h('p', { class: 'yn-hint', text: `Signed in as ${me.username}.` }),
+        h('p', { class: 'yn-hint' }, `Signed in as ${me.username}. `, h('a', { href: '/HTML-pages/profile.html' }, 'My profile')),
         h('div', { class: 'glass-blur-dialog__actions' },
             h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: async () => { await logoutUser().catch(() => {}); toLogin(); } }, 'Sign out'),
             h('button', { class: 'glass-blur-dialog__btn', type: 'button', onclick: () => {
