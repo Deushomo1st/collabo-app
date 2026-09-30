@@ -168,6 +168,7 @@ class SpaceMembershipTest {
         send(delete("/api/spaces/" + space + "/members/" + ann), bobS, null).andExpect(status().isBadRequest());   // the owner stays
         send(delete("/api/spaces/" + space + "/members/" + cat), bobS, null).andExpect(status().isOk());
         send(get("/api/spaces/" + space + "/members"), annS, null).andExpect(jsonPath("$", hasSize(2)));
-        send(post("/api/spaces/" + space + "/join"), catS, null).andExpect(status().isBadRequest());   // removed people do not slip back in
+        send(get("/api/spaces/" + space), catS, null).andExpect(status().isNotFound());   // removal ends reading
+        send(post("/api/spaces/" + space + "/join"), catS, null).andExpect(status().isNotFound());   // and joining
     }
 }

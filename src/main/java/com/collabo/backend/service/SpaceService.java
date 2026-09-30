@@ -75,14 +75,15 @@ public class SpaceService {
         return response(s, post, role);
     }
 
-    /** OWNER, MEMBER (joined), APPLICANT (accepted, may read, not joined), or null (no access). */
+    /** OWNER, MEMBER (joined), APPLICANT (accepted, may read, not joined), or null (no access, including the removed). */
     String roleOf(User me, Space s) {
         if (s.getOwnerId().equals(me.getId())) return "OWNER";
         boolean accepted = applications.findByPostIdAndApplicantId(s.getPostId(), me.getId())
                 .filter(a -> a.getState() == ApplicationState.ACCEPTED).isPresent();
         if (!accepted) return null;
-        boolean joined = members.findBySpaceIdAndUserId(s.getId(), me.getId()).filter(m -> m.getState() == SpaceMember.State.ACTIVE).isPresent();
-        return joined ? "MEMBER" : "APPLICANT";
+        var member = members.findBySpaceIdAndUserId(s.getId(), me.getId());
+        if (member.filter(m -> m.getState() == SpaceMember.State.REMOVED).isPresent()) return null;   // removal ends reading too
+        return member.filter(m -> m.getState() == SpaceMember.State.ACTIVE).isPresent() ? "MEMBER" : "APPLICANT";
     }
 
     private SpaceResponse response(Space s, Post post, String role) {
