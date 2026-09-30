@@ -19,7 +19,7 @@
 .yn-group, .yn-list { display: grid; gap: 8px; }
 
 .yn-row {
-    display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 14px; text-align: left;
+    display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; padding: 12px 14px; text-align: left;
     border-radius: 18px; border: 1px solid var(--sp-line); background: var(--sp-panel);
     backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
     transition: transform .2s, background .2s;
@@ -42,3 +42,18 @@
 .yn-empty { margin: 30px 0; text-align: center; color: var(--sp-muted); }
 
 @media (prefers-reduced-motion: reduce) { .yn-row { transition: none; } }
+
+/* row + quick action (Archive / Restore / Unblock) */
+.yn-item { display: flex; align-items: stretch; gap: 8px; }
+.yn-row--static:hover { transform: none; }
+.yn-quick {
+    flex: none; padding: 0 12px; border-radius: 16px; font-size: 12.5px; font-weight: 700;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-muted);
+}
+.yn-quick:hover { background: var(--sp-panel-hi); color: var(--sp-text); }
+.yn-flags { color: var(--sp-muted); font: 500 10.5px var(--sp-mono); letter-spacing: .04em; text-transform: uppercase; }
+
+.yn-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.yn-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
+.yn-signin { padding: 22px; border-radius: 22px; max-width: 420px; margin: 24px auto; }
+.yn-signin .sp-h2, .yn-signin .sp-sub { margin-bottom: 8px; }

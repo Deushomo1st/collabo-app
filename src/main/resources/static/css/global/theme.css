@@ -119,6 +119,15 @@
     --action-banner-ok-ink: #ffffff;
     --action-banner-line: rgba(2, 48, 71, .16);
 
+    /* ---- yarn-thread ---- */
+    --yarn-thread-ink: #023047;
+    --yarn-thread-muted: #5b7280;
+    --yarn-thread-mine: #e07b00;
+    --yarn-thread-mine-ink: #ffffff;
+    --yarn-thread-theirs: rgba(255, 255, 255, .7);
+    --yarn-thread-line: rgba(2, 48, 71, .14);
+    --yarn-thread-accent: #e07b00;
+
     /* ---- avatar ---- */
     --avatar-brand: #209EBB;
     --avatar-card: #ffffff;

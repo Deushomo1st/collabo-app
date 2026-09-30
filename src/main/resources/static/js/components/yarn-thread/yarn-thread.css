@@ -1,0 +1,53 @@
+/* yarn-thread: conversation + composer.
+   Public variables: --yarn-thread-{ink,muted,mine,mine-ink,theirs,line,accent}
+   Private: --_yt-* (internal). Light values live in css/global/theme.css. */
+
+.yarn-thread {
+    --_yt-ink: var(--yarn-thread-ink, #f4f5f7);
+    --_yt-muted: var(--yarn-thread-muted, #9099a8);
+    --_yt-mine: var(--yarn-thread-mine, #FF9000);
+    --_yt-mine-ink: var(--yarn-thread-mine-ink, #1a1000);
+    --_yt-theirs: var(--yarn-thread-theirs, rgba(255, 255, 255, .085));
+    --_yt-line: var(--yarn-thread-line, rgba(255, 255, 255, .10));
+    --_yt-accent: var(--yarn-thread-accent, #FF9000);
+
+    display: flex; flex-direction: column; gap: 10px; color: var(--_yt-ink);
+}
+.yarn-thread__list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+
+.yarn-thread__msg {
+    max-width: min(78%, 520px); padding: 9px 13px 6px; border-radius: 18px;
+    display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere;
+}
+.yarn-thread__msg--mine { align-self: flex-end; background: var(--_yt-mine); color: var(--_yt-mine-ink); border-bottom-right-radius: 6px; }
+.yarn-thread__msg--theirs {
+    align-self: flex-start; background: var(--_yt-theirs); border: 1px solid var(--_yt-line); border-bottom-left-radius: 6px;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.yarn-thread__name { font-size: 12px; color: var(--_yt-accent); }
+.yarn-thread__text { white-space: pre-wrap; }
+.yarn-thread__time { align-self: flex-end; font-size: 10.5px; opacity: .65; }
+.yarn-thread__system { align-self: center; margin: 4px 0; padding: 4px 12px; border-radius: 999px; font-size: 12px; color: var(--_yt-muted); border: 1px solid var(--_yt-line); }
+.yarn-thread__more { align-self: center; padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 12.5px; color: var(--_yt-muted); background: transparent; border: 1px solid var(--_yt-line); cursor: pointer; }
+
+.yarn-thread__composer {
+    position: sticky; bottom: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: flex-end; gap: 8px;
+    padding: 8px; border-radius: 22px; border: 1px solid var(--_yt-line); background: var(--_yt-theirs);
+    backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+}
+.yarn-thread__composer[hidden], .yarn-thread__notice[hidden], .yarn-thread__error[hidden] { display: none; }
+.yarn-thread__input {
+    flex: 1; resize: none; max-height: 120px; padding: 9px 10px; border: 0; outline: 0; background: transparent;
+    font: inherit; color: inherit;
+}
+.yarn-thread__input::placeholder { color: var(--_yt-muted); }
+.yarn-thread__send {
+    display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 50%; border: 0; cursor: pointer;
+    background: var(--_yt-mine); color: var(--_yt-mine-ink);
+}
+.yarn-thread__send svg { width: 18px; height: 18px; }
+.yarn-thread__send:disabled { opacity: .5; cursor: not-allowed; }
+.yarn-thread__send:focus-visible, .yarn-thread__input:focus-visible { outline: 2px solid var(--_yt-accent); outline-offset: 2px; }
+
+.yarn-thread__notice { margin: 0; text-align: center; color: var(--_yt-muted); font-size: 13px; }
+.yarn-thread__error { margin: 0; text-align: center; color: #f87171; font-size: 13px; }
