@@ -33,6 +33,10 @@ public class YarnThread {
     @Column(name = "dm_key", unique = true)
     private String dmKey;
 
+    /** The post this thread came from: set for a space's Workspace and a post's WeSpace, null for the rest. */
+    @Column(name = "post_id")
+    private UUID postId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -56,6 +60,8 @@ public class YarnThread {
     public void setCreatedBy(UUID createdBy) { this.createdBy = createdBy; }
     public String getDmKey() { return dmKey; }
     public void setDmKey(String dmKey) { this.dmKey = dmKey; }
+    public UUID getPostId() { return postId; }
+    public void setPostId(UUID postId) { this.postId = postId; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getLastYarnAt() { return lastYarnAt; }
     public UUID getLastSenderId() { return lastSenderId; }

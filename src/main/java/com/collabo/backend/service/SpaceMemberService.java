@@ -28,11 +28,12 @@ public class SpaceMemberService {
     private final SpaceService spaceAccess;
     private final CredentialService credentials;
     private final CollaboratorRepository collaborators;
+    private final SpaceThreadService spaceThreads;
 
     public SpaceMemberService(SpaceRepository spaces, SpaceMemberRepository members, UserRepository users,
                               SpaceService spaceAccess, CredentialService credentials,
-                              CollaboratorRepository collaborators) {
-        this.collaborators = collaborators;
+                              CollaboratorRepository collaborators, SpaceThreadService spaceThreads) {
+        this.spaceThreads = spaceThreads; this.collaborators = collaborators;
         this.spaces = spaces; this.members = members; this.users = users; this.spaceAccess = spaceAccess; this.credentials = credentials;
     }
 
@@ -51,6 +52,7 @@ public class SpaceMemberService {
         } else {
             members.save(new SpaceMember(s.getId(), me.getId()));
         }
+        spaceThreads.joinWorkspace(s, me.getId());
         credentials.record(me.getId(), CredentialKind.SPACE_FORMED, s.getName(), "", "space", s.getId().toString(), null);   // once per space
     }
 
@@ -62,6 +64,7 @@ public class SpaceMemberService {
                 .orElseThrow(() -> new ResourceNotFoundException(GONE));
         m.setState(SpaceMember.State.LEFT);
         members.save(m);
+        spaceThreads.leaveWorkspace(s, me.getId());
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +114,7 @@ public class SpaceMemberService {
         m.setState(SpaceMember.State.REMOVED);
         m.setPermissions(EnumSet.noneOf(SpacePermission.class));
         members.save(m);
+        spaceThreads.leaveWorkspace(s, target.getId());
     }
 
     private boolean isCollaborator(User me, Space s) {

@@ -34,9 +34,12 @@ public class CollaboratorService {
     private final ApplicationRepository applications;
     private final SpaceRepository spaces;
     private final SpaceService spaceService;
+    private final SpaceThreadService spaceThreads;
 
     public CollaboratorService(CollaboratorRepository collaborators, PostRepository posts, UserRepository users, FollowRepository follows,
-                               UserBlockRepository blocks, ApplicationRepository applications, SpaceRepository spaces, SpaceService spaceService) {
+                               UserBlockRepository blocks, ApplicationRepository applications, SpaceRepository spaces, SpaceService spaceService,
+                               SpaceThreadService spaceThreads) {
+        this.spaceThreads = spaceThreads;
         this.collaborators = collaborators; this.posts = posts; this.users = users; this.follows = follows;
         this.blocks = blocks; this.applications = applications; this.spaces = spaces; this.spaceService = spaceService;
     }
@@ -86,6 +89,7 @@ public class CollaboratorService {
         Collaborator c = pending(me, postId);
         c.setState(Collaborator.State.ACTIVE);
         collaborators.save(c);
+        posts.findById(postId).ifPresent(p -> spaceThreads.joinWeSpace(p, me.getId()));
         spaces.findByPostId(postId).ifPresent(s -> spaceService.seat(s, me.getId(), "Collaborator"));
     }
 
@@ -104,6 +108,7 @@ public class CollaboratorService {
         Collaborator c = collaborators.findByPostIdAndUserId(postId, target.getId())
                 .filter(x -> x.getState() != Collaborator.State.DECLINED).orElseThrow(() -> new ResourceNotFoundException("No such collaborator."));
         collaborators.delete(c);
+        spaceThreads.leaveWeSpace(postId, target.getId());
         spaces.findByPostId(postId).ifPresent(s -> spaceService.unseat(s, target.getId()));
     }
 

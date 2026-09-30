@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface YarnThreadRepository extends JpaRepository<YarnThread, UUID> {
     Optional<YarnThread> findByDmKey(String dmKey);
+    Optional<YarnThread> findByPostIdAndTier(UUID postId, YarnThread.Tier tier);
 }

@@ -33,11 +33,12 @@ public class SpaceService {
     private final CredentialService credentials;
     private final SpaceMemberRepository members;
     private final CollaboratorRepository collaborators;
+    private final SpaceThreadService spaceThreads;
 
     public SpaceService(SpaceRepository spaces, PostRepository posts, ApplicationRepository applications, UserRepository users,
                         CredentialService credentials, SpaceMemberRepository members,
-                        CollaboratorRepository collaborators) {
-        this.collaborators = collaborators; this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
+                        CollaboratorRepository collaborators, SpaceThreadService spaceThreads) {
+        this.spaceThreads = spaceThreads; this.collaborators = collaborators; this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
     }
 
     /** The post's author forms the space, once, when at least one applicant has been accepted. */
@@ -58,12 +59,13 @@ public class SpaceService {
         founder.setTitle("Owner");
         founder.setPermissions(java.util.EnumSet.allOf(SpacePermission.class));
         members.save(founder);   // the owner is a member like everyone else
+        spaceThreads.openWorkspace(space);
         collaborators.findByPostIdAndStateInOrderByCreatedAtAsc(postId, java.util.List.of(Collaborator.State.ACTIVE))
                 .forEach(c -> seat(space, c.getUserId(), "Collaborator"));
         post.setFormed(true);
         posts.save(post);
         credentials.record(me.getId(), CredentialKind.SPACE_FORMED, space.getName(), "", "space", space.getId().toString(), null);
-        return response(space, post, "OWNER", true);
+        return response(space, post, "OWNER", true, spaceThreads.workspaceId(postId));
     }
 
     @Transactional(readOnly = true)
@@ -81,7 +83,8 @@ public class SpaceService {
         String role = roleOf(me, s);
         if (role == null) throw new ResourceNotFoundException("No such space.");
         Post post = posts.findById(s.getPostId()).orElseThrow(() -> new ResourceNotFoundException("No such space."));
-        return response(s, post, role, "OWNER".equals(role) || collaborators.existsByPostIdAndUserIdAndState(s.getPostId(), me.getId(), Collaborator.State.ACTIVE));
+        return response(s, post, role, "OWNER".equals(role) || collaborators.existsByPostIdAndUserIdAndState(s.getPostId(), me.getId(), Collaborator.State.ACTIVE),
+                "APPLICANT".equals(role) ? null : spaceThreads.workspaceId(s.getPostId()));
     }
 
     /** Puts someone in the room with every permission (co-founders), or back in if they were out. */
@@ -91,6 +94,7 @@ public class SpaceService {
         m.setTitle(title);
         m.setPermissions(java.util.EnumSet.allOf(SpacePermission.class));
         members.save(m);
+        spaceThreads.joinWorkspace(s, userId);
     }
 
     /** Takes someone out of the room and closes it to them. */
@@ -100,6 +104,7 @@ public class SpaceService {
             m.setPermissions(java.util.EnumSet.noneOf(SpacePermission.class));
             members.save(m);
         });
+        spaceThreads.leaveWorkspace(s, userId);
     }
 
     /** OWNER, MEMBER (joined), APPLICANT (accepted, may read, not joined), or null (no access, including the removed). */
@@ -113,8 +118,8 @@ public class SpaceService {
         return accepted ? "APPLICANT" : null;
     }
 
-    private SpaceResponse response(Space s, Post post, String role, boolean canManage) {
+    private SpaceResponse response(Space s, Post post, String role, boolean canManage, UUID threadId) {
         User owner = users.findById(s.getOwnerId()).orElseThrow(() -> new ResourceNotFoundException("No such space."));
-        return new SpaceResponse(s.getId(), s.getPostId(), s.getName(), post.getTitle(), post.getBody(), PersonDto.of(owner), role, canManage, s.getCreatedAt());
+        return new SpaceResponse(s.getId(), s.getPostId(), s.getName(), post.getTitle(), post.getBody(), PersonDto.of(owner), role, canManage, threadId, s.getCreatedAt());
     }
 }
