@@ -65,6 +65,8 @@ To check whether the page can scroll, run in the Console:
 document.documentElement.scrollHeight - innerHeight   // must be > 40 for window scrolling to collapse it
 ```
 
+Pressing anywhere outside the nav (a different surface) also collapses it straight away.
+
 ## Sizing
 
 Set these on the mount target or any ancestor:

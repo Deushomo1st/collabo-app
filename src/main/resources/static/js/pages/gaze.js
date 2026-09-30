@@ -4,8 +4,7 @@ import { live } from '/js/services/live.js';   // keeps the live socket open (ya
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
-import { openMine } from '/js/components/applications/applications.js';
-import { openCollaborations } from '/js/components/collaborators/collaborators.js';
+import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 import { currentUser, gazeFeed, gazeNewer, postCreate } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
@@ -48,14 +47,18 @@ window.addEventListener('scroll', () => { clearTimeout(saveTimer); saveTimer = s
 const card = (p) => { const c = postCard(p, { onGone: () => drop(p.id) }); c.dataset.id = p.id; return c; };
 const emptyNote = () => h('p', { class: 'gz-empty', text: old.length ? 'Nothing newer than what you have seen.' : EMPTY[feed] });
 
-function controls() {
-    const tab = (id, label) => h('button', { class: 'gz-tab', role: 'tab', type: 'button', 'aria-selected': String(feed === id), text: label,
-        onclick: () => { if (feed === id) return; save(); feed = id; drawControls(); show(); } });
-    const pending = h('input', { type: 'checkbox', checked: pendingOnly, onchange: (e) => { save(); pendingOnly = e.target.checked; show(); } });
-    return [h('div', { class: 'gz-tabs', role: 'tablist' }, tab('gaze', 'The Gaze'), tab('shared', 'Shared Gaze')),
-        h('label', { class: 'gz-filter' }, pending, ' Open to applications only')];
-}
-const drawControls = () => document.getElementById('controls').replaceChildren(...controls());
+// The feed choices live in a pill nav in the header (the TikTok-style switcher): The Gaze, Shared Gaze, or the Gaze narrowed to ideas still open to applications.
+const FEEDS = [
+    { label: 'The Gaze', feed: 'gaze', open: false, icon: '<circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>' },
+    { label: 'Shared', feed: 'shared', open: false, icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
+    { label: 'Open', feed: 'gaze', open: true, icon: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>' },
+];
+const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+const mountFeeds = () => mountNavSelector('#filter-nav', {
+    links: FEEDS.map((f) => f.label), hrefs: FEEDS.map((f, i) => '#' + i), icons: FEEDS.map((f) => svg(f.icon)),
+    activeIndex: FEEDS.findIndex((f) => f.feed === feed && f.open === pendingOnly),
+    onChange: (label) => { const f = FEEDS.find((x) => x.label === label); if (f.feed === feed && f.open === pendingOnly) return; save(); feed = f.feed; pendingOnly = f.open; show(); },
+});
 
 /** Builds the page from the state: the old block (hidden until unlocked), the fresh cards, and the sentinel that loads more. */
 function render() {
@@ -133,6 +136,7 @@ async function more(first) {
         list().querySelectorAll('.gz-old > [data-id]').forEach((el) => now.has(el.dataset.id) && el.remove());
         const freshEl = list().querySelector('.gz-fresh');
         freshEl.append(...items.map(card));
+        freshEl.querySelector('.gz-empty')?.remove();
         if (!fresh.length) freshEl.append(emptyNote());
         if (!old.length) unlocked = false;
         drawBar(); save();
@@ -197,12 +201,31 @@ async function compose() {
     });
 }
 
+// The bottom nav: back to the top of the Gaze, Yarns, a plus to post, and your profile.
+async function mountBottom(username) {
+    const pages = [
+        ['Gaze', '#top', svg('<path d="M3 10.5 12 3l9 7.5V21H3z"/>')],
+        ['Yarns', '/HTML-pages/yarnspaces.html', svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')],
+        ['Post', '#post', svg('<path d="M12 5v14M5 12h14"/>')],
+        ['Profile', profileHref(username), svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')],
+    ];
+    const nav = await mountNavSelector('#bottom-nav', {
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: 0,
+        links: pages.map((p) => p[0]), hrefs: pages.map((p) => p[1]), icons: pages.map((p) => p[2]),
+        onChange: (label, href) => {
+            if (label === 'Gaze') return window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (label === 'Post') { nav.setActive(0); return compose(); }
+            location.href = href;
+        },
+    });
+}
+
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return toLogin();
     who = me.username;
-    document.getElementById('me-link').href = profileHref(me.username);
-    drawControls();
+    mountFeeds();
+    mountBottom(me.username);
     live.on('gaze', soon);
     live.on('post-gone', (s) => drop(s.post));
     live.onResync(soon);
@@ -213,7 +236,4 @@ async function boot() {
 
 preloadGlassBlurDialog();
 mountThemeSwitcher('#theme-slot', { inline: true });
-document.getElementById('compose-btn').addEventListener('click', compose);
-document.getElementById('mine-btn').addEventListener('click', openMine);
-document.getElementById('collab-btn').addEventListener('click', openCollaborations);
 boot();

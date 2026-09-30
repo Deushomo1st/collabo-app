@@ -40,7 +40,7 @@ export function preloadNotificationBell() {
     return partsPromise;
 }
 
-// opts: { loadItems, onRead(item), onSelect(item), isActionable(item), filters [{ id, label, match(item) }], pollMs (default 60000, 0 = off), inline }
+// opts: { loadItems, onRead(item), onSelect(item), isActionable(item), filters [{ id, label, match(item) | view(container) }], footer { label, onClick }, pollMs (default 60000, 0 = off), inline }
 // Returns { refresh, open, destroy, element }.
 export async function mountNotificationBell(target, opts = {}) {
     const host = typeof target === 'string' ? document.querySelector(target) : target;
@@ -101,6 +101,11 @@ export async function mountNotificationBell(target, opts = {}) {
         let to = null;
 
         function render() {
+            if (filter && filter.view) {      // a filter that draws its own content instead of the notifications
+                if (list.dataset.view !== filter.id) { list.dataset.view = filter.id; list.replaceChildren(); filter.view(list); }
+                return;
+            }
+            delete list.dataset.view;
             const shown = items.filter((n) => {
                 if (query && !`${n.title || ''} ${n.body || ''}`.toLowerCase().includes(query)) return false;
                 if (filter && filter.match && !filter.match(n)) return false;
@@ -159,6 +164,15 @@ export async function mountNotificationBell(target, opts = {}) {
                 chips.append(c);
             }
             list.before(chips);
+        }
+
+        if (opts.footer) {
+            const link = document.createElement('button');
+            link.type = 'button';
+            link.className = 'notification-bell__footer';
+            link.textContent = opts.footer.label;
+            link.addEventListener('click', () => { dlg.close(); opts.footer.onClick(); });
+            list.after(link);
         }
 
         search.addEventListener('input', (e) => { query = e.target.value.trim().toLowerCase(); render(); });

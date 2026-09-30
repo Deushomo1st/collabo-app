@@ -115,6 +115,10 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     }
     scrollRoot.addEventListener('scroll', onScroll, { passive: true });
 
+    // Pressing anywhere outside the nav (another surface) tucks it away at once.
+    const onOutside = (e) => { if (!root.contains(e.target) && !isIconized()) iconize(); };
+    document.addEventListener('pointerdown', onOutside, true);
+
     navIcon.addEventListener('click', () => { expand(); armIdle(); });
     root.addEventListener('mouseenter', () => clearTimeout(idleTimer));
     root.addEventListener('mouseleave', () => { if (canIdleCollapse() && !isIconized()) armIdle(); });
@@ -202,6 +206,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         destroy() {
             clearTimeout(idleTimer);
             scrollRoot.removeEventListener('scroll', onScroll);
+            document.removeEventListener('pointerdown', onOutside, true);
             window.removeEventListener('resize', update);
             wrap.remove();
         },

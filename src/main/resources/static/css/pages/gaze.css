@@ -83,3 +83,8 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .gz-old[hidden] { display: none; }
 .gz-old::after { content: 'You were here'; justify-self: center; color: var(--sp-muted); font: 600 11px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
 .gz-sentinel { min-height: 1px; text-align: center; color: var(--sp-muted); font-size: 12.5px; padding: 6px 0 18px; }
+
+/* the feed switcher lives in the header; the bottom nav needs room under the last card */
+.gz-filters .nav-selector-fluid-hold-wrap { position: static; padding: 0; margin-left: auto; }
+.gz-list { padding-bottom: 96px; }
+#bottom-nav, .gz-filters { --nav-link-padding: 9px 12px; --nav-font-size: 14px; }

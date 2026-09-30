@@ -198,3 +198,9 @@
     content: "Action needed"; margin-right: 8px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
     color: var(--_nb-brand); border: 1px solid var(--_nb-brand); vertical-align: 1px;
 }
+
+.notification-bell__footer {
+    display: block; margin: 12px auto 0; padding: 4px 8px; border: 0; background: none; cursor: pointer;
+    color: inherit; font: 600 13px inherit; text-decoration: underline; opacity: .8;
+}
+.notification-bell__footer:hover { opacity: 1; }

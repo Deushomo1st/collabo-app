@@ -5,6 +5,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
 import { postCard } from '/js/components/post-card/post-card.js';
+import { openMine } from '/js/components/applications/applications.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
@@ -106,6 +107,7 @@ function identity() {
                 externalLink({ class: 'pf-link', href: l.url }, h('strong', { text: l.title }), h('small', { text: l.note || l.url })))),
             h('div', { class: 'pf-actions' },
                 profile.self && h('button', { class: 'pf-btn pf-btn--brand', type: 'button', text: 'Edit profile', onclick: openEdit }),
+                profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'My applications', onclick: openMine }),
                 !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow })),
             h('span', { class: 'pf-joined', text: `Joined ${day(profile.joined)}` })));
 }

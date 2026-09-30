@@ -38,7 +38,11 @@ export async function openCollaborators(post) {
 /** Requests to collaborate that you have not answered, and the ideas you already collaborate on. */
 export async function openCollaborations() {
     const { panel } = await dialog('Collaborations', 'Collaborations', 'lg');
-    const body = panel.querySelector('.ap-body');
+    return collaborationsInto(panel.querySelector('.ap-body'));
+}
+
+/** Fills any element with the collaboration requests and collaborations (the notification panel's Collaborations filter uses this). */
+export async function collaborationsInto(body) {
     const me = await currentUser().catch(() => null);
     async function load() {
         try {
