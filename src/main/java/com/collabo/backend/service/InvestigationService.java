@@ -31,11 +31,13 @@ public class InvestigationService {
     private final ModeratorRepository moderators;
     private final AppealService appeals;
     private final NotificationService notifications;
+    private final FindingService findings;
 
     public InvestigationService(InvestigationRepository investigations, YarnThreadRepository threads, ThreadMemberRepository seats,
-                                UserRepository users, ModeratorRepository moderators, AppealService appeals, NotificationService notifications) {
+                                UserRepository users, ModeratorRepository moderators, AppealService appeals, NotificationService notifications,
+                                FindingService findings) {
         this.investigations = investigations; this.threads = threads; this.seats = seats; this.users = users;
-        this.moderators = moderators; this.appeals = appeals; this.notifications = notifications;
+        this.moderators = moderators; this.appeals = appeals; this.notifications = notifications; this.findings = findings;
     }
 
     /** A member reports a Yarnspace they sit in. Anyone else gets the same "no such thread" as for a missing one. */
@@ -61,7 +63,19 @@ public class InvestigationService {
     public InvestigationDetail detail(UUID id) {
         Investigation i = find(id);
         List<String> members = i.getThreadId() == null ? List.of() : users.findAllById(involvedSeats(i.getThreadId())).stream().map(User::getUsername).sorted().toList();
-        return new InvestigationDetail(view(i), members, i.getAppealId() == null ? null : appeals.detail(i.getAppealId()));
+        return new InvestigationDetail(view(i), members, i.getAppealId() == null ? null : appeals.detail(i.getAppealId()), findings.list(id));
+    }
+
+    /** Closes a report once the admin has read the findings. An appeal closes through decide. */
+    public InvestigationView close(UUID id) {
+        Investigation i = find(id);
+        if (i.getAppealId() != null) throw new InvalidProfileException("An appeal closes when you decide its badge.");
+        if (i.isClosed()) throw new InvalidProfileException("This investigation is already closed.");
+        i.close();
+        investigations.save(i);
+        notifications.notify(i.getReporterId(), Bucket.SPACES, "Your report was reviewed", "A moderator looked into your report and the admin has closed it.",
+                i.getThreadId() == null ? null : "/HTML-pages/yarnspaces.html#t/" + i.getThreadId());
+        return view(i);
     }
 
     /** Puts an active moderator on it (or swaps one) and tells the people involved. */
@@ -96,7 +110,7 @@ public class InvestigationService {
     private InvestigationView view(Investigation i) { return views(List.of(i)).get(0); }
 
     /** Batched, so a queue of 200 costs a handful of queries, not hundreds. */
-    private List<InvestigationView> views(List<Investigation> rows) {
+    public List<InvestigationView> views(List<Investigation> rows) {
         Set<UUID> threadIds = rows.stream().map(Investigation::getThreadId).filter(Objects::nonNull).collect(Collectors.toSet());
         Map<UUID, YarnThread> byThread = threads.findAllById(threadIds).stream().collect(Collectors.toMap(YarnThread::getId, Function.identity()));
         Map<UUID, List<UUID>> seated = seats.findByThreadIdIn(threadIds).stream()

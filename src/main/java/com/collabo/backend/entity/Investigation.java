@@ -80,6 +80,7 @@ public class Investigation {
     public Instant getAssignedAt() { return assignedAt; }
 
     public void assign(UUID moderator) { this.moderatorId = moderator; this.assignedAt = Instant.now(); this.status = Status.ASSIGNED; }
+    public void markReported() { if (status == Status.ASSIGNED) this.status = Status.REPORTED; }
     public void close() { this.status = Status.CLOSED; }
     public boolean isClosed() { return status == Status.CLOSED; }
 }

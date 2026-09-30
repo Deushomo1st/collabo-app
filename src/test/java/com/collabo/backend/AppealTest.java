@@ -165,6 +165,27 @@ class AppealTest {
     }
 
     @Test
+    void anAppealsModeratorSeesOnlyTheWindowAndMayRecommendButTheAdminDecides() throws Exception {
+        removeBobWithABadge(2);
+        String inv = investigationId(appeal());
+        String email = "mo" + UUID.randomUUID().toString().substring(0, 8) + "@t.dev";
+        String modId = com.jayway.jsonpath.JsonPath.read(admin(post("/api/admin/moderators"), "{\"name\":\"Mo\",\"email\":\"" + email + "\",\"password\":\"long-enough-pw\"}")
+                .andReturn().getResponse().getContentAsString(), "$.id");
+        admin(post("/api/admin/investigations/" + inv + "/assign"), "{\"moderatorId\":\"" + modId + "\"}").andExpect(status().isOk());
+        send(get("/api/notifications"), bobS, null).andExpect(jsonPath("$[0].title").value("A moderator was introduced"));
+        Cookie modS = mvc.perform(post("/api/moderator/login").cookie(XSRF).header("X-XSRF-TOKEN", "t").contentType("application/json")
+                .content("{\"identifier\":\"" + email + "\",\"password\":\"long-enough-pw\"}")).andReturn().getResponse().getCookie("COLLABO_SESSION");
+        send(get("/api/moderator/investigations/" + inv), modS, null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.yarns[*].body", hasItem(containsString("removed " + bob))))
+                .andExpect(jsonPath("$.yarns[*].body", not(hasItem(containsString("You were removed")))));
+        send(post("/api/moderator/investigations/" + inv + "/findings"), modS, "{\"text\":\"Bob was on leave.\",\"recommendation\":\"nonsense\"}").andExpect(status().isBadRequest());
+        send(post("/api/moderator/investigations/" + inv + "/findings"), modS, "{\"text\":\"Bob was on leave.\",\"recommendation\":\"DROPS\"}").andExpect(status().isCreated());
+        admin(get("/api/admin/investigations/" + inv), null).andExpect(jsonPath("$.findings[0].recommendation").value("DROPS"));
+        admin(post("/api/admin/investigations/" + inv + "/close"), null).andExpect(status().isBadRequest());   // an appeal closes by deciding
+        send(get("/api/users/" + bob + "/removals"), bobS, null).andExpect(jsonPath("$[0].badge").value(true));   // a recommendation changes nothing
+    }
+
+    @Test
     void theOldUserModeratorEndpointsAreGone() throws Exception {
         send(get("/api/moderation/appeals"), annS, null).andExpect(status().isNotFound());
     }

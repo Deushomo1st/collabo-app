@@ -12,5 +12,6 @@ public interface InvestigationRepository extends JpaRepository<Investigation, UU
     List<Investigation> findTop200ByStatusInOrderByCreatedAtAsc(Collection<Investigation.Status> statuses);
     List<Investigation> findTop200ByStatusOrderByCreatedAtDesc(Investigation.Status status);
     Optional<Investigation> findByAppealId(UUID appealId);
+    List<Investigation> findByModeratorIdAndStatusInOrderByAssignedAtAsc(UUID moderatorId, Collection<Investigation.Status> statuses);
     boolean existsByThreadIdAndReporterIdAndKindAndStatusNot(UUID threadId, UUID reporterId, Investigation.Kind kind, Investigation.Status status);
 }
