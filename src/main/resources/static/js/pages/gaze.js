@@ -243,5 +243,5 @@ async function boot() {
 }
 
 preloadGlassBlurDialog();
-mountThemeSwitcher('#theme-slot', { inline: true });
+mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
 boot();

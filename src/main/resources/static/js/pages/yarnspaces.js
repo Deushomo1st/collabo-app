@@ -2,7 +2,7 @@
 // Reached through the "Yarns" label. All network calls live in js/services/api.js.
 // Text goes in through textContent only (h() never sets innerHTML for user text).
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
+import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
@@ -370,6 +370,7 @@ async function openSettings() {
     panel.querySelector('.sp-form').append(
         h('label', { for: 'default-chat' }, 'Default chat', pick),
         h('p', { class: 'yn-hint', text: 'What opens first when you tap Yarns from the Dash.' }),
+        h('div', { class: 'yn-theme' }),
         h('p', { class: 'yn-hint' }, `Signed in as ${me.username}. `, h('a', { href: '/HTML-pages/profile.html' }, 'My profile')),
         h('div', { class: 'glass-blur-dialog__actions' },
             h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: async () => { await logoutUser().catch(() => {}); toLogin(); } }, 'Sign out'),
@@ -377,6 +378,7 @@ async function openSettings() {
                 try { localStorage.setItem(PREF_KEY, pick.value); } catch { /* private mode: setting just won't stick */ }
                 toast('Default chat saved.'); close();
             } }, 'Save')));
+    await mountThemeRow(panel.querySelector('.yn-theme'));
 }
 
 // ---- boot ------------------------------------------------------------------
@@ -392,7 +394,7 @@ async function start() {
 async function boot() {
     preloadGlassBlurDialog(); preloadYarnThread();
     await preloadActionBanner();
-    await mountThemeSwitcher('#theme-slot', { inline: true });
+    await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     document.getElementById('settings-btn').addEventListener('click', () => me && openSettings());
     document.getElementById('thread-wrench').addEventListener('click', () => openThread && openThreadSettings(openThread));
     document.getElementById('new-btn').addEventListener('click', () => me && openNew());

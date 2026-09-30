@@ -323,7 +323,7 @@ async function boot() {
     preloadGlassBlurDialog();
     await Promise.all([preloadActionBanner(), preloadSwitch()]);
     renderAll();
-    await mountThemeSwitcher('#theme-slot', { inline: true });
+    await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     nav = await mountNavSelector('#nav', {
         placement: 'bottom', links: SECTIONS.map((s) => s.title), hrefs: SECTIONS.map((s) => '#' + s.id), icons: SECTIONS.map((s) => s.icon),
         activeIndex: SECTIONS.findIndex((s) => s.id === currentId()), collapseWhenIdle: true, idleMs: 5000,

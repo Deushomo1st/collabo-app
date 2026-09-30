@@ -1,7 +1,7 @@
 // Profile page: identity, links, follow, Credentials / Feats tabs, edit dialog. Reached as profile.html?u=<username>
 // (no ?u= shows your own). All network calls live in js/services/api.js; text goes in through textContent only.
 import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
+import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
 import { postCard } from '/js/components/post-card/post-card.js';
@@ -110,6 +110,7 @@ function identity() {
                 profile.self && h('button', { class: 'pf-btn pf-btn--brand', type: 'button', text: 'Edit profile', onclick: openEdit }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'My applications', onclick: openMine }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Drafts', onclick: openDrafts }),
+                profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Settings', onclick: openProfileSettings }),
                 !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow })),
             h('span', { class: 'pf-joined', text: `Joined ${day(profile.joined)}` })));
 }
@@ -273,7 +274,12 @@ async function boot() {
 }
 
 preloadGlassBlurDialog(); preloadAvatar().catch(() => {});
-mountThemeSwitcher('#theme-slot', { inline: true });
+async function openProfileSettings() {
+    const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Settings', html: '<h3 class="glass-blur-dialog__title">Settings</h3><div class="pf-settings"></div>' });
+    await mountThemeRow(panel.querySelector('.pf-settings'));
+}
+
+mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
 document.getElementById('header-back').addEventListener('click', (e) => {
     if (history.length > 1) { e.preventDefault(); history.back(); }
 });

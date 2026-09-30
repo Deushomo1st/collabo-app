@@ -109,5 +109,5 @@ async function boot() {
     }
 }
 
-mountThemeSwitcher('#theme-slot', { inline: true });
+mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
 boot();

@@ -56,9 +56,8 @@ export function preloadThemeSwitcher() {
     return fragmentPromise;
 }
 
-// opts: { inline, plain, onChange(theme) }. Returns { element, destroy }.
-// An inline switcher (a page header's) turns into a gear button on small screens: the gear opens a Settings dialog that holds
-// the switcher, so the header keeps its room. `plain` is the switcher inside that dialog, which stays put at every size.
+// opts: { inline, collapse, plain, onChange(theme) }. Returns { element, destroy }.
+// `collapse` hides an inline switcher on small screens, where the theme lives in the page's Settings (see mountThemeRow).
 export async function mountThemeSwitcher(target, opts = {}) {
     const host = typeof target === 'string' ? document.querySelector(target) : target;
     if (!host) throw new Error(`theme-switcher: no element matches ${target}`);
@@ -68,7 +67,7 @@ export async function mountThemeSwitcher(target, opts = {}) {
     tpl.innerHTML = (await preloadThemeSwitcher()).trim();
     const root = tpl.content.firstElementChild;
     if (opts.inline) root.classList.add('theme-switcher--inline');
-    if (opts.plain) root.classList.add('theme-switcher--plain');
+    if (opts.collapse) root.classList.add('theme-switcher--collapse');
 
     const label = root.querySelector('.theme-switcher__label');
     const icon = root.querySelector('.theme-switcher__icon');
@@ -91,33 +90,23 @@ export async function mountThemeSwitcher(target, opts = {}) {
     update();
     host.appendChild(root);
 
-    let gear = null;
-    if (opts.inline && !opts.plain) {
-        gear = document.createElement('button');
-        gear.type = 'button';
-        gear.className = 'theme-switcher__gear';
-        gear.setAttribute('aria-label', 'Settings');
-        gear.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
-        gear.addEventListener('click', openSettings);
-        host.appendChild(gear);
-    }
-
     return {
         element: root,
         destroy() {
             document.removeEventListener(THEME_EVENT, onThemeChange);
-            gear?.remove();
             root.remove();
         },
     };
 }
 
-// The small-screen Settings dialog. The dialog component is loaded only now, so the switcher itself stays standalone.
-async function openSettings() {
-    const { openGlassBlurDialog } = await import('/js/components/glass-blur-dialog/glass-blur-dialog.js');
-    const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Settings', html:
-        '<h3 class="glass-blur-dialog__title">Settings</h3><div class="theme-switcher__row"><span>Theme</span><span class="theme-switcher__slot"></span></div>' });
-    await mountThemeSwitcher(panel.querySelector('.theme-switcher__slot'), { inline: true, plain: true });
+// A "Theme" row for a Settings dialog: the switcher always shows here, even where the header's is folded away.
+export async function mountThemeRow(target) {
+    const host = typeof target === 'string' ? document.querySelector(target) : target;
+    const row = document.createElement('div');
+    row.className = 'theme-switcher__row';
+    row.innerHTML = '<span>Theme</span><span></span>';
+    host.appendChild(row);
+    await mountThemeSwitcher(row.lastChild, { inline: true, plain: true });
 }
 
 function loadStylesOnce(href, componentName) {
