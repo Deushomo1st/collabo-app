@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>COLLABO — Kobo Workspace</title>
+<title>COLLABO — Yarns</title>
 <link rel="stylesheet" href="/css/global/global.css">
 <!-- Apply the saved theme before first paint (see theme-switcher README) -->
 <script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/yarnspaces.css">
 </head>
 <body>
 <div class="sp-aurora" aria-hidden="true">
@@ -21,15 +22,19 @@
 
 <div class="sp-shell">
     <div class="sp-top">
-        <header class="sp-header sp-glass">
-            <a class="sp-back" href="/HTML-pages/yarnspaces.html" aria-label="Back to Yarns">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </a>
-            <div class="sp-title" id="header-info" role="link" tabindex="0" aria-label="Open workspace settings"></div>
-            <div class="sp-stack" id="header-stack" role="link" tabindex="0" aria-label="Open members"></div>
-            <div id="theme-slot"></div>
+        <header class="sp-header sp-glass yn-header">
+            <div class="yn-header__top">
+                <a class="sp-back" href="/HTML-pages/index.html" aria-label="Back to The Gaze">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </a>
+                <div class="sp-title">
+                    <div class="sp-title__row"><h1>Yarns</h1><span class="sp-tag sp-tag--brand">Yarnspaces</span></div>
+                    <p id="header-sub"></p>
+                </div>
+                <div id="theme-slot"></div>
+            </div>
+            <input class="yn-search" id="search" type="search" placeholder="Search yarns" aria-label="Search yarns" autocomplete="off">
         </header>
-        <div class="sp-island" id="island"></div>
     </div>
 
     <main id="section" class="sp-section" aria-live="polite"></main>
@@ -38,6 +43,6 @@
 <div id="nav"></div>
 <div class="sp-toast" id="toast" role="status"></div>
 
-<script type="module" src="/js/pages/workspace.js"></script>
+<script type="module" src="/js/pages/yarnspaces.js"></script>
 </body>
 </html>

@@ -1,0 +1,38 @@
+/* Yarnspaces hub. Loaded after workspace.css (shared palette, glass, avatars, tags); only hub-specific bits here. */
+
+.yn-header { flex-direction: column; align-items: stretch; gap: 10px; }
+.yn-header__top { display: flex; align-items: center; gap: 14px; }
+.yn-search {
+    width: 100%; padding: 10px 14px; border-radius: 14px; font: inherit; color: inherit;
+    border: 1px solid var(--sp-line); background: var(--sp-panel);
+}
+.yn-search::placeholder { color: var(--sp-muted); }
+
+.sp-top { margin-bottom: 0; }
+#section { display: grid; gap: 14px; }
+.yn-group, .yn-list { display: grid; gap: 8px; }
+
+.yn-row {
+    display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 14px; text-align: left;
+    border-radius: 18px; border: 1px solid var(--sp-line); background: var(--sp-panel);
+    backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
+    transition: transform .2s, background .2s;
+}
+.yn-row:hover { background: var(--sp-panel-hi); transform: translateY(-2px); }
+.yn-faces { display: flex; flex: none; }
+.yn-faces .sp-avatar { margin-left: -8px; border: 2px solid var(--sp-bg); }
+.yn-faces .sp-avatar:first-child { margin-left: 0; }
+.yn-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.yn-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.yn-line strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yn-line .sp-tag { flex: none; }
+.yn-line time { margin-left: auto; flex: none; color: var(--sp-muted); font: 500 11px var(--sp-mono); }
+.yn-last { color: var(--sp-muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.is-unread .yn-last { color: var(--sp-text); }
+.yn-badge {
+    flex: none; min-width: 22px; padding: 3px 7px; border-radius: 999px; text-align: center;
+    font: 700 11px/1.2 var(--sp-font); background: var(--sp-brand); color: var(--sp-brand-ink);
+}
+.yn-empty { margin: 30px 0; text-align: center; color: var(--sp-muted); }
+
+@media (prefers-reduced-motion: reduce) { .yn-row { transition: none; } }
