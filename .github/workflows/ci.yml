@@ -27,7 +27,7 @@ jobs:
           --health-retries 10
     env:
       # only CollaboBackendApplicationTests.contextLoads uses these; the other tests run on H2
-      SPRING_DATASOURCE_URL: localhost:5432/collabo
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/collabo
       SPRING_DATASOURCE_USERNAME: collabo_user
       SPRING_DATASOURCE_PASSWORD: ci-password
       RESEND_API_KEY: ci-not-a-real-key
