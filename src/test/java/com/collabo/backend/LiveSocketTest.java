@@ -141,6 +141,34 @@ class LiveSocketTest {
     }
 
     @Test
+    void theBellHearsWhenNotificationsChangeEvenFromAnotherTab() throws Exception {
+        String tag = UUID.randomUUID().toString().substring(0, 6);
+        Browser bob = new Browser("bob" + tag), stranger = new Browser("str" + tag);
+        var tabOne = bob.listen(null);            // bob has two tabs open
+        var tabTwo = bob.listen(null);
+        var other = stranger.listen(null);
+        bob.call("POST", "/api/notifications/read-all", null);   // done in one tab
+        take(tabOne, "notification");                             // both tabs are told
+        take(tabTwo, "notification");
+        Thread.sleep(300);
+        assertNull(other.poll(), "someone else's bell must stay quiet");
+    }
+
+    @Test
+    void theBellHearsWhenNotificationsChangeEvenFromAnotherTab() throws Exception {
+        String tag = UUID.randomUUID().toString().substring(0, 6);
+        Browser bob = new Browser("bob" + tag), stranger = new Browser("str" + tag);
+        var tabOne = bob.listen(null);            // bob has two tabs open
+        var tabTwo = bob.listen(null);
+        var other = stranger.listen(null);
+        bob.call("POST", "/api/notifications/read-all", null);   // done in one tab
+        take(tabOne, "notification");                             // both tabs are told
+        take(tabTwo, "notification");
+        Thread.sleep(300);
+        assertNull(other.poll(), "someone else's bell must stay quiet");
+    }
+
+    @Test
     void deliveredFramesFromStrangersOrJunkChangeNothing() throws Exception {
         String tag = UUID.randomUUID().toString().substring(0, 6);
         Browser ann = new Browser("ann" + tag), bob = new Browser("bob" + tag), eve = new Browser("eve" + tag);

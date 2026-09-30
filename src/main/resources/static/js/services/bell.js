@@ -2,6 +2,7 @@
 // Load with: <script type="module" src="/js/services/bell.js"></script>
 import { mountNotificationBell } from '/js/components/notification-bell/notification-bell.js';
 import { currentUser, notificationsList, notificationRead } from '/js/services/api.js';
+import { live } from '/js/services/live.js';
 
 const pinned = (n) => n.actionRequired;
 const FILTERS = [
@@ -21,6 +22,11 @@ if (slot) {
             onRead: (n) => notificationRead(n.id).catch(() => {}),
             onSelect: (n) => { if (n.link) location.href = n.link; },
             isActionable: (n) => n.actionRequired,
+        }).then((bell) => {
+            // The server says when something changed (a new notification, one settled, one read in another tab), so the bell
+            // looks again at once. The 60s poll underneath stays as the net.
+            live.on('notification', () => bell.refresh().catch(() => {}));
+            live.onResync(() => bell.refresh().catch(() => {}));
         });
     }).catch(() => {});
 }

@@ -69,6 +69,7 @@ function setHeader(t) {
         sub.replaceChildren(...t.members.flatMap((m, i) => [i ? ', ' : '', h('a', { href: `/HTML-pages/profile.html?u=${encodeURIComponent(m.username)}`, text: m.username })]).filter(Boolean));
     } else sub.textContent = n ? `${n} unread ${n === 1 ? 'yarn' : 'yarns'}` : 'All caught up';
     document.getElementById('search').hidden = !!t;
+    document.getElementById('thread-wrench').hidden = !t;
 }
 
 async function loadAll() {
@@ -108,7 +109,7 @@ function toLogin() {
 }
 
 // ---- lists -----------------------------------------------------------------
-function row(t, quick) {
+function row(t) {
     const others = t.members.filter((m) => m.id !== me.id);
     const shown = (others.length ? others : t.members).slice(0, 3);
     const flags = [t.pinned && 'Pinned', t.muted && 'Muted'].filter(Boolean).join(' · ');
@@ -123,18 +124,19 @@ function row(t, quick) {
                     h('time', { text: ago(t.lastAt) })),
                 h('span', { class: 'yn-last', text: `${t.lastSender}: ${t.lastBody || ''}` })),
             t.unread ? h('span', { class: 'yn-badge', 'aria-label': `${t.unread} unread yarns`, text: String(t.unread) }) : null),
-        h('button', { class: 'yn-quick', type: 'button', title: quick.label, onclick: quick.run, text: quick.label }));
+        wrenchButton(t));
+}
+
+function wrenchButton(t) {
+    const b = h('button', { class: 'yn-quick yn-wrench', type: 'button', title: 'Settings', 'aria-label': `Settings for ${t.name}`, onclick: () => openThreadSettings(t) });
+    b.innerHTML = svg(WRENCH);   // static markup, no user text
+    return b;
 }
 
 async function act(fn, done) {
     try { await fn(); await loadAll(); if (done) toast(done); setHeader(null); renderSection(); }
     catch (err) { toast(err.message); }
 }
-
-const archiveQuick = (t) => ({
-    label: t.archived ? 'Restore' : 'Archive',
-    run: () => act(() => yarnPrefs(t.id, { archived: !t.archived }), t.archived ? 'Restored to your inbox.' : 'Archived. A new yarn brings it back.'),
-});
 
 function renderSection() {
     const sec = currentSection();
@@ -155,7 +157,7 @@ function renderSection() {
         }).element),
         rest.length ? h('section', { class: 'yn-group' },
             h('h2', { class: 'sp-h2', text: sec.id === 'all' ? 'Recent yarns' : sec.label }),
-            h('div', { class: 'yn-list' }, ...rest.map((t) => row(t, archiveQuick(t))))) : null,
+            h('div', { class: 'yn-list' }, ...rest.map(row))) : null,
         list.length ? null : h('p', { class: 'yn-empty', text: query ? 'No yarns match that search.' : sec.id === 'archive' ? 'Nothing archived.' : sec.id === 'wespace' ? 'The collaborators room opens here once someone accepts your request.' : sec.id === 'workspace' ? 'A Workspace opens here when a space forms and you are in it.' : 'No yarns here yet. Tap + to start one.' }));
 }
 
@@ -186,47 +188,7 @@ async function respond(t, accept) {
 // ---- one thread ------------------------------------------------------------
 function renderThread() {
     const t = openThread;
-    const actions = h('div', { class: 'yn-actions' });
-    const paintActions = () => fill(actions,
-        h('button', { class: 'sp-btn', type: 'button', text: t.pinned ? 'Unpin' : 'Pin', onclick: () => tweak({ pinned: !t.pinned }) }),
-        h('button', { class: 'sp-btn', type: 'button', text: t.muted ? 'Unmute' : 'Mute', onclick: () => tweak({ muted: !t.muted }) }),
-        h('button', { class: 'sp-btn', type: 'button', text: t.archived ? 'Restore' : 'Archive', onclick: () => tweak({ archived: !t.archived }, true) }),
-        h('button', { class: 'sp-btn', type: 'button', text: 'Report', onclick: report }),
-        t.otherUserId ? h('button', { class: 'sp-btn sp-btn--danger', type: 'button', text: 'Block', onclick: block }) : null);
-
-    async function tweak(prefs, leave) {
-        try {
-            Object.assign(t, await yarnPrefs(t.id, prefs));
-            if (leave) { await loadAll(); toast(t.archived ? 'Archived. A new yarn brings it back.' : 'Restored to your inbox.'); return go('#' + lastSection); }
-            paintActions();
-        } catch (err) { toast(err.message); }
-    }
-    // Any tier can be reported. The admin sends a moderator, and everyone in the Yarnspace is told one was introduced.
-    async function report() {
-        const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'Report this Yarnspace', html: '<h3 class="glass-blur-dialog__title">Report this Yarnspace</h3><form class="sp-form"></form>' });
-        const box = h('textarea', { class: 'sp-input', rows: 5, maxlength: 1000, required: true, placeholder: 'What is wrong? Say what happened and who was involved.' });
-        const err = h('p', { class: 'yn-error', role: 'alert', hidden: true });
-        const form = panel.querySelector('.sp-form');
-        form.append(box, err,
-            h('p', { class: 'yn-hint', text: 'The platform admin reviews it and may assign a moderator, who can read this Yarnspace (and nothing else of yours) while it is looked at. Everyone in it is told a moderator was introduced, not who reported.' }),
-            h('div', { class: 'glass-blur-dialog__actions' },
-                h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: close }, 'Cancel'),
-                h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Send report')));
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            err.hidden = true;
-            try { await yarnReport(t.id, box.value); close(); toast('Report sent. The admin will look at it.'); }
-            catch (ex) { err.textContent = ex.message; err.hidden = false; }
-        });
-    }
-    async function block() {
-        if (!(await glassBlurConfirm(`Block ${t.name}? They are not told. Neither of you can send new MySpace yarns until you unblock them in Blocked.`, { title: 'Block this person?', okText: 'Block', danger: true }))) return;
-        try { await yarnBlock(t.otherUserId); await loadAll(); toast(`Blocked ${t.name}.`); go('#' + lastSection); }
-        catch (err) { toast(err.message); }
-    }
-
     const reason = t.status === 'DECLINED' ? 'This yarn request was declined.' : t.incomingRequest ? 'Accept the request to reply.' : '';
-    paintActions();
     threadView = createYarnThread({
         meId: me.id, showNames: t.tier !== 'MYSPACE', disabledReason: reason,
         load: (before) => yarnHistory(t.id, before),
@@ -241,12 +203,67 @@ function renderThread() {
         isLive: () => live.connected,
     });
     fill(document.getElementById('section'),
-        actions,
         t.incomingRequest ? createActionBanner({
             title: `${t.name} wants to yarn you`, text: 'Accept to reply. Declining archives it and they cannot send more.',
             actions: [{ label: 'Accept', variant: 'ok', onClick: () => respond(t, true) }, { label: 'Decline', variant: 'danger', onClick: () => respond(t, false) }],
         }).element : null,
         threadView.element);
+}
+
+// ---- settings for one Yarnspace ----------------------------------------------
+// Pin, mute, archive, report and block live here, reached by the wrench on a row in the list or in a thread's header,
+// so they take no room on the screen until you want them.
+const WRENCH = '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>';
+
+/** After a change: refresh the lists, and leave the thread if it just went to the Archive (or came back). */
+async function afterChange(message, leave) {
+    await loadAll();
+    if (message) toast(message);
+    if (openThread && leave) return go('#' + lastSection);
+    if (!openThread) { setHeader(null); renderSection(); }
+}
+
+async function openThreadSettings(t) {
+    const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'Yarnspace settings', html: '<h3 class="glass-blur-dialog__title"></h3><div class="sp-form yn-settings"></div>' });
+    panel.querySelector('h3').textContent = `${t.name}: settings`;   // a name is user text, so never through innerHTML
+    const item = (title, hint, run, extra = '') => h('button', { class: `yn-setting ${extra}`.trim(), type: 'button', onclick: run }, h('strong', { text: title }), h('span', { text: hint }));
+    const change = (prefs, message, leave) => async () => {
+        try { Object.assign(t, await yarnPrefs(t.id, prefs)); close(); await afterChange(message, leave); }
+        catch (err) { toast(err.message); }
+    };
+    fill(panel.querySelector('.yn-settings'),
+        item(t.pinned ? 'Unpin' : 'Pin', 'Keep it at the top of your list.', change({ pinned: !t.pinned }, t.pinned ? 'Unpinned.' : 'Pinned.')),
+        item(t.muted ? 'Unmute' : 'Mute', 'A muted thread is not brought back from the Archive by new yarns.', change({ muted: !t.muted }, t.muted ? 'Unmuted.' : 'Muted.')),
+        item(t.archived ? 'Restore' : 'Archive', t.archived ? 'Move it back to your inbox.' : 'Move it out of your inbox. A new yarn brings it back.',
+            change({ archived: !t.archived }, t.archived ? 'Restored to your inbox.' : 'Archived. A new yarn brings it back.', true)),
+        h('p', { class: 'yn-hint yn-settings__sep', text: 'Something wrong?' }),
+        item('Report this Yarnspace', 'Tell the admin. A moderator may read it (and nothing else of yours) while it is looked at.', () => { close(); openReport(t); }),
+        t.otherUserId ? item(`Block ${t.name}`, 'They are not told. Neither of you can send new MySpace yarns until you unblock them.', () => { close(); blockPerson(t); }, 'yn-setting--danger') : null);
+}
+
+// Any tier can be reported. The admin sends a moderator, and everyone in the Yarnspace is told one was introduced.
+async function openReport(t) {
+    const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'Report this Yarnspace', html: '<h3 class="glass-blur-dialog__title">Report this Yarnspace</h3><form class="sp-form"></form>' });
+    const box = h('textarea', { class: 'sp-input', rows: 5, maxlength: 1000, required: true, placeholder: 'What is wrong? Say what happened and who was involved.' });
+    const err = h('p', { class: 'yn-error', role: 'alert', hidden: true });
+    const form = panel.querySelector('.sp-form');
+    form.append(box, err,
+        h('p', { class: 'yn-hint', text: 'The platform admin reviews it and may assign a moderator, who can read this Yarnspace (and nothing else of yours) while it is looked at. Everyone in it is told a moderator was introduced, not who reported.' }),
+        h('div', { class: 'glass-blur-dialog__actions' },
+            h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: close }, 'Cancel'),
+            h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Send report')));
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        err.hidden = true;
+        try { await yarnReport(t.id, box.value); close(); toast('Report sent. The admin will look at it.'); }
+        catch (ex) { err.textContent = ex.message; err.hidden = false; }
+    });
+}
+
+async function blockPerson(t) {
+    if (!(await glassBlurConfirm(`Block ${t.name}? They are not told. Neither of you can send new MySpace yarns until you unblock them in Blocked.`, { title: 'Block this person?', okText: 'Block', danger: true }))) return;
+    try { await yarnBlock(t.otherUserId); await afterChange(`Blocked ${t.name}.`, true); }
+    catch (err) { toast(err.message); }
 }
 
 // ---- dialogs ---------------------------------------------------------------
@@ -319,6 +336,7 @@ async function boot() {
         onChange: (_l, href) => go(href.slice(href.lastIndexOf('#'))),   // href can arrive absolute
     });
     document.getElementById('settings-btn').addEventListener('click', () => me && openSettings());
+    document.getElementById('thread-wrench').addEventListener('click', () => openThread && openThreadSettings(openThread));
     document.getElementById('new-btn').addEventListener('click', () => me && openNew());
     document.getElementById('search').addEventListener('input', (e) => { query = e.target.value; if (!openThread && me) renderSection(); });
     document.getElementById('header-back').addEventListener('click', (e) => { if (openThread) { e.preventDefault(); go('#' + lastSection); } });

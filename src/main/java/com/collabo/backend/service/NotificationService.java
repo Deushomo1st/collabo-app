@@ -5,6 +5,7 @@ import com.collabo.backend.entity.Notification;
 import com.collabo.backend.entity.Notification.Bucket;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.InvalidProfileException;
+import com.collabo.backend.live.LiveSignals;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -23,20 +24,23 @@ import java.util.UUID;
 public class NotificationService {
 
     private final NotificationRepository notifications;
+    private final LiveSignals signals;
 
-    public NotificationService(NotificationRepository notifications) { this.notifications = notifications; }
+    public NotificationService(NotificationRepository notifications, LiveSignals signals) { this.notifications = notifications; this.signals = signals; }
 
     public void notify(UUID userId, Bucket bucket, String title, String body, String link) {
         notifications.save(new Notification(userId, bucket, false, null, title, body, link));
+        signals.notification(userId);
     }
 
     /** Pinned until resolve(refKey): a payment claim holding a room, a clock running down, a removal awaiting an answer. */
     public void require(UUID userId, String refKey, Bucket bucket, String title, String body, String link) {
         notifications.save(new Notification(userId, bucket, true, refKey, title, body, link));
+        signals.notification(userId);
     }
 
     public void resolve(String refKey) {
-        notifications.findByRefKeyAndActionRequiredTrue(refKey).forEach(n -> { n.clearAction(); notifications.save(n); });
+        notifications.findByRefKeyAndActionRequiredTrue(refKey).forEach(n -> { n.clearAction(); notifications.save(n); signals.notification(n.getUserId()); });
     }
 
     /** Action-required first (newest first), then the rest of the chosen filter, newest first. */
@@ -56,10 +60,12 @@ public class NotificationService {
         Notification n = notifications.findByIdAndUserId(id, me.getId()).orElseThrow(() -> new ResourceNotFoundException("No such notification."));
         n.markRead();
         notifications.save(n);
+        signals.notification(me.getId());   // the same person's other tabs
     }
 
     public void readAll(User me) {
         notifications.findByUserIdAndReadFalse(me.getId()).forEach(n -> { n.markRead(); notifications.save(n); });
+        signals.notification(me.getId());
     }
 
     private static Bucket parse(String filter) {

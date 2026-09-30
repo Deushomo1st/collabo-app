@@ -30,6 +30,9 @@ public class LiveSignals {
         send(users, "{\"t\":\"receipt\",\"thread\":\"" + thread + "\"}");
     }
 
+    /** Someone's notifications changed (a new one, one settled, or read elsewhere): their bell should look again. */
+    public void notification(UUID user) { send(java.util.List.of(user), "{\"t\":\"notification\"}"); }
+
     private void send(Collection<UUID> users, String json) {
         var accounts = users.stream().map(LiveHub::userKey).collect(Collectors.toSet());
         if (accounts.isEmpty()) return;

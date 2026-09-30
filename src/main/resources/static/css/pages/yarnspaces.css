@@ -53,6 +53,27 @@
 .yn-quick:hover { background: var(--sp-panel-hi); color: var(--sp-text); }
 .yn-flags { color: var(--sp-muted); font: 500 10.5px var(--sp-mono); letter-spacing: .04em; text-transform: uppercase; }
 
-.yn-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+/* The wrench sits inside the chat tablet, at its right edge, past the unread badge. */
+.yn-item:has(.yn-wrench) { position: relative; }
+.yn-item:has(.yn-wrench) .yn-row { padding-right: 64px; }
+.yn-wrench {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: grid; place-items: center;
+    width: 36px; height: 36px; padding: 0; border-radius: 50%; background: transparent;
+}
+.yn-wrench svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.yn-gear[hidden] { display: none; }
+
+/* the settings dialog: one tablet per action */
+.yn-settings { display: grid; gap: 8px; }
+.yn-setting {
+    display: grid; gap: 2px; width: 100%; text-align: left; padding: 11px 14px; border-radius: 14px; cursor: pointer;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text); font: inherit;
+}
+.yn-setting strong { font-size: 14px; }
+.yn-setting span { color: var(--sp-muted); font-size: 12.5px; }
+.yn-setting:hover { background: var(--sp-panel-hi); }
+.yn-setting:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
+.yn-setting--danger strong { color: var(--sp-danger); }
+.yn-settings__sep { margin: 8px 2px 0; }
 .yn-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
 #header-sub a { color: inherit; text-decoration: underline dotted; } #header-sub a:hover { color: var(--sp-text); }
