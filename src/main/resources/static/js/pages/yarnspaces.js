@@ -7,7 +7,7 @@ import { createActionBanner, preloadActionBanner } from '/js/components/action-b
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import {
-    getDevUser, setDevUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnCreateGroup, yarnHistory, yarnSend,
+    logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnCreateGroup, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock,
 } from '/js/services/api.js';
 import { SECTIONS, TIER_LABEL, inSection, unreadTotal, matches, ago, hue } from '/js/pages/yarnspaces-data.js';
@@ -95,25 +95,14 @@ const fill = (root, ...kids) => root.replaceChildren(...kids.flat().filter(Boole
 function message(text) { document.getElementById('section').replaceChildren(h('p', { class: 'yn-empty', text })); }
 
 function fatal(err) {
-    if (err.status === 401 || err.status === 503) return renderSignIn(err);
+    if (err.status === 401) return toLogin();
     message(err.message || 'Could not load your yarns.');
     document.getElementById('section').append(h('button', { class: 'sp-btn', type: 'button', text: 'Try again', onclick: start }));
 }
 
-// ---- sign in (temporary: there is no login yet) -----------------------------
-function renderSignIn(err) {
-    setHeader(null);
-    document.getElementById('header-sub').textContent = 'Not signed in';
-    const name = h('input', { class: 'sp-input', id: 'dev-user', placeholder: 'your username', autocomplete: 'username', required: true, value: getDevUser() });
-    const showErr = err && (getDevUser() || err.status === 503);
-    const form = h('form', { class: 'yn-signin sp-glass sp-form' },
-        h('h2', { class: 'sp-h2', text: 'Sign in to Yarns' }),
-        h('p', { class: 'sp-sub', text: 'Login is not built yet, so for now just say which account you are.' }),
-        showErr ? h('p', { class: 'yn-error', role: 'alert', text: err.message }) : null,
-        h('label', { for: 'dev-user' }, 'Username', name),
-        h('button', { class: 'sp-btn sp-btn--brand', type: 'submit', text: 'Continue' }));
-    form.addEventListener('submit', (e) => { e.preventDefault(); setDevUser(name.value.trim()); start(); });
-    document.getElementById('section').replaceChildren(form);
+// ---- signed out -> the login page, then back here ----------------------------
+function toLogin() {
+    location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search + location.hash));
 }
 
 // ---- lists -----------------------------------------------------------------
@@ -290,9 +279,9 @@ async function openSettings() {
     panel.querySelector('.sp-form').append(
         h('label', { for: 'default-chat' }, 'Default chat', pick),
         h('p', { class: 'yn-hint', text: 'What opens first when you tap Yarns from the Dash.' }),
-        h('p', { class: 'yn-hint', text: `Signed in as ${me.username} (temporary, until login exists).` }),
+        h('p', { class: 'yn-hint', text: `Signed in as ${me.username}.` }),
         h('div', { class: 'glass-blur-dialog__actions' },
-            h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: () => { setDevUser(''); location.reload(); } }, 'Switch account'),
+            h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: async () => { await logoutUser().catch(() => {}); toLogin(); } }, 'Sign out'),
             h('button', { class: 'glass-blur-dialog__btn', type: 'button', onclick: () => {
                 try { localStorage.setItem(PREF_KEY, pick.value); } catch { /* private mode: setting just won't stick */ }
                 toast('Default chat saved.'); close();
@@ -303,6 +292,7 @@ async function openSettings() {
 async function start() {
     try {
         me = await yarnMe();
+        if (!me) return toLogin();
         await loadAll();
     } catch (err) { me = null; return fatal(err); }
     route();

@@ -1,0 +1,54 @@
+// Sign-in page. The network call lives in js/services/api.js.
+import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
+import { loginUser, currentUser } from '/js/services/api.js';
+
+const DEFAULT_NEXT = '/HTML-pages/yarnspaces.html';
+
+// Only same-site paths are allowed as a destination, so a crafted ?next= can't send people elsewhere.
+function safeNext() {
+    const next = new URLSearchParams(location.search).get('next') || '';
+    return next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') ? next : DEFAULT_NEXT;
+}
+
+const form = document.getElementById('login-form');
+const error = document.getElementById('error');
+const submit = document.getElementById('submit');
+let countdown;
+
+function show(text) { error.textContent = text; error.hidden = !text; }
+
+function lockout(seconds) {   // "too many attempts": count down, then let them try again
+    clearInterval(countdown);
+    let left = seconds;
+    submit.disabled = true;
+    const tick = () => {
+        if (left <= 0) { clearInterval(countdown); submit.disabled = false; show(''); return; }
+        show(`Too many attempts. Try again in ${left < 60 ? `${left}s` : `${Math.ceil(left / 60)} min`}.`);
+        left -= 1;
+    };
+    tick();
+    countdown = setInterval(tick, 1000);
+}
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const identifier = form.identifier.value.trim();
+    const password = form.password.value;
+    if (!identifier || !password) return show('Enter your email or username and your password.');
+    show('');
+    submit.disabled = true;
+    try {
+        await loginUser(identifier, password);
+        location.replace(safeNext());
+        return;
+    } catch (err) {
+        if (err.retryAfterSeconds) return lockout(err.retryAfterSeconds);
+        show(err.requiresVerification ? `${err.message} Finish verifying on the sign-up page.` : err.message);
+    }
+    submit.disabled = false;
+});
+
+(async () => {
+    mountThemeSwitcher('#theme-slot', { inline: true });
+    if (await currentUser()) location.replace(safeNext());   // already signed in
+})();

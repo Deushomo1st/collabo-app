@@ -55,5 +55,3 @@
 
 .yn-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .yn-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
-.yn-signin { padding: 22px; border-radius: 22px; max-width: 420px; margin: 24px auto; }
-.yn-signin .sp-h2, .yn-signin .sp-sub { margin-bottom: 8px; }

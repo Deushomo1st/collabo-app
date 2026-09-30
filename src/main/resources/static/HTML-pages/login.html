@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>COLLABO — Sign in</title>
+<link rel="stylesheet" href="/css/global/global.css">
+<!-- Apply the saved theme before first paint (see theme-switcher README) -->
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/login.css">
+</head>
+<body>
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
+
+<div class="sp-shell">
+    <div class="lg-theme" id="theme-slot"></div>
+    <main class="lg-card sp-glass">
+        <h1 class="lg-title">Sign in</h1>
+        <p class="sp-sub">Welcome back to COLLABO.</p>
+        <form class="sp-form" id="login-form" novalidate>
+            <label for="identifier">Email or username
+                <input class="sp-input" id="identifier" name="identifier" autocomplete="username" required autofocus>
+            </label>
+            <label for="password">Password
+                <input class="sp-input" id="password" name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <p class="lg-error" id="error" role="alert" hidden></p>
+            <button class="sp-btn sp-btn--brand" id="submit" type="submit">Sign in</button>
+        </form>
+        <p class="lg-foot">New here? <a href="/HTML-pages/register.html">Create an account</a></p>
+    </main>
+</div>
+
+<script type="module" src="/js/pages/login.js"></script>
+</body>
+</html>

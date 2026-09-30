@@ -1,0 +1,11 @@
+/* Sign-in page. Loaded after workspace.css (shared palette, glass, form and button styles). */
+
+.sp-shell { display: grid; align-content: start; gap: 18px; padding-top: 24px; }
+.lg-theme { justify-self: end; }
+.lg-card { width: min(100%, 420px); margin: 6vh auto 0; padding: 26px; border-radius: 24px; }
+.lg-title { margin: 0 0 4px; font-size: 1.5rem; font-weight: 800; letter-spacing: -.01em; }
+.lg-card .sp-sub { margin-bottom: 18px; }
+.lg-card .sp-btn { margin-top: 4px; padding: 12px 16px; }
+.lg-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
+.lg-foot { margin: 16px 0 0; text-align: center; color: var(--sp-muted); font-size: 13px; }
+.lg-foot a { color: var(--sp-brand); font-weight: 700; }
