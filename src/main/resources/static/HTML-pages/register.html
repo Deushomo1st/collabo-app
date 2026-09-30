@@ -1,136 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join COLLABO</title>
-    <link rel="stylesheet" href="/css/global/global.css">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 { text-align: center; color: #111827; margin-bottom: 1.5rem; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; color: #374151; font-size: 0.875rem; font-weight: 500; }
-        input, select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            box-sizing: border-box; /* Ensures padding doesn't break width */
-            font-size: 1rem;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-        button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover { background-color: #1d4ed8; }
-        button:disabled { background-color: #93c5fd; cursor: not-allowed; }
-        .message {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            display: none;
-        }
-        .success { background-color: #d1fae5; color: #065f46; }
-        .error { background-color: #fee2e2; color: #991b1b; }
-        #challengeBox {
-            background: #fffbeb;
-            border: 1px solid #fbbf24;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-top: 1rem;
-            display: none;
-        }
-        #challengeText { color: #92400e; font-weight: 600; }
-        #challengeBox input { margin-top: 0.5rem; }
-        #challengeBox button { margin-top: 0.5rem; }
-        #verifyBox {
-            background: #eff6ff;
-            border: 1px solid #93c5fd;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-top: 1rem;
-            display: none;
-        }
-        #verifyPrompt { color: #1e40af; font-size: 0.875rem; margin-top: 0; }
-        #verifyBox input { margin-top: 0.5rem; }
-        #verifyBox button { margin-top: 0.5rem; }
-        #resendOtpBtn { background-color: transparent; color: #2563eb; width: auto; margin-left: 0.5rem; }
-        #resendOtpBtn:hover { background-color: #dbeafe; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>COLLABO — Create an account</title>
+<link rel="stylesheet" href="/css/global/global.css">
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/login.css">
 </head>
 <body>
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
 
-<div class="container">
-    <h2>Create your COLLABO account</h2>
-    <form id="registerForm">
-        <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" required placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" required placeholder="johndoe">
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" required placeholder="••••••••">
-        </div>
-        <div class="form-group">
-            <label for="confirm">Confirm Password</label>
-            <input type="password" id="confirm" required placeholder="••••••••">
-        </div>
-        <button type="submit" id="submitBtn">Create Account</button>
-    </form>
+<div class="sp-shell">
+    <div class="lg-theme" id="theme-slot"></div>
+    <main class="lg-card sp-glass">
+        <h1 class="lg-title">Create your account</h1>
+        <p class="sp-sub">Your people are out there. Let's collabo.</p>
+        <form class="sp-form" id="registerForm">
+            <label for="email">Email address
+                <input class="sp-input" type="email" id="email" required placeholder="you@example.com" autocomplete="email">
+            </label>
+            <label for="username">Username
+                <input class="sp-input" type="text" id="username" required placeholder="johndoe" autocomplete="username">
+            </label>
+            <label for="password">Password
+                <input class="sp-input" type="password" id="password" required autocomplete="new-password">
+            </label>
+            <label for="confirm">Confirm password
+                <input class="sp-input" type="password" id="confirm" required autocomplete="new-password">
+            </label>
+            <button class="sp-btn sp-btn--brand" type="submit" id="submitBtn">Create Account</button>
+        </form>
 
-    <div id="verifyBox">
-        <p id="verifyPrompt"></p>
-        <input type="text" id="otpCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code">
-        <div>
-            <button type="button" id="verifyOtpBtn">Verify code</button>
-            <button type="button" id="resendOtpBtn">Resend code</button>
+        <div class="lg-box" id="verifyBox">
+            <p id="verifyPrompt"></p>
+            <input class="sp-input" type="text" id="otpCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code">
+            <div class="lg-row">
+                <button class="sp-btn sp-btn--brand" type="button" id="verifyOtpBtn">Verify code</button>
+                <button class="sp-btn" type="button" id="resendOtpBtn">Resend code</button>
+            </div>
         </div>
-    </div>
 
-    <div id="challengeBox">
-        <label id="challengeText"></label>
-        <input type="text" id="challengeAnswer" inputmode="numeric" autocomplete="off" placeholder="Your answer">
-        <button type="button" id="verifyBtn">Verify</button>
-    </div>
+        <div class="lg-box" id="challengeBox">
+            <label id="challengeText"></label>
+            <input class="sp-input" type="text" id="challengeAnswer" inputmode="numeric" autocomplete="off" placeholder="Your answer">
+            <button class="sp-btn sp-btn--brand" type="button" id="verifyBtn">Verify</button>
+        </div>
 
-    <div id="messageBox" class="message"></div>
+        <div id="messageBox" class="message"></div>
+        <p class="lg-foot">Already have an account? <a href="/HTML-pages/login.html">Sign in</a></p>
+    </main>
 </div>
 
 <script type="module">
+    import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
     import { registerUser, verifyOtp, resendOtp } from '../js/services/api.js';
 
     const form = document.getElementById('registerForm');
@@ -307,6 +238,7 @@
             resendOtpBtn.disabled = false;
         }
     });
+    mountThemeSwitcher('#theme-slot', { inline: true });
 </script>
 
 </body>
