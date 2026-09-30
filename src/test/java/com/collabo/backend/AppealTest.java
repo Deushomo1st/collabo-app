@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Appeals: the removed person reports a termination once; a moderator sees only the room around it and decides the badge. */
+/** Appeals: the removed person reports a termination once; it becomes an investigation and the admin decides the badge. */
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:appeals;DB_CLOSE_DELAY=-1",
         "spring.datasource.username=sa",
@@ -41,15 +41,15 @@ class AppealTest {
     @Autowired PasswordEncoder encoder;
     @Autowired RemovalService removals;
 
-    String ann, bob, dan, mod;
-    Cookie annS, bobS, danS, modS;
+    String ann, bob, dan;
+    Cookie annS, bobS, danS;
     String postId, space, record;
 
     @BeforeEach
     void setUp() throws Exception {
         String tag = UUID.randomUUID().toString().substring(0, 8);
-        ann = "ann" + tag; bob = "bob" + tag; dan = "dan" + tag; mod = "mod" + tag;
-        annS = signIn(ann, Role.USER); bobS = signIn(bob, Role.USER); danS = signIn(dan, Role.USER); modS = signIn(mod, Role.MODERATOR);
+        ann = "ann" + tag; bob = "bob" + tag; dan = "dan" + tag;
+        annS = signIn(ann, Role.USER); bobS = signIn(bob, Role.USER); danS = signIn(dan, Role.USER);
         String body = send(post("/api/posts"), annS, "{\"title\":\"Idea\",\"body\":\"We need a designer.\"}").andReturn().getResponse().getContentAsString();
         postId = com.jayway.jsonpath.JsonPath.read(body, "$.id");
         String app = send(post("/api/posts/" + postId + "/applications"), bobS, "{\"statement\":\"me\"}").andReturn().getResponse().getContentAsString();
@@ -107,71 +107,65 @@ class AppealTest {
         send(post("/api/removals/" + record + "/appeal"), bobS, "{\"note\":\"x\"}").andExpect(status().isBadRequest());
     }
 
-    @Test
-    void onlyModeratorsAndAdminsSeeTheQueue() throws Exception {
-        removeBobWithABadge(2);
-        appeal();
-        send(get("/api/moderation/appeals"), danS, null).andExpect(status().isForbidden());
-        send(get("/api/moderation/appeals"), bobS, null).andExpect(status().isForbidden());
-        send(get("/api/moderation/appeals"), modS, null).andExpect(status().isOk()).andExpect(jsonPath("$[?(@.record.removed.username=='" + bob + "')]", hasSize(1)));
+    /** The investigation this appeal opened, as the admin's queue shows it. */
+    private String investigationId(String appealId) throws Exception {
+        String list = admin(get("/api/admin/investigations"), null).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        java.util.List<String> ids = com.jayway.jsonpath.JsonPath.read(list, "$[?(@.kind=='APPEAL' && @.reporter=='" + bob + "')].id");
+        return ids.get(0);
+    }
+
+    private ResultActions admin(MockHttpServletRequestBuilder req, String json) throws Exception {
+        req.header("X-Admin-Key", "test-admin-key");
+        if (json != null) req.cookie(XSRF).header("X-XSRF-TOKEN", "t").contentType("application/json").content(json);
+        return mvc.perform(req);
     }
 
     @Test
-    void theModeratorSeesTheRoomAroundTheRemovalAndNotTheDms() throws Exception {
+    void anAppealOpensAnInvestigationForTheAdminAndNobodyElse() throws Exception {
         removeBobWithABadge(2);
         String id = appeal();
-        send(get("/api/moderation/appeals/" + id), modS, null).andExpect(status().isOk())
-                .andExpect(jsonPath("$.note").value("I was on leave.")).andExpect(jsonPath("$.record.reason").value("gone quiet"))
-                .andExpect(jsonPath("$.history[*].body", hasItem(containsString("removed " + bob))))
-                .andExpect(jsonPath("$.history[*].body", not(hasItem(containsString("You were removed")))));   // the DM note is not in the room
-        send(get("/api/moderation/appeals/" + id), danS, null).andExpect(status().isForbidden());
-        send(get("/api/moderation/appeals/" + UUID.randomUUID()), modS, null).andExpect(status().isNotFound());
+        String inv = investigationId(id);
+        admin(get("/api/admin/investigations"), null).andExpect(jsonPath("$[?(@.id=='" + inv + "')].status", contains("OPEN")))
+                .andExpect(jsonPath("$[?(@.id=='" + inv + "')].tier", contains("WORKSPACE")));
+        mvc.perform(get("/api/admin/investigations")).andExpect(status().isForbidden());   // no key, no queue
+        send(get("/api/admin/investigations"), danS, null).andExpect(status().isForbidden());   // a signed-in user is not the admin
+    }
+
+    @Test
+    void theAdminSeesTheRoomAroundTheRemovalAndNotTheDms() throws Exception {
+        removeBobWithABadge(2);
+        String inv = investigationId(appeal());
+        admin(get("/api/admin/investigations/" + inv), null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.appeal.note").value("I was on leave.")).andExpect(jsonPath("$.appeal.record.reason").value("gone quiet"))
+                .andExpect(jsonPath("$.appeal.history[*].body", hasItem(containsString("removed " + bob))))
+                .andExpect(jsonPath("$.appeal.history[*].body", not(hasItem(containsString("You were removed")))));   // the DM note is not in the room
+        admin(get("/api/admin/investigations/" + UUID.randomUUID()), null).andExpect(status().isNotFound());
     }
 
     @Test
     void dropsTakesTheBadgeAwayAndTheRemovalStands() throws Exception {
         removeBobWithABadge(2);
-        String id = appeal();
-        send(post("/api/moderation/appeals/" + id + "/decide"), modS, "{\"outcome\":\"nonsense\"}").andExpect(status().isBadRequest());
-        send(post("/api/moderation/appeals/" + id + "/decide"), danS, "{\"outcome\":\"DROPS\"}").andExpect(status().isForbidden());
-        send(post("/api/moderation/appeals/" + id + "/decide"), modS, "{\"outcome\":\"DROPS\"}").andExpect(status().isOk());
+        String inv = investigationId(appeal());
+        admin(post("/api/admin/investigations/" + inv + "/decide"), "{\"outcome\":\"nonsense\"}").andExpect(status().isBadRequest());
+        admin(post("/api/admin/investigations/" + inv + "/decide"), "{\"outcome\":\"DROPS\"}").andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CLOSED"));
         send(get("/api/users/" + bob + "/removals"), bobS, null).andExpect(jsonPath("$[0].badge").value(false)).andExpect(jsonPath("$[0].appeal").value("DROPS"));
-        send(get("/api/moderation/appeals"), modS, null).andExpect(jsonPath("$[?(@.record.removed.username=='" + bob + "')]", hasSize(0)));
-        send(post("/api/moderation/appeals/" + id + "/decide"), modS, "{\"outcome\":\"STICKS\"}").andExpect(status().isBadRequest());   // decided once
-        send(get("/api/spaces/" + space), bobS, null).andExpect(status().isNotFound());                                                   // still removed
+        admin(get("/api/admin/investigations"), null).andExpect(jsonPath("$[?(@.id=='" + inv + "')]", hasSize(0)));   // left the active queue
+        admin(get("/api/admin/investigations?status=closed"), null).andExpect(jsonPath("$[?(@.id=='" + inv + "')]", hasSize(1)));
+        admin(post("/api/admin/investigations/" + inv + "/decide"), "{\"outcome\":\"STICKS\"}").andExpect(status().isBadRequest());   // decided once
+        send(get("/api/spaces/" + space), bobS, null).andExpect(status().isNotFound());                                                     // still removed
         send(get("/api/notifications"), bobS, null).andExpect(jsonPath("$[0].title", containsString("appeal")));
-    }
-
-    @Test
-    void decidedAppealsMoveToTheirOwnListWithWhoDecided() throws Exception {
-        removeBobWithABadge(2);
-        String id = appeal();
-        String mineFilter = "$[?(@.record.removed.username=='" + bob + "')]";
-        send(get("/api/moderation/appeals?status=decided"), modS, null).andExpect(jsonPath(mineFilter, hasSize(0)));
-        send(post("/api/moderation/appeals/" + id + "/decide"), modS, "{\"outcome\":\"STICKS\"}").andExpect(status().isOk());
-        send(get("/api/moderation/appeals?status=decided"), modS, null).andExpect(status().isOk())
-                .andExpect(jsonPath(mineFilter, hasSize(1))).andExpect(jsonPath(mineFilter + ".decidedBy", contains(mod)))
-                .andExpect(jsonPath(mineFilter + ".outcome", contains("STICKS")));
-        send(get("/api/moderation/appeals?status=decided"), danS, null).andExpect(status().isForbidden());
-    }
-
-    @Test
-    void aModeratorWhoWasPartOfTheRemovalCannotRuleOnIt() throws Exception {
-        removeBobWithABadge(2);
-        String id = appeal();
-        User remover = users.findByUsername(ann).orElseThrow();
-        remover.setRole(Role.MODERATOR);
-        users.save(remover);
-        send(get("/api/moderation/appeals/" + id), annS, null).andExpect(status().isForbidden());
-        send(post("/api/moderation/appeals/" + id + "/decide"), annS, "{\"outcome\":\"DROPS\"}").andExpect(status().isForbidden());
-        send(get("/api/moderation/appeals/" + id), modS, null).andExpect(status().isOk());   // someone else still can
     }
 
     @Test
     void sticksLeavesTheBadge() throws Exception {
         removeBobWithABadge(2);
-        String id = appeal();
-        send(post("/api/moderation/appeals/" + id + "/decide"), modS, "{\"outcome\":\"STICKS\"}").andExpect(status().isOk());
+        String inv = investigationId(appeal());
+        admin(post("/api/admin/investigations/" + inv + "/decide"), "{\"outcome\":\"STICKS\"}").andExpect(status().isOk());
         send(get("/api/users/" + bob + "/removals"), bobS, null).andExpect(jsonPath("$[0].badge").value(true)).andExpect(jsonPath("$[0].appeal").value("STICKS"));
+    }
+
+    @Test
+    void theOldUserModeratorEndpointsAreGone() throws Exception {
+        send(get("/api/moderation/appeals"), annS, null).andExpect(status().isNotFound());
     }
 }

@@ -11,8 +11,6 @@ public final class AppealDtos {
 
     public record AppealRequest(String note) {}
 
-    public record DecideRequest(String outcome) {}
-
     /** outcome, decidedBy and decidedAt are null while the appeal is open. */
     public record AppealView(UUID id, String note, String outcome, Instant createdAt, String decidedBy, Instant decidedAt, RecordView record) {}
 

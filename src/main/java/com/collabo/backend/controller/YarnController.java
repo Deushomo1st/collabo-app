@@ -2,7 +2,10 @@ package com.collabo.backend.controller;
 
 import com.collabo.backend.config.CurrentUser;
 import com.collabo.backend.exception.YarnException;
+import com.collabo.backend.service.InvestigationService;
 import com.collabo.backend.service.YarnService;
+import com.collabo.backend.dto.InvestigationDtos.InvestigationView;
+import com.collabo.backend.dto.InvestigationDtos.ReportRequest;
 
 import com.collabo.backend.dto.YarnDtos.*;
 import com.collabo.backend.entity.YarnThread.Tier;
@@ -21,11 +24,19 @@ import java.util.UUID;
 public class YarnController {
 
     private final YarnService service;
+    private final InvestigationService investigations;
     private final CurrentUser caller;
 
-    public YarnController(YarnService service, CurrentUser caller) {
+    public YarnController(YarnService service, InvestigationService investigations, CurrentUser caller) {
         this.service = service;
+        this.investigations = investigations;
         this.caller = caller;
+    }
+
+    /** Any member can report the Yarnspace they sit in, whatever its tier. The admin takes it from there. */
+    @PostMapping("/threads/{id}/report")
+    public InvestigationView report(@PathVariable UUID id, @RequestBody ReportRequest req) {
+        return investigations.report(caller.require(), id, req.reason());
     }
 
     @GetMapping("/me")

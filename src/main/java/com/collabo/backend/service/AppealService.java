@@ -15,12 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * A removed person reports the termination once; a moderator reads only the room's yarns around it and decides whether the
- * badge sticks. The removal itself always stands. Consent to the moderator reading that window is a T&C clause, not code.
+ * A removed person reports the termination once. That opens an investigation (kind APPEAL) on the room's yarns around the
+ * removal, and the admin decides whether the badge sticks. The removal itself always stands. Consent to a moderator reading
+ * that window is a T&C clause, not code.
  */
 @Service
 @Transactional
@@ -28,6 +28,7 @@ public class AppealService {
 
     static final int MAX_NOTE = 1000;
     static final Duration BEFORE = Duration.ofHours(24), AFTER = Duration.ofHours(1);
+    private static final String DECIDER = "Admin";   // the admin key carries no identity
 
     private final AppealRepository appeals;
     private final RemovalRecordRepository records;
@@ -37,11 +38,13 @@ public class AppealService {
     private final YarnRepository yarns;
     private final UserRepository users;
     private final NotificationService notifications;
+    private final InvestigationRepository investigations;
 
     public AppealService(AppealRepository appeals, RemovalRecordRepository records, RemovalRecordService recordViews, SpaceRepository spaces,
-                         SpaceThreadService spaceThreads, YarnRepository yarns, UserRepository users, NotificationService notifications) {
+                         SpaceThreadService spaceThreads, YarnRepository yarns, UserRepository users, NotificationService notifications,
+                         InvestigationRepository investigations) {
         this.appeals = appeals; this.records = records; this.recordViews = recordViews; this.spaces = spaces; this.spaceThreads = spaceThreads;
-        this.yarns = yarns; this.users = users; this.notifications = notifications;
+        this.yarns = yarns; this.users = users; this.notifications = notifications; this.investigations = investigations;
     }
 
     public AppealView appeal(User me, UUID recordId, String raw) {
@@ -56,49 +59,44 @@ public class AppealService {
         catch (org.springframework.dao.DataIntegrityViolationException e) {   // two at once: the unique record_id wins
             throw new InvalidProfileException("This removal has already been appealed.");
         }
+        investigations.save(Investigation.forAppeal(roomOf(r), a, r.getCreatedAt().minus(BEFORE), r.getCreatedAt().plus(AFTER)));
         return view(a, r);
     }
 
     @Transactional(readOnly = true)
-    public List<AppealView> queue(User me, boolean decided) {
-        requireModerator(me);
-        List<Appeal> open = decided ? appeals.findTop100ByOutcomeIsNotNullOrderByDecidedAtDesc() : appeals.findTop100ByOutcomeIsNullOrderByCreatedAtAsc();
-        Map<UUID, RemovalRecord> rows = records.findAllById(open.stream().map(Appeal::getRecordId).toList()).stream().collect(Collectors.toMap(RemovalRecord::getId, Function.identity()));
-        return open.stream().filter(a -> rows.containsKey(a.getRecordId())).map(a -> view(a, rows.get(a.getRecordId()))).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public AppealDetail detail(User me, UUID id) {
-        requireModerator(me);
+    public AppealDetail detail(UUID id) {
         Appeal a = appeals.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such appeal."));
         RemovalRecord r = records.findById(a.getRecordId()).orElseThrow(() -> new ResourceNotFoundException("No such appeal."));
-        requireImpartial(me, r);
         AppealView v = view(a, r);
         return new AppealDetail(v.id(), v.note(), v.outcome(), v.createdAt(), v.decidedBy(), v.decidedAt(), v.record(), history(r));
     }
 
-    public AppealView decide(User me, UUID id, String outcome) {
-        requireModerator(me);
+    /** The admin rules on the badge; the investigation closes with it. */
+    public AppealView decide(UUID id, String outcome) {
         Appeal a = appeals.findById(id).orElseThrow(() -> new ResourceNotFoundException("No such appeal."));
         Appeal.Outcome o;
         try { o = Appeal.Outcome.valueOf(outcome == null ? "" : outcome.trim().toUpperCase()); }
         catch (IllegalArgumentException e) { throw new InvalidProfileException("Decide STICKS or DROPS."); }
         if (!a.isOpen()) throw new InvalidProfileException("This appeal has already been decided.");
         RemovalRecord r = records.findById(a.getRecordId()).orElseThrow(() -> new ResourceNotFoundException("No such appeal."));
-        requireImpartial(me, r);
-        a.decide(o, me.getId());
+        a.decide(o, null);
         appeals.save(a);
         if (o == Appeal.Outcome.DROPS) { r.dropBadge(); records.save(r); }
+        investigations.findByAppealId(a.getId()).ifPresent(i -> { i.close(); investigations.save(i); });
         notifications.notify(a.getAppellantId(), Bucket.SPACES, "Your appeal was decided",
                 o == Appeal.Outcome.DROPS ? "The badge for \"" + r.getSpaceName() + "\" was dropped. The removal itself stands."
                         : "The badge for \"" + r.getSpaceName() + "\" stays.", "/HTML-pages/profile.html?u=" + nameOf(a.getAppellantId()));
         return view(a, r);
     }
 
+    private UUID roomOf(RemovalRecord r) {
+        Space s = spaces.findById(r.getSpaceId()).orElse(null);
+        return s == null ? null : spaceThreads.workspaceId(s.getPostId());
+    }
+
     /** Only the appeal's own room, only its yarns in the window: a day before the removal to an hour after. */
     private List<HistoryLine> history(RemovalRecord r) {
-        Space s = spaces.findById(r.getSpaceId()).orElse(null);
-        UUID thread = s == null ? null : spaceThreads.workspaceId(s.getPostId());
+        UUID thread = roomOf(r);
         if (thread == null) return List.of();
         List<Yarn> lines = yarns.findByThreadIdAndCreatedAtBetweenOrderByCreatedAtAsc(thread, r.getCreatedAt().minus(BEFORE), r.getCreatedAt().plus(AFTER));
         Map<UUID, String> names = users.findAllById(lines.stream().map(Yarn::getSenderId).filter(Objects::nonNull).collect(Collectors.toSet()))
@@ -109,17 +107,7 @@ public class AppealService {
     private AppealView view(Appeal a, RemovalRecord r) {
         RecordView rv = recordViews.present(List.of(r)).stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("No such record."));
         return new AppealView(a.getId(), a.getNote(), a.getOutcome() == null ? null : a.getOutcome().name(), a.getCreatedAt(),
-                a.getDecidedBy() == null ? null : nameOf(a.getDecidedBy()), a.getDecidedAt(), rv);
-    }
-
-    private void requireModerator(User me) {
-        if (me.getRole() != Role.MODERATOR && me.getRole() != Role.ADMIN) throw new ForbiddenException("Moderators only.");
-    }
-
-    /** Whoever removed or was removed cannot read the room or rule on it, even if they are a moderator. */
-    private void requireImpartial(User me, RemovalRecord r) {
-        if (me.getId().equals(r.getRemovedId()) || me.getId().equals(r.getRemovedById()))
-            throw new ForbiddenException("You were part of this removal, so another moderator has to handle it.");
+                a.getDecidedAt() == null ? null : DECIDER, a.getDecidedAt(), rv);
     }
 
     private String nameOf(UUID userId) { return users.findById(userId).map(User::getUsername).orElse(""); }
