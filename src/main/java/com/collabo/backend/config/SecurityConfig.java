@@ -5,12 +5,14 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -42,6 +44,8 @@ public class SecurityConfig {
                 // /api/admin/** is gated solely by AdminKeyFilter (X-Admin-Key header);
                 // "authenticated" would 403 since no auth mechanism exists yet.
                 .addFilterBefore(adminKeyFilter, UsernamePasswordAuthenticationFilter.class)
+                // Signed-out API calls answer 401 (not 403) so the frontend knows to show the login page
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         // Tightened: only the registration POST is public, not every method on /api/users
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
