@@ -2,6 +2,7 @@
 // Text goes in through textContent only (h() never sets innerHTML).
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
+import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { TIERS, initialThreads, inTier, actionThreads, unreadTotal, markRead, search, ago } from '/js/pages/yarnspaces-data.js';
 
@@ -29,7 +30,9 @@ const ICON = {
     workspace: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',
 };
 const SECTIONS = TIERS.map((t) => ({ ...t, icon: svg(ICON[t.id]) }));
-const currentTier = () => (SECTIONS.find((s) => location.hash === '#' + s.id) || SECTIONS[0]).id;
+const PREF_KEY = 'collaboYarnDefault';   // which tier opens when Yarns is entered from the Dash (no #hash)
+const savedDefault = () => { try { return localStorage.getItem(PREF_KEY); } catch { return null; } };
+const currentTier = () => (SECTIONS.find((s) => location.hash === '#' + s.id) || SECTIONS.find((s) => !location.hash && s.id === savedDefault()) || SECTIONS[0]).id;
 let nav;
 
 function toast(text) {
@@ -79,7 +82,21 @@ function render() {
     document.getElementById('header-sub').textContent = n ? `${n} unread ${n === 1 ? 'yarn' : 'yarns'}` : 'All caught up';
 }
 
+async function openSettings() {
+    const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'Yarns settings', html: '<h3 class="glass-blur-dialog__title">Yarns settings</h3><form class="sp-form"></form>' });
+    const pick = h('select', { class: 'sp-input', id: 'default-chat' }, ...SECTIONS.map((s) => h('option', { value: s.id, text: s.label, selected: s.id === (savedDefault() || 'all') })));
+    panel.querySelector('.sp-form').append(
+        h('label', { for: 'default-chat' }, 'Default chat', pick),
+        h('p', { class: 'yn-hint', text: 'What opens first when you tap Yarns from the Dash.' }),
+        h('div', { class: 'glass-blur-dialog__actions' },
+            h('button', { class: 'glass-blur-dialog__btn', type: 'button', onclick: () => {
+                try { localStorage.setItem(PREF_KEY, pick.value); } catch { /* private mode: setting just won't stick */ }
+                toast('Default chat saved.'); close();
+            } }, 'Save')));
+}
+
 async function boot() {
+    preloadGlassBlurDialog();
     await preloadActionBanner();
     render();
     await mountThemeSwitcher('#theme-slot', { inline: true });
@@ -91,6 +108,7 @@ async function boot() {
             if (location.hash === hash) render(); else location.hash = hash;
         },
     });
+    document.getElementById('settings-btn').addEventListener('click', openSettings);
     document.getElementById('search').addEventListener('input', (e) => { query = e.target.value; render(); });
     window.addEventListener('hashchange', () => { nav.setActive(SECTIONS.findIndex((s) => s.id === currentTier())); render(); });
 }

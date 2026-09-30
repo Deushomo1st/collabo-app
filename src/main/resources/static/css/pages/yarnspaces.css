@@ -2,6 +2,12 @@
 
 .yn-header { flex-direction: column; align-items: stretch; gap: 10px; }
 .yn-header__top { display: flex; align-items: center; gap: 14px; }
+.yn-gear {
+    display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px;
+    border: 1px solid var(--sp-line); background: var(--sp-panel);
+}
+.yn-gear:hover { background: var(--sp-panel-hi); }
+.yn-hint { margin: 0; opacity: .7; font-size: 13px; }
 .yn-search {
     width: 100%; padding: 10px 14px; border-radius: 14px; font: inherit; color: inherit;
     border: 1px solid var(--sp-line); background: var(--sp-panel);
