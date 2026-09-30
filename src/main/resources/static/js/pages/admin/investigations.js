@@ -14,8 +14,13 @@ export async function investigationsView() {
     const root = h('div', { class: 'ad-view' });
     let filter = 'active';
 
-    async function list() {
+    let showing = 'list', seen = '';
+
+    async function list(quiet = false) {
         const rows = await api.investigations(filter);
+        const now = filter + JSON.stringify(rows);
+        if (quiet && now === seen) return;   // nothing new: leave the table (and your scroll) alone
+        seen = now; showing = 'list';
         root.replaceChildren(
             h('div', { class: 'ad-head' }, h('h2', { text: 'Investigations' })),
             h('p', { class: 'ad-lead', text: 'Reports from members and termination appeals. Assign a moderator, read their findings, then close it or rule on the badge.' }),
@@ -38,6 +43,7 @@ export async function investigationsView() {
     async function detail(id) {
         let d;
         try { d = await api.investigation(id); } catch (e) { if (e instanceof api.AdminAuthError) throw e; notify(e.message, true); return list(); }
+        showing = 'detail';
         const i = d.investigation, appeal = d.appeal;
         const again = async (work, done) => {
             try { await work(); notify(done); await detail(id); }
@@ -84,6 +90,11 @@ export async function investigationsView() {
     }
 
     await list();
+    // The console signs in with a key, not a session, so it has no socket: it looks again every 15s while the queue is on screen.
+    const timer = setInterval(() => {
+        if (!root.isConnected) return clearInterval(timer);
+        if (showing === 'list' && document.visibilityState === 'visible' && !document.querySelector('dialog[open]')) list(true).catch(() => {});
+    }, 15_000);
     return root;
 }
 

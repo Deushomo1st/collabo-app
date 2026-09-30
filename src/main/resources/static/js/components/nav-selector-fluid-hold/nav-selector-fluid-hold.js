@@ -74,7 +74,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
                 num.textContent = String(getLinks().indexOf(active) + 1);
                 navIcon.appendChild(num);
             } else {
-                const svg = active.querySelector('svg');
+                const svg = active.querySelector('svg, i');   // <i> = a picture icon (e.g. a profile face)
                 if (svg) navIcon.appendChild(svg.cloneNode(true));
             }
             navIcon.dataset.for = key;

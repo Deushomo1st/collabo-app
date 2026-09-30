@@ -15,11 +15,33 @@ function showSignin(message = '') {
     $('signin-email').focus();
 }
 
+let listening = false;
+
 async function showDesk(moderator) {
     $('signin').hidden = true;
     $('desk').hidden = false;
     $('who').textContent = moderator.name;
     await refresh();
+    if (!listening) { listening = true; listen(); }
+}
+
+// The admin assigning, swapping or closing a case sends "case"; reload the list quietly. The open case is only redrawn if it left
+// your desk, so a finding you are typing is never wiped.
+async function listen() {
+    const { live } = await import('/js/services/live.js');   // only once signed in: the socket needs the session
+    let timer;
+    const soon = () => { clearTimeout(timer); timer = setTimeout(quietRefresh, 250); };
+    live.on('case', soon);
+    live.onResync(soon);
+    setInterval(() => { if (!live.connected && document.visibilityState === 'visible') quietRefresh(); }, 30_000);   // safety net while the socket is down
+}
+
+async function quietRefresh() {
+    if ($('desk').hidden) return;
+    try { list = await api.cases(); } catch (e) { expired(e); return; }
+    drawList();
+    const id = caseId();
+    if (id && !list.some((c) => c.id === id)) await drawCase();
 }
 
 // A 401 anywhere means the session ended (signed out elsewhere, or the admin deactivated this account).
@@ -59,7 +81,7 @@ $('signin-form').addEventListener('submit', async (e) => {
     try { await showDesk(await api.login($('signin-email').value.trim(), $('signin-password').value)); }
     catch (err) { showSignin(err.status === 429 ? 'Too many attempts. Wait a little and try again.' : err.status === 401 ? 'Wrong email or password, or the account is deactivated.' : err.message); }
 });
-$('signout').addEventListener('click', async () => { try { await api.logout(); } catch { /* the page is signing out anyway */ } location.hash = ''; showSignin(); });
+$('signout').addEventListener('click', async () => { try { await api.logout(); } catch { /* the page is signing out anyway */ } location.hash = ''; location.reload(); });   // reload: the live socket belongs to the session that just ended
 window.addEventListener('hashchange', () => { if (!$('desk').hidden) { drawList(); drawCase(); } });
 
 const dialog = $('password-dialog');

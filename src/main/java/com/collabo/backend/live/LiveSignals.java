@@ -33,8 +33,14 @@ public class LiveSignals {
     /** Someone's notifications changed (a new one, one settled, or read elsewhere): their bell should look again. */
     public void notification(UUID user) { send(java.util.List.of(user), "{\"t\":\"notification\"}"); }
 
+    /** A moderator's case list changed (assigned, swapped away, closed, decided): their desk should reload it. */
+    public void moderatorCases(UUID moderator) { sendTo(java.util.Set.of(LiveHub.moderatorKey(moderator)), "{\"t\":\"case\"}"); }
+
     private void send(Collection<UUID> users, String json) {
-        var accounts = users.stream().map(LiveHub::userKey).collect(Collectors.toSet());
+        sendTo(users.stream().map(LiveHub::userKey).collect(Collectors.toSet()), json);
+    }
+
+    private void sendTo(Collection<String> accounts, String json) {
         if (accounts.isEmpty()) return;
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

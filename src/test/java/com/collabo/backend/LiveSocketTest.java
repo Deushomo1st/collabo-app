@@ -59,8 +59,20 @@ class LiveSocketTest {
             return jar.getCookieStore().getCookies().stream().map(c -> c.getName() + "=" + c.getValue()).reduce((a, b) -> a + "; " + b).orElse("");
         }
 
-        String call(String method, String path, String json) throws Exception {
+        /** A moderator's browser: signed in through the moderator door instead of the user one. */
+        Browser(String moderatorEmail, String moderatorPassword) throws Exception {
+            this.name = moderatorEmail;
+            call("GET", "/api/auth/csrf", null);
+            call("POST", "/api/moderator/login", "{\"identifier\":\"" + moderatorEmail + "\",\"password\":\"" + moderatorPassword + "\"}");
+        }
+
+        String admin(String method, String path, String json) throws Exception { return call(method, path, json, "test-admin-key"); }
+
+        String call(String method, String path, String json) throws Exception { return call(method, path, json, null); }
+
+        String call(String method, String path, String json, String adminKey) throws Exception {
             var b = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path));
+            if (adminKey != null) b.header("X-Admin-Key", adminKey);
             jar.getCookieStore().getCookies().stream().filter(c -> c.getName().equals("XSRF-TOKEN")).findFirst().ifPresent(c -> b.header("X-XSRF-TOKEN", c.getValue()));
             if (json != null) b.header("Content-Type", "application/json");
             b.method(method, json == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(json));
@@ -152,6 +164,28 @@ class LiveSocketTest {
         take(tabTwo, "notification");
         Thread.sleep(300);
         assertNull(other.poll(), "someone else's bell must stay quiet");
+    }
+
+    @Test
+    void aModeratorDeskHearsWhenACaseIsAssignedSwappedAwayAndClosed() throws Exception {
+        String tag = UUID.randomUUID().toString().substring(0, 6);
+        Browser ann = new Browser("ann" + tag), bob = new Browser("bob" + tag);
+        String dm = JsonPath.read(ann.call("POST", "/api/yarns/threads/myspace", "{\"username\":\"" + bob.name + "\",\"body\":\"hi\"}"), "$.id");
+        String inv = JsonPath.read(ann.call("POST", "/api/yarns/threads/" + dm + "/report", "{\"reason\":\"rude\"}"), "$.id");
+        String pw = "ModPassw0rd!x9";
+        String first = JsonPath.read(ann.admin("POST", "/api/admin/moderators", "{\"name\":\"One\",\"email\":\"one" + tag + "@t.dev\",\"password\":\"" + pw + "\"}"), "$.id");
+        String second = JsonPath.read(ann.admin("POST", "/api/admin/moderators", "{\"name\":\"Two\",\"email\":\"two" + tag + "@t.dev\",\"password\":\"" + pw + "\"}"), "$.id");
+        Browser one = new Browser("one" + tag + "@t.dev", pw), two = new Browser("two" + tag + "@t.dev", pw);
+        var oneQ = one.listen(null);
+        var twoQ = two.listen(null);
+
+        ann.admin("POST", "/api/admin/investigations/" + inv + "/assign", "{\"moderatorId\":\"" + first + "\"}");
+        take(oneQ, "case");                                   // it lands on the first desk
+        ann.admin("POST", "/api/admin/investigations/" + inv + "/assign", "{\"moderatorId\":\"" + second + "\"}");
+        take(oneQ, "case");                                   // and leaves it
+        take(twoQ, "case");                                   // for the second
+        ann.admin("POST", "/api/admin/investigations/" + inv + "/close", null);
+        take(twoQ, "case");                                   // closing clears it from the desk that held it
     }
 
     @Test

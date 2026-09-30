@@ -66,6 +66,7 @@
 .yn-headfaces a:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
 .yn-headfaces .sp-avatar { --_size: 46px; border: 2px solid var(--sp-bg); }
 .nav-selector-fluid-hold__link .yn-navface { --_size: 26px; border: 0; font-style: normal; }
+.nav-selector-fluid-hold__icon .yn-navface { --_size: 32px; border: 0; font-style: normal; }
 
 .yn-wrench {
     position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: grid; place-items: center;
