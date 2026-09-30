@@ -30,12 +30,14 @@
 </div>
 
 <div id="app" class="ad-app" hidden>
-    <aside class="ad-side">
+    <header class="ad-top">
         <div class="ad-brand">COLLABO <small>Admin</small></div>
-        <nav id="nav" aria-label="Admin sections"></nav>
-        <div class="ad-theme" id="theme-slot"></div>
-        <button id="signout" class="ad-btn ad-btn--small" type="button">Sign out</button>
-    </aside>
+        <div class="ad-top__end">
+            <div class="ad-theme" id="theme-slot"></div>
+            <button id="signout" class="ad-btn ad-btn--small" type="button">Sign out</button>
+        </div>
+    </header>
+    <div id="nav" class="ad-nav" aria-label="Admin sections"></div>
     <div class="ad-main">
         <div id="strip" class="ad-strip" aria-label="System status"></div>
         <main id="view"></main>

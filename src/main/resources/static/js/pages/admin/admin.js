@@ -2,6 +2,7 @@
 // Views live next to this file and return a DOM node. An AdminAuthError anywhere sends you back to the gate.
 import * as api from '/js/services/admin-api.js';
 import { h } from '/js/services/dom.js';
+import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { overview, checks } from './overview.js';
 import { usersView } from './users.js';
@@ -49,7 +50,7 @@ const current = () => (location.hash.slice(1) in VIEWS ? location.hash.slice(1) 
 
 async function route() {
     const key = current();
-    $('nav').querySelectorAll('a').forEach((a) => a.classList.toggle('is-on', a.dataset.view === key));
+    nav?.setActive(Object.keys(VIEWS).indexOf(key));
     const view = $('view');
     view.replaceChildren(h('p', { class: 'ad-empty', text: 'Loading…' }));
     try {
@@ -70,7 +71,9 @@ async function unlock() {
     catch (e) { api.setKey(''); showGate(e instanceof api.AdminAuthError ? e.message : `Could not reach the server (${e.message}).`); }
 }
 
-$('nav').append(...Object.entries(VIEWS).map(([key, v]) => h('a', { href: `#${key}`, 'data-view': key, text: v.label })));
+let nav;   // the pill nav; route() keeps its bubble on the current view
+mountNavSelector('#nav', { links: Object.values(VIEWS).map((v) => v.label), hrefs: Object.keys(VIEWS).map((k) => `#${k}`), activeIndex: Object.keys(VIEWS).indexOf(current()),
+    onChange: (_l, href) => { location.hash = href.slice(href.lastIndexOf('#')); } }).then((n) => { nav = n; nav?.setActive(Object.keys(VIEWS).indexOf(current())); });
 $('gate-form').addEventListener('submit', (e) => { e.preventDefault(); unlock(); });
 $('signout').addEventListener('click', () => { api.setKey(''); showGate(); });
 window.addEventListener('hashchange', () => { if (!$('app').hidden) route(); });

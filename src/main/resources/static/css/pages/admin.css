@@ -19,8 +19,7 @@ small { color: var(--ad-muted); font-weight: 500; }
 .ad-input:focus { outline: 2px solid var(--ad-brand); outline-offset: -1px; }
 .ad-btn { background: var(--ad-panel-hi); border: 1px solid var(--ad-line); border-radius: 10px; color: inherit; cursor: pointer; font: inherit; font-weight: 600; padding: 7px 14px; }
 .ad-btn:hover:not(:disabled) { border-color: var(--ad-brand); }
-.ad-btn:focus-visible, .ad-link:focus-visible, .ad-chip:focus-visible, .ad-side a:focus-visible { outline: 2px solid var(--ad-brand); outline-offset: 2px; }
-.ad-btn:disabled { opacity: .45; cursor: default; }
+.ad-btn:focus-visible, .ad-link:focus-visible, .ad-chip:focus-visible, .ad-btn:disabled { opacity: .45; cursor: default; }
 .ad-btn--primary { background: var(--ad-brand); border-color: var(--ad-brand); color: var(--sp-brand-ink); }
 .ad-btn--primary:hover:not(:disabled) { background: var(--ad-brand-hi); border-color: var(--ad-brand-hi); }
 .ad-btn--danger { background: var(--ad-bad); border-color: var(--ad-bad); color: #fff; }
@@ -41,14 +40,12 @@ small { color: var(--ad-muted); font-weight: 500; }
 .ad-gate__hint { color: var(--ad-muted); font-size: 12px; }
 
 /* ---------- shell ---------- */
-.ad-app { display: grid; grid-template-columns: 210px 1fr; min-height: 100vh; }
-.ad-side { background: var(--ad-panel); border-right: 1px solid var(--ad-line); display: flex; flex-direction: column; gap: 18px; padding: 18px 12px; position: sticky; top: 0; height: 100vh; }
-.ad-brand { font-weight: 700; letter-spacing: .04em; padding: 0 8px; }
-#nav { display: grid; gap: 2px; flex: 1; align-content: start; }
-.ad-side a { color: var(--ad-muted); border-radius: 6px; padding: 8px 10px; text-decoration: none; }
-.ad-side a:hover { background: var(--ad-panel-hi); color: var(--ad-text); }
-.ad-side a.is-on { background: none; color: var(--ad-brand); font-weight: 700; text-shadow: 0 0 14px color-mix(in srgb, var(--ad-brand) 80%, transparent); box-shadow: 0 0 22px -6px var(--ad-brand); }
-.ad-main { min-width: 0; }
+.ad-app { min-height: 100vh; }
+.ad-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--sp-gutter); }
+.ad-top__end { display: flex; align-items: center; gap: 10px; }   /* theme switch and sign out sit on the right edge */
+.ad-nav { display: flex; justify-content: center; padding: 0 var(--sp-gutter); position: sticky; top: 8px; z-index: 5; }
+.ad-brand { font-weight: 700; letter-spacing: .04em; }
+.ad-main { min-width: 0; max-width: 1140px; margin: 0 auto; }
 .ad-strip { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 24px; border-bottom: 1px solid var(--ad-line); background: var(--ad-panel); }
 .ad-pill { border: 1px solid var(--ad-line); border-radius: 999px; font-size: 12.5px; padding: 2px 10px; text-decoration: none; color: var(--ad-text); }
 .ad-pill.is-ok span { color: var(--ad-ok); }
@@ -118,9 +115,6 @@ main { padding: 24px; max-width: 1100px; }
 
 /* ---------- narrow screens: the sidebar becomes a top bar ---------- */
 @media (max-width: 800px) {
-    .ad-app { grid-template-columns: 1fr; }
-    .ad-side { position: static; height: auto; flex-direction: row; align-items: center; flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
-    #nav { display: flex; flex: 1 1 100%; order: 3; overflow-x: auto; }
     .ad-strip { padding: 10px 14px; }
     main { padding: 16px 14px; }
 }
@@ -145,9 +139,8 @@ main { padding: 24px; max-width: 1100px; }
 .ad-dialog--wide { width: min(760px, calc(100vw - 32px)); }
 
 /* ---------- theme: glass surfaces, solid dialogs ---------- */
-.ad-side, .ad-strip, .ad-scroll, .ad-card, .ad-panel, .ad-tile, .ad-check, .ad-gate__card { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.ad-strip, .ad-scroll, .ad-card, .ad-panel, .ad-tile, .ad-check, .ad-gate__card { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 .ad-scroll, .ad-card, .ad-panel, .ad-tile, .ad-check, .ad-gate__card { border-radius: 16px; }
 .ad-dialog, .ad-notice { background: linear-gradient(var(--ad-panel), var(--ad-panel)), var(--sp-bg); border-radius: 16px; }
 .ad-dialog::backdrop { background: rgba(0, 0, 0, .55); backdrop-filter: blur(4px); }
 .ad-brand { font-weight: 800; letter-spacing: .14em; }
-.ad-theme { padding: 0 4px; }
