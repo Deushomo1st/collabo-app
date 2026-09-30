@@ -5,6 +5,7 @@ import com.collabo.backend.dto.SpaceMemberDtos.MemberResponse;
 import com.collabo.backend.entity.*;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
+import com.collabo.backend.repository.CollaboratorRepository;
 import com.collabo.backend.repository.SpaceMemberRepository;
 import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.UserRepository;
@@ -26,9 +27,12 @@ public class SpaceMemberService {
     private final UserRepository users;
     private final SpaceService spaceAccess;
     private final CredentialService credentials;
+    private final CollaboratorRepository collaborators;
 
     public SpaceMemberService(SpaceRepository spaces, SpaceMemberRepository members, UserRepository users,
-                              SpaceService spaceAccess, CredentialService credentials) {
+                              SpaceService spaceAccess, CredentialService credentials,
+                              CollaboratorRepository collaborators) {
+        this.collaborators = collaborators;
         this.spaces = spaces; this.members = members; this.users = users; this.spaceAccess = spaceAccess; this.credentials = credentials;
     }
 
@@ -38,6 +42,7 @@ public class SpaceMemberService {
         String role = spaceAccess.roleOf(me, s);
         if (role == null) throw new ResourceNotFoundException(GONE);
         if (role.equals("OWNER")) throw new InvalidProfileException("You already own this space.");
+        if (isCollaborator(me, s)) throw new InvalidProfileException("You are already in as a collaborator.");
         Optional<SpaceMember> existing = members.findBySpaceIdAndUserId(s.getId(), me.getId());
         if (existing.isPresent()) {
             SpaceMember m = existing.get();
@@ -52,6 +57,7 @@ public class SpaceMemberService {
     public void leave(User me, UUID spaceId) {
         Space s = find(spaceId);
         if (s.getOwnerId().equals(me.getId())) throw new InvalidProfileException("The owner cannot leave their own space.");
+        if (isCollaborator(me, s)) throw new InvalidProfileException("Step down as a collaborator instead.");
         SpaceMember m = members.findBySpaceIdAndUserId(s.getId(), me.getId()).filter(x -> x.getState() == SpaceMember.State.ACTIVE)
                 .orElseThrow(() -> new ResourceNotFoundException(GONE));
         m.setState(SpaceMember.State.LEFT);
@@ -69,10 +75,10 @@ public class SpaceMemberService {
         return out;
     }
 
-    /** Owner only (collaborators arrive in the next step). The owner's own row is fixed. Weighty permissions need confirm=true. */
+    /** The owner or a collaborator. The owner's own row is fixed. Weighty permissions need confirm=true. */
     public MemberResponse update(User me, UUID spaceId, String username, String title, List<String> requested, Boolean confirm) {
         Space s = find(spaceId);
-        if (!s.getOwnerId().equals(me.getId())) throw new ResourceNotFoundException(GONE);
+        if (!s.getOwnerId().equals(me.getId()) && !isCollaborator(me, s)) throw new ResourceNotFoundException(GONE);
         User target = users.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("No such member."));
         if (target.getId().equals(s.getOwnerId())) throw new InvalidProfileException("The owner's role is fixed.");
         SpaceMember m = activeMember(s, target);
@@ -105,6 +111,10 @@ public class SpaceMemberService {
         m.setState(SpaceMember.State.REMOVED);
         m.setPermissions(EnumSet.noneOf(SpacePermission.class));
         members.save(m);
+    }
+
+    private boolean isCollaborator(User me, Space s) {
+        return collaborators.existsByPostIdAndUserIdAndState(s.getPostId(), me.getId(), Collaborator.State.ACTIVE);
     }
 
     private Space find(UUID id) { return spaces.findById(id).orElseThrow(() -> new ResourceNotFoundException(GONE)); }

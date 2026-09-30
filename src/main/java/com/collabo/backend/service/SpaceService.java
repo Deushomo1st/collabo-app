@@ -7,6 +7,7 @@ import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.repository.ApplicationRepository;
 import com.collabo.backend.repository.PostRepository;
+import com.collabo.backend.repository.CollaboratorRepository;
 import com.collabo.backend.repository.SpaceMemberRepository;
 import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.UserRepository;
@@ -31,10 +32,12 @@ public class SpaceService {
     private final UserRepository users;
     private final CredentialService credentials;
     private final SpaceMemberRepository members;
+    private final CollaboratorRepository collaborators;
 
     public SpaceService(SpaceRepository spaces, PostRepository posts, ApplicationRepository applications, UserRepository users,
-                        CredentialService credentials, SpaceMemberRepository members) {
-        this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
+                        CredentialService credentials, SpaceMemberRepository members,
+                        CollaboratorRepository collaborators) {
+        this.collaborators = collaborators; this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
     }
 
     /** The post's author forms the space, once, when at least one applicant has been accepted. */
@@ -55,6 +58,8 @@ public class SpaceService {
         founder.setTitle("Owner");
         founder.setPermissions(java.util.EnumSet.allOf(SpacePermission.class));
         members.save(founder);   // the owner is a member like everyone else
+        collaborators.findByPostIdAndStateInOrderByCreatedAtAsc(postId, java.util.List.of(Collaborator.State.ACTIVE))
+                .forEach(c -> seat(space, c.getUserId(), "Collaborator"));
         post.setFormed(true);
         posts.save(post);
         credentials.record(me.getId(), CredentialKind.SPACE_FORMED, space.getName(), "", "space", space.getId().toString(), null);
@@ -79,15 +84,33 @@ public class SpaceService {
         return response(s, post, role);
     }
 
+    /** Puts someone in the room with every permission (co-founders), or back in if they were out. */
+    void seat(Space s, UUID userId, String title) {
+        SpaceMember m = members.findBySpaceIdAndUserId(s.getId(), userId).orElseGet(() -> new SpaceMember(s.getId(), userId));
+        if (m.getId() != null) m.rejoin();
+        m.setTitle(title);
+        m.setPermissions(java.util.EnumSet.allOf(SpacePermission.class));
+        members.save(m);
+    }
+
+    /** Takes someone out of the room and closes it to them. */
+    void unseat(Space s, UUID userId) {
+        members.findBySpaceIdAndUserId(s.getId(), userId).ifPresent(m -> {
+            m.setState(SpaceMember.State.REMOVED);
+            m.setPermissions(java.util.EnumSet.noneOf(SpacePermission.class));
+            members.save(m);
+        });
+    }
+
     /** OWNER, MEMBER (joined), APPLICANT (accepted, may read, not joined), or null (no access, including the removed). */
     String roleOf(User me, Space s) {
         if (s.getOwnerId().equals(me.getId())) return "OWNER";
-        boolean accepted = applications.findByPostIdAndApplicantId(s.getPostId(), me.getId())
-                .filter(a -> a.getState() == ApplicationState.ACCEPTED).isPresent();
-        if (!accepted) return null;
         var member = members.findBySpaceIdAndUserId(s.getId(), me.getId());
         if (member.filter(m -> m.getState() == SpaceMember.State.REMOVED).isPresent()) return null;   // removal ends reading too
-        return member.filter(m -> m.getState() == SpaceMember.State.ACTIVE).isPresent() ? "MEMBER" : "APPLICANT";
+        if (member.filter(m -> m.getState() == SpaceMember.State.ACTIVE).isPresent()) return "MEMBER";   // includes seated collaborators
+        boolean accepted = applications.findByPostIdAndApplicantId(s.getPostId(), me.getId())
+                .filter(a -> a.getState() == ApplicationState.ACCEPTED).isPresent();
+        return accepted ? "APPLICANT" : null;
     }
 
     private SpaceResponse response(Space s, Post post, String role) {

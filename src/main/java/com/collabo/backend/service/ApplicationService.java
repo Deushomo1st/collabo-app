@@ -4,12 +4,14 @@ import com.collabo.backend.dto.ApplicationDtos.ApplicationResponse;
 import com.collabo.backend.dto.ApplicationDtos.ReviewResponse;
 import com.collabo.backend.dto.PersonDto;
 import com.collabo.backend.entity.Application;
+import com.collabo.backend.entity.Collaborator;
 import com.collabo.backend.entity.ApplicationState;
 import com.collabo.backend.entity.Post;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.repository.ApplicationRepository;
+import com.collabo.backend.repository.CollaboratorRepository;
 import com.collabo.backend.repository.PostRepository;
 import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.UserBlockRepository;
@@ -37,9 +39,12 @@ public class ApplicationService {
     private final UserRepository users;
     private final UserBlockRepository blocks;
     private final SpaceRepository spaces;
+    private final CollaboratorRepository collaborators;
 
     public ApplicationService(ApplicationRepository applications, PostService postService, PostRepository posts,
-                              UserRepository users, UserBlockRepository blocks, SpaceRepository spaces) {
+                              UserRepository users, UserBlockRepository blocks, SpaceRepository spaces,
+                              CollaboratorRepository collaborators) {
+        this.collaborators = collaborators;
         this.applications = applications; this.postService = postService; this.posts = posts;
         this.users = users; this.blocks = blocks; this.spaces = spaces;
     }
@@ -47,6 +52,9 @@ public class ApplicationService {
     public ApplicationResponse apply(User me, UUID postId, String text) {
         Post post = postService.visible(me, postId);
         if (post.getAuthorId().equals(me.getId())) throw new InvalidProfileException("That idea is yours.");
+        if (collaborators.existsByPostIdAndUserIdAndState(postId, me.getId(), Collaborator.State.ACTIVE)) {
+            throw new InvalidProfileException("You are a collaborator on this idea.");
+        }
         if (!"pending".equals(post.status())) throw new InvalidProfileException("Applications for this post are closed.");
         String statement = text == null ? "" : text.trim();
         if (statement.isEmpty()) throw new InvalidProfileException("Tell them why you.");
@@ -135,9 +143,10 @@ public class ApplicationService {
         return new ReviewResponse(a.getId(), PersonDto.of(applicant), a.getStatement(), a.getState().name(), a.getCreatedAt());
     }
 
-    /** The post, if it is the caller's; anyone else (or a missing post) gets not-found. */
+    /** The post, if the caller is its author or an active collaborator; anyone else (or a missing post) gets not-found. */
     private Post ownPost(User me, UUID postId) {
-        Post p = posts.findById(postId).filter(x -> x.getAuthorId().equals(me.getId()))
+        Post p = posts.findById(postId).filter(x -> x.getAuthorId().equals(me.getId())
+                        || collaborators.existsByPostIdAndUserIdAndState(postId, me.getId(), Collaborator.State.ACTIVE))
                 .orElseThrow(() -> new ResourceNotFoundException("That post is gone."));
         return p;
     }
