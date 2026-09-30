@@ -1,0 +1,29 @@
+/* switch: on/off toggle. Public variables (set on the element, an ancestor, or :root):
+   --switch-height (28px) · --switch-on (#34d399) · --switch-off (rgba(255,255,255,.18)) · --switch-knob (#fff)
+   Private: --_sw-* (internal). Light values live in css/global/theme.css. */
+
+.switch {
+    --_sw-h: var(--switch-height, 28px);
+    --_sw-on: var(--switch-on, #34d399);
+    --_sw-off: var(--switch-off, rgba(255, 255, 255, .18));
+    --_sw-knob: var(--switch-knob, #fff);
+    position: relative; display: inline-block; flex: none;
+    width: calc(var(--_sw-h) * 1.8); height: var(--_sw-h);
+}
+.switch__input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.switch__track { position: absolute; inset: 0; border-radius: 999px; background: var(--_sw-off); transition: background .25s; }
+.switch__track::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: calc(var(--_sw-h) - 6px); height: calc(var(--_sw-h) - 6px); border-radius: 50%;
+    background: var(--_sw-knob); box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+    transition: transform .25s cubic-bezier(.3, 1.4, .5, 1);
+}
+.switch__input:checked + .switch__track { background: var(--_sw-on); }
+.switch__input:checked + .switch__track::after { transform: translateX(calc(var(--_sw-h) * .8)); }
+.switch__input:focus-visible + .switch__track { outline: 2px solid var(--_sw-on); outline-offset: 2px; }
+.switch__input:disabled { cursor: not-allowed; }
+.switch__input:disabled + .switch__track { opacity: .5; }
+
+@media (prefers-reduced-motion: reduce) {
+    .switch__track, .switch__track::after { transition: none; }
+}
