@@ -1,4 +1,4 @@
-// Mock data + pure state transitions for the Spaces (Workspace) screen.
+// Mock data + pure state transitions for the Workspace screen.
 // Nothing here touches the DOM or the network; every function returns a NEW state.
 // When the backend exists, swap `initialState()` for a call in js/services/api.js.
 

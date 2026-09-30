@@ -1,4 +1,4 @@
-// Spaces (Workspace) screen: rendering + wiring. State lives in spaces-data.js.
+// Workspace screen: rendering + wiring. State lives in workspace-data.js.
 // All text goes in through textContent (h() never sets innerHTML), so user text is safe.
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
@@ -9,7 +9,7 @@ import {
     ME, PERMISSIONS, MIN_CLOCK_HOURS, initialState, memberOf, activeClaim, openTasks, naira,
     sendMessage, addDraftFiles, removeDraftFile, togglePin, toggleTask, toggleTaskMilestone, toggleOptOut, logPayment,
     resolvePayment, setPermission, nudge, changeSetting,
-} from '/js/pages/spaces-data.js';
+} from '/js/pages/workspace-data.js';
 
 let state = initialState();
 let islandOpen = false;
@@ -132,7 +132,7 @@ function renderRoom(root) {
                 h('time', { text: m.time })));
     });
     const input = h('input', {
-        type: 'text', placeholder: 'Message the room', 'aria-label': 'Message the room', maxlength: '500', disabled: !!claim, value: state.draft,
+        type: 'text', placeholder: 'Send a yarn to the room', 'aria-label': 'Send a yarn to the room', maxlength: '500', disabled: !!claim, value: state.draft,
         oninput: (e) => { state = { ...state, draft: e.target.value }; },
         onkeydown: (e) => { if (e.key === 'Enter') send(); },
     });
@@ -165,7 +165,7 @@ function renderRoom(root) {
                 h('button', { class: 'sp-iconbtn', type: 'button', disabled: !!claim, title: 'Attach files', 'aria-label': 'Attach files', onclick: () => picker.click() }, icon(ICON.clip, 20)),
                 picker,
                 claim ? h('span', { class: 'sp-composer__locked', text: 'Room on hold: resolve the payment claim above to keep talking.' }) : input,
-                h('button', { class: 'sp-iconbtn sp-iconbtn--send', type: 'button', disabled: !!claim, title: 'Send (Enter)', 'aria-label': 'Send message', onclick: send }, icon(ICON.send, 20)))));
+                h('button', { class: 'sp-iconbtn sp-iconbtn--send', type: 'button', disabled: !!claim, title: 'Send (Enter)', 'aria-label': 'Send yarn', onclick: send }, icon(ICON.send, 20)))));
 }
 
 const fmtSize = (n) => (n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB');
