@@ -3,9 +3,10 @@
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
+import { postCard } from '/js/components/post-card/post-card.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
-    follow, unfollow, followers, following, credentialsOf, credentialFeature, credentialShip, credentialUnship,
+    follow, unfollow, followers, following, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts,
 } from '/js/services/api.js';
 
 const MAX_LINKS = 12, MAX_SHIPPED = 5;
@@ -18,6 +19,7 @@ const KIND = { SPACE_FORMED: 'Space formed', MILESTONE_CREDITED: 'Milestone' };
 let profile = null;      // ProfileResponse of the person being viewed
 let credentials = null;  // CredentialsResponse, loaded with the profile
 let tab = 'credentials';
+let feeds = {};         // Posts / Reposts pages loaded so far: { posts: { items, next, error }, reposts: {...} }
 
 // ---- tiny DOM helper -------------------------------------------------------
 function h(tag, props = {}, ...kids) {
@@ -48,6 +50,7 @@ const externalLink = (props, ...kids) => h('a', { ...props, href: safeHref(props
 
 // ---- loading ---------------------------------------------------------------
 async function load(name) {
+    feeds = {};
     [profile, credentials] = await Promise.all([profileGet(name), credentialsOf(name)]);
     document.getElementById('header-title').textContent = profile.username;
     document.title = `COLLABO — ${profile.username}`;
@@ -160,24 +163,49 @@ function entryCard(e) {
             e.shipped.length < MAX_SHIPPED && h('button', { class: 'pf-btn', type: 'button', text: 'Add proof', onclick: () => addShipped(e) })));
 }
 
+async function loadFeed(id, more) {
+    const f = feeds[id] || (feeds[id] = { items: [], next: null });
+    try {
+        const page = await userPosts(profile.username, id, more ? f.next : undefined);
+        f.items = more ? [...f.items, ...page.items] : page.items;
+        f.next = page.next || null; f.error = null;
+    } catch (err) { f.error = err.message; }
+    renderTabs();
+}
+
+function postList(id) {
+    const f = feeds[id];
+    if (!f) { loadFeed(id, false); return h('p', { class: 'pf-empty', text: 'Loading…' }); }
+    if (f.error) return h('p', { class: 'pf-empty', text: f.error });
+    if (f.items.length === 0) return h('p', { class: 'pf-empty', text: id === 'posts'
+        ? (profile.self ? 'Ideas you post to The Gaze show up here.' : 'No posts yet.')
+        : (profile.self ? 'Ideas you shout out show up here.' : 'No reposts yet.') });
+    return h('div', { class: 'pf-list' }, ...f.items.map((p) => { const c = postCard(p, { onGone: () => { f.items = f.items.filter((x) => x.id !== p.id); renderTabs(); } }); return c; }),
+        f.next && h('button', { class: 'pf-btn', type: 'button', text: 'Show more', onclick: () => loadFeed(id, true) }));
+}
+
 function renderTabs() {
     const box = document.getElementById('tabs-box');
-    if (!credentials.visible) {
-        return box.replaceChildren(h('p', { class: 'pf-empty', text: 'Credentials are private.' }));
-    }
     const all = credentials.entries, feats = all.filter((e) => e.featured);
-    const shown = tab === 'feats' ? feats : all;
-    const tabBtn = (id, label, n) => h('button', {
-        class: 'pf-tab', role: 'tab', type: 'button', 'aria-selected': String(tab === id), text: `${label} · ${n}`,
+    const tabBtn = (id, label) => h('button', {
+        class: 'pf-tab', role: 'tab', type: 'button', 'aria-selected': String(tab === id), text: label,
         onclick: () => { tab = id; renderTabs(); },
     });
-    box.replaceChildren(
-        h('div', { class: 'pf-tabs', role: 'tablist' }, tabBtn('credentials', 'Credentials', all.length), tabBtn('feats', 'Feats', feats.length)),
-        shown.length === 0
+    let body;
+    if (tab === 'posts' || tab === 'reposts') body = postList(tab);
+    else if (!credentials.visible) body = h('p', { class: 'pf-empty', text: 'Credentials are private.' });
+    else {
+        const shown = tab === 'feats' ? feats : all;
+        body = shown.length === 0
             ? h('p', { class: 'pf-empty', text: tab === 'feats'
                 ? (profile.self ? 'Promote a credential to show it off here.' : 'No feats yet.')
                 : (profile.self ? 'Credentials appear when you form a space or hit a milestone.' : 'No credentials yet.') })
-            : h('div', { class: 'pf-list' }, ...shown.map(entryCard)));
+            : h('div', { class: 'pf-list' }, ...shown.map(entryCard));
+    }
+    box.replaceChildren(
+        h('div', { class: 'pf-tabs', role: 'tablist' }, tabBtn('credentials', `Credentials · ${credentials.visible ? all.length : 0}`),
+            tabBtn('feats', `Feats · ${credentials.visible ? feats.length : 0}`), tabBtn('posts', 'Posts'), tabBtn('reposts', 'Reposts')),
+        body);
 }
 
 function render() {
