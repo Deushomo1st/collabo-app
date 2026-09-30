@@ -46,6 +46,18 @@ public class User {
     @Column(name = "otp_expires_at")
     private LocalDateTime otpExpiresAt;
 
+    // Profile. Nullable wrappers/strings so existing rows survive the new columns:
+    // null reads as "no title", "no bio" and EVERYONE.
+    @Column(name = "preferred_title", length = 40)
+    private String preferredTitle;
+
+    @Column(length = 600)
+    private String bio;
+
+    @Column(name = "credentials_privacy")
+    @Enumerated(EnumType.STRING)
+    private CredentialsPrivacy credentialsPrivacy;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -83,4 +95,13 @@ public class User {
 
     public LocalDateTime getOtpExpiresAt() { return otpExpiresAt; }
     public void setOtpExpiresAt(LocalDateTime otpExpiresAt) { this.otpExpiresAt = otpExpiresAt; }
+
+    public String getPreferredTitle() { return preferredTitle == null ? "" : preferredTitle; }
+    public void setPreferredTitle(String preferredTitle) { this.preferredTitle = preferredTitle; }
+
+    public String getBio() { return bio == null ? "" : bio; }
+    public void setBio(String bio) { this.bio = bio; }
+
+    public CredentialsPrivacy getCredentialsPrivacy() { return credentialsPrivacy == null ? CredentialsPrivacy.EVERYONE : credentialsPrivacy; }
+    public void setCredentialsPrivacy(CredentialsPrivacy credentialsPrivacy) { this.credentialsPrivacy = credentialsPrivacy; }
 }

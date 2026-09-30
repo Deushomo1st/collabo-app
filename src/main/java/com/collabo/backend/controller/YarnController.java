@@ -1,6 +1,6 @@
 package com.collabo.backend.controller;
 
-import com.collabo.backend.config.YarnCaller;
+import com.collabo.backend.config.CurrentUser;
 import com.collabo.backend.exception.YarnException;
 import com.collabo.backend.service.YarnService;
 
@@ -21,9 +21,9 @@ import java.util.UUID;
 public class YarnController {
 
     private final YarnService service;
-    private final YarnCaller caller;
+    private final CurrentUser caller;
 
-    public YarnController(YarnService service, YarnCaller caller) {
+    public YarnController(YarnService service, CurrentUser caller) {
         this.service = service;
         this.caller = caller;
     }

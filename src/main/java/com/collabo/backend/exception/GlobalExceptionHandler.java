@@ -65,6 +65,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
+    @ExceptionHandler(InvalidProfileException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidProfile(InvalidProfileException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, String>> handleUnauthorized(UnauthorizedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", ex.getMessage()));
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadLogin(InvalidCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", ex.getMessage()));

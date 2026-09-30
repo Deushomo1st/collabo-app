@@ -1,30 +1,29 @@
 package com.collabo.backend.config;
 
 import com.collabo.backend.entity.User;
-import com.collabo.backend.exception.YarnException;
+import com.collabo.backend.exception.UnauthorizedException;
 import com.collabo.backend.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-/** Who is calling the Yarnspaces API? The logged-in user of the current session. */
+/** The logged-in user of the current session. Every signed-in-only endpoint asks here who is calling. */
 @Component
-public class YarnCaller {
+public class CurrentUser {
 
     private final UserRepository users;
 
-    public YarnCaller(UserRepository users) {
+    public CurrentUser(UserRepository users) {
         this.users = users;
     }
 
     public User require() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth instanceof AnonymousAuthenticationToken || !auth.isAuthenticated()) {
-            throw new YarnException(HttpStatus.UNAUTHORIZED, "Sign in to use Yarns.");
+            throw new UnauthorizedException();
         }
         return users.findByUsername(auth.getName())
-                .orElseThrow(() -> new YarnException(HttpStatus.UNAUTHORIZED, "Sign in to use Yarns."));
+                .orElseThrow(() -> new UnauthorizedException());
     }
 }
