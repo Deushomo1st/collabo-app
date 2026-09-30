@@ -77,7 +77,7 @@ Set these on the mount target or any ancestor:
 | `--nav-font-size` | `15px` | Link font size |
 
 The nav mounts inside a sticky wrapper (`.nav-selector-fluid-hold-wrap`, `top: 16px`) so it stays
-reachable on long pages. It is dark in both themes; it doesn't read the theme variables.
+reachable on long pages. It follows the theme, inverted on purpose: in dusk it is the brightest thing on the page (light pill, white halo, dark active bubble); in light it is dark metal with a dark halo and a white bubble. Public variables: `--nav-selector-fluid-hold-{bg,border,shadow,fade,link,link-hover,link-active,bubble-bg,bubble-shadow,hover-bg,hover-shadow,arrow-bg,arrow-ink}`; light values live in `css/global/theme.css`, dusk values are the defaults.
 
 ## Known quirk
 

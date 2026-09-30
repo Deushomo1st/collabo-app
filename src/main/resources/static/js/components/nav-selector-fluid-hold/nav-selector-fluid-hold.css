@@ -29,16 +29,30 @@
 .nav-selector-fluid-hold-wrap--start { justify-content: flex-start; }
 
 .nav-selector-fluid-hold {
+    /* defaults = the bright pill with a white halo (dusk). Light theme flips it to dark metal in css/global/theme.css */
+    --_nf-bg: var(--nav-selector-fluid-hold-bg, linear-gradient(145deg, #ffffff, #d5dae2));
+    --_nf-border: var(--nav-selector-fluid-hold-border, rgba(255, 255, 255, .75));
+    --_nf-shadow: var(--nav-selector-fluid-hold-shadow, inset 0 2px 5px rgba(255,255,255,.9), inset 0 -5px 14px rgba(60,70,90,.18), 0 10px 30px rgba(0,0,0,.5), 0 0 22px rgba(255,255,255,.55), 0 0 60px rgba(255,255,255,.28));
+    --_nf-fade: var(--nav-selector-fluid-hold-fade, #e3e7ed);
+    --_nf-link: var(--nav-selector-fluid-hold-link, #5d6676);
+    --_nf-link-hover: var(--nav-selector-fluid-hold-link-hover, #000);
+    --_nf-link-active: var(--nav-selector-fluid-hold-link-active, #fff);
+    --_nf-bubble-bg: var(--nav-selector-fluid-hold-bubble-bg, linear-gradient(145deg, #2b2f38, #0b0c0f));
+    --_nf-bubble-shadow: var(--nav-selector-fluid-hold-bubble-shadow, inset 0 2px 4px rgba(255,255,255,.14), inset 0 -3px 6px rgba(0,0,0,.6), 0 6px 12px rgba(0,0,0,.35));
+    --_nf-hover-bg: var(--nav-selector-fluid-hold-hover-bg, linear-gradient(145deg, rgba(20,24,32,.14), rgba(20,24,32,.06)));
+    --_nf-hover-shadow: var(--nav-selector-fluid-hold-hover-shadow, inset 0 1px 3px rgba(255,255,255,.7), 0 3px 8px rgba(0,0,0,.12));
+    --_nf-arrow-bg: var(--nav-selector-fluid-hold-arrow-bg, rgba(255, 255, 255, .92));
+    --_nf-arrow-ink: var(--nav-selector-fluid-hold-arrow-ink, #3a4150);
+    --_nf-icon-ink: var(--nav-selector-fluid-hold-icon-ink, #fff);
     position: relative;
     width: fit-content;
     max-width: var(--nav-width, min(92vw, 560px));
     height: 46px;
     padding: var(--nav-padding, 6px);
     border-radius: 999px;
-    background: linear-gradient(145deg, #2a2a2a, #111);
-    border: 1px solid #333;
-    box-shadow: inset 0 2px 5px rgba(255,255,255,0.05), inset 0 -5px 15px rgba(0,0,0,0.6),
-    0 10px 30px rgba(0,0,0,0.5), 0 0 24px rgba(0,0,0,0.45);
+    background: var(--_nf-bg);
+    border: 1px solid var(--_nf-border);
+    box-shadow: var(--_nf-shadow);
     display: flex;
     align-items: center;
     overflow: hidden;
@@ -61,8 +75,8 @@
     content: ""; position: absolute; top: 0; bottom: 0; width: 20px;
     z-index: 4; pointer-events: none; opacity: 0; transition: opacity .2s;
 }
-.nav-selector-fluid-hold__clip::before { left: 0; background: linear-gradient(to right, #181818, transparent); }
-.nav-selector-fluid-hold__clip::after { right: 0; background: linear-gradient(to left, #181818, transparent); }
+.nav-selector-fluid-hold__clip::before { left: 0; background: linear-gradient(to right, var(--_nf-fade), transparent); }
+.nav-selector-fluid-hold__clip::after { right: 0; background: linear-gradient(to left, var(--_nf-fade), transparent); }
 .nav-selector-fluid-hold__clip.fade-l::before { opacity: 1; }
 .nav-selector-fluid-hold__clip.fade-r::after { opacity: 1; }
 
@@ -81,15 +95,15 @@
 .nav-selector-fluid-hold__link {
     position: relative; display: flex; align-items: center; gap: 8px;
     padding: var(--nav-link-padding, 10px 20px);
-    color: #999; text-decoration: none; font-weight: 500;
+    color: var(--_nf-link); text-decoration: none; font-weight: 500;
     font-size: var(--nav-font-size, 15px); border-radius: 999px;
     cursor: pointer; font-family: inherit; white-space: nowrap;
     scroll-snap-align: center; scroll-snap-stop: always;
     transition: color .3s ease;
 }
 .nav-selector-fluid-hold__link svg { width: 16px; height: 16px; flex-shrink: 0; }
-.nav-selector-fluid-hold__link:hover { color: #fff; }
-.nav-selector-fluid-hold__link.is-active { color: #111; anchor-name: --ns-active; }
+.nav-selector-fluid-hold__link:hover { color: var(--_nf-link-hover); }
+.nav-selector-fluid-hold__link.is-active { color: var(--_nf-link-active); anchor-name: --ns-active; }
 .nav-selector-fluid-hold__link::before { content: ""; position: absolute; inset: 0; border-radius: 999px; }
 .nav-selector-fluid-hold__link:hover::before { anchor-name: --ns-hover; }
 
@@ -99,13 +113,13 @@
     bottom .4s cubic-bezier(.25,1,.5,1), left .4s cubic-bezier(.25,1,.5,1), opacity .3s ease;
 }
 .nav-selector-fluid-hold__bubble--active {
-    background: linear-gradient(145deg, #ffffff, #d4d4d4);
-    box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -3px 6px rgba(0,0,0,0.2), 0 6px 12px rgba(0,0,0,0.4);
+    background: var(--_nf-bubble-bg);
+    box-shadow: var(--_nf-bubble-shadow);
     position-anchor: --ns-active; top: anchor(top); right: anchor(right); bottom: anchor(bottom); left: anchor(left); z-index: 2;
 }
 .nav-selector-fluid-hold__bubble--hover {
-    background: linear-gradient(145deg, #3d3d3d, #1a1a1a);
-    box-shadow: inset 0 2px 4px rgba(255,255,255,0.05), inset 0 -3px 6px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.3);
+    background: var(--_nf-hover-bg);
+    box-shadow: var(--_nf-hover-shadow);
     position-anchor: --ns-nav; top: anchor(top); right: anchor(right); bottom: anchor(bottom); left: anchor(left); opacity: 0; z-index: 1;
 }
 .nav-selector-fluid-hold:has(.nav-selector-fluid-hold__link:hover:not(.is-active)) .nav-selector-fluid-hold__bubble--hover {
@@ -116,9 +130,9 @@
 .nav-selector-fluid-hold__icon {
     position: absolute; left: 50%; top: 50%;
     width: 36px; height: 36px; border-radius: 50%;
-    background: linear-gradient(145deg, #ffffff, #d4d4d4);
-    box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -3px 6px rgba(0,0,0,0.2), 0 6px 14px rgba(0,0,0,0.5);
-    display: flex; align-items: center; justify-content: center; color: #111;
+    background: var(--_nf-bubble-bg);
+    box-shadow: var(--_nf-bubble-shadow);
+    display: flex; align-items: center; justify-content: center; color: var(--_nf-link-active);
     border: none; cursor: pointer; z-index: 9;
     opacity: 0; pointer-events: none; transform: translate(-50%,-50%) scale(.4);
     transition: opacity .25s ease, transform .25s cubic-bezier(.25,1,.5,1);
@@ -135,12 +149,12 @@
     position: absolute; top: 50%; transform: translateY(-50%);
     width: 26px; height: 26px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: rgba(18,18,18,0.9); border: 1px solid #333;
-    color: #ccc; font-size: 15px; line-height: 1; cursor: pointer;
+    background: var(--_nf-arrow-bg); border: 1px solid var(--_nf-border);
+    color: var(--_nf-arrow-ink); font-size: 15px; line-height: 1; cursor: pointer;
     z-index: 7; opacity: 0; pointer-events: none; transition: opacity .2s, color .2s;
 }
 .nav-selector-fluid-hold__arrow.on { opacity: 1; pointer-events: auto; }
-.nav-selector-fluid-hold__arrow:hover { color: #fff; }
+.nav-selector-fluid-hold__arrow:hover { color: var(--_nf-link-hover); }
 .nav-selector-fluid-hold__arrow--left { left: 5px; }
 .nav-selector-fluid-hold__arrow--right { right: 5px; }
 
