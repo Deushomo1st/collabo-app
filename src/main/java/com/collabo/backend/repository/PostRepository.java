@@ -24,4 +24,8 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
             + "and (:pendingOnly = false or p.applyBy is null or p.applyBy > :now) order by p.createdAt desc")
     List<Post> network(@Param("before") Instant before, @Param("network") Collection<UUID> network,
                        @Param("pendingOnly") boolean pendingOnly, @Param("now") Instant now, Pageable page);
+
+    /** One author's posts for their profile, newest first. */
+    @Query("select p from Post p where p.authorId = :author and p.createdAt < :before order by p.createdAt desc")
+    List<Post> byAuthor(@Param("author") UUID author, @Param("before") Instant before, Pageable page);
 }

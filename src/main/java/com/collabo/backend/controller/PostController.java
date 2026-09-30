@@ -34,6 +34,12 @@ public class PostController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/shout")
+    public PostResponse shout(@PathVariable UUID id) { return posts.shout(current.require(), id); }
+
+    @DeleteMapping("/{id}/shout")
+    public PostResponse unshout(@PathVariable UUID id) { return posts.unshout(current.require(), id); }
+
     @PatchMapping("/{id}/window")
     public PostResponse window(@PathVariable UUID id, @RequestBody WindowRequest req) {
         return posts.setWindow(current.require(), id, req.applyBy());
