@@ -1,14 +1,13 @@
-// The Gaze: everyone's ideas newest first, or Shared Gaze (your network only). Compose, filter, endless scroll.
+// The Gaze: everyone's ideas newest first, or Shared Gaze (your network only). Filter, endless scroll. Posting happens on post.html.
 // All network calls live in js/services/api.js; text goes in through textContent only.
 import { live } from '/js/services/live.js';   // keeps the live socket open (yarns are acknowledged from any page) and tells us when ideas are posted or deleted
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { currentUser, gazeFeed, gazeNewer, postCreate } from '/js/services/api.js';
+import { currentUser, gazeFeed, gazeNewer, postGet } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
-const MAX_TITLE = 120, MAX_BODY = 2000;
 const EMPTY = {
     gaze: 'Nothing here yet. Be the first to post an idea.',
     shared: 'Nothing from your network yet. Follow people, or ask them to follow you.',
@@ -196,24 +195,16 @@ async function checkNewer() {
 let newerTimer;
 const soon = () => { clearTimeout(newerTimer); newerTimer = setTimeout(checkNewer, 500 + Math.random() * 2500); };   // the jitter spreads a crowd's questions out
 
-async function compose() {
-    const { panel, close } = await openGlassBlurDialog({ size: 'md', label: 'New idea', html:
-        '<h3 class="glass-blur-dialog__title">Post an idea</h3><form class="sp-form"></form>' });
-    const title = h('input', { class: 'sp-input', id: 'gz-title', maxlength: MAX_TITLE, required: true, placeholder: 'What are you building?' });
-    const body = h('textarea', { class: 'sp-input', id: 'gz-body', rows: 6, maxlength: MAX_BODY, required: true, placeholder: 'Who do you need, and what will you make together?' });
-    const by = h('input', { class: 'sp-input', id: 'gz-by', type: 'datetime-local' });
-    const err = h('p', { class: 'gz-error', hidden: true });
-    const form = panel.querySelector('form');
-    form.append(h('label', { for: 'gz-title' }, 'Title', title), h('label', { for: 'gz-body' }, 'Description', body),
-        h('label', { for: 'gz-by' }, 'Applications close (optional)', by), err,
-        h('div', { class: 'glass-blur-dialog__actions' }, h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Post')));
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try {
-            await postCreate(title.value, body.value, by.value ? new Date(by.value).toISOString() : null);
-            close(); toast('Posted. Your own ideas live on your profile, not in your Gaze.');
-        } catch (ex) { err.textContent = ex.message; err.hidden = false; }
-    });
+/** A shared link (gaze.html?post=ID) opens that one post over the feed. */
+async function openLinkedPost() {
+    const id = new URLSearchParams(location.search).get('post');
+    if (!id) return;
+    try {
+        const p = await postGet(id);
+        const { panel, close } = await openGlassBlurDialog({ size: 'lg', label: 'Post', html: '<div class="gz-linked"></div>' });
+        panel.querySelector('.gz-linked').append(postCard(p, { onGone: () => { close(); drop(id); } }));
+    } catch (err) { toast(err.message); }
+    history.replaceState(null, '', location.pathname);   // a refresh should not pop it open again
 }
 
 // The bottom nav: back to the top of the Gaze, Yarns, a plus to post, and your profile.
@@ -229,7 +220,7 @@ async function mountBottom(username) {
         links: pages.map((p) => p[0]), hrefs: pages.map((p) => p[1]), icons: pages.map((p) => p[2]),
         onChange: (label, href) => {
             if (label === 'Gaze') return window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (label === 'Post') { nav.setActive(0); return compose(); }
+            if (label === 'Post') { nav.setActive(0); location.href = '/HTML-pages/post.html'; return; }   // the post page is a page of its own
             location.href = href;
         },
     });
@@ -247,6 +238,8 @@ async function boot() {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') soon(); });
     setInterval(() => { if (!live.connected && document.visibilityState === 'visible') checkNewer(); }, 60_000);   // a safety net while the socket is down
     show();
+    try { const msg = sessionStorage.getItem('collaboToast'); if (msg) { sessionStorage.removeItem('collaboToast'); toast(msg); } } catch { /* just no message */ }
+    openLinkedPost();
 }
 
 preloadGlassBlurDialog();

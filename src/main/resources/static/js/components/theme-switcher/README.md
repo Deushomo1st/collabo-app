@@ -32,7 +32,7 @@ What each theme *looks like* is decided by `css/global/theme.css`, not by this c
 
 | Export | Does |
 |---|---|
-| `mountThemeSwitcher(target, { inline, onChange })` | Mounts a switcher. Returns `{ element, destroy }`. `inline` puts it in normal flow instead of fixed bottom-right. |
+| `mountThemeSwitcher(target, { inline, onChange })` | Mounts a switcher. Returns `{ element, destroy }`. `inline` puts it in normal flow instead of fixed bottom-right; an inline one turns into a gear (Settings dialog) at 560px and below. `plain` keeps it as a plain switcher (used inside that dialog). |
 | `getTheme()` | `'light'` or `'dusk'` |
 | `setTheme(theme, { persist = true })` | Applies a theme, saves it, and fires `collabo:themechange` |
 | `initTheme()` | Applies the saved theme if the page hasn't set one. Called by `mountThemeSwitcher`. |

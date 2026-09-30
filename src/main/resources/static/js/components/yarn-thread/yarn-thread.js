@@ -23,6 +23,10 @@ export function preloadYarnThread() {
     return loadStylesOnce(CSS_HREF, 'yarn-thread');
 }
 
+// A shared post arrives as a yarn ending in its own address; make just that address a link (everything else stays plain text).
+const POST_LINK = /(\/HTML-pages\/gaze\.html\?post=[0-9a-f-]{36})/;
+const linkify = (text) => text.split(POST_LINK).map((part, i) => i % 2 ? h('a', { href: part, text: 'Open the post' }) : part);
+
 // opts: { meId, showNames, load(before), send(body), onRead(), signals(refresh), isLive(), pollMs = 6000, disabledReason, onError(err) }
 // Returns { element, refresh(), destroy(), setDisabledReason(text) }.
 export function createYarnThread(opts) {
@@ -61,7 +65,7 @@ export function createYarnThread(opts) {
         const mine = y.senderId === opts.meId;
         return h('div', { class: `yarn-thread__msg ${mine ? 'yarn-thread__msg--mine' : 'yarn-thread__msg--theirs'}` },
             !mine && opts.showNames ? h('strong', { class: 'yarn-thread__name', text: y.sender }) : null,
-            h('span', { class: 'yarn-thread__text', text: y.body }),
+            h('span', { class: 'yarn-thread__text' }, ...linkify(y.body)),
             h('span', { class: 'yarn-thread__meta' },
                 h('time', { class: 'yarn-thread__time', text: new Date(y.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }),
                 mine && y.receipt ? ticks(y.receipt) : null));

@@ -104,7 +104,20 @@ const post = (id, path = '') => `/api/posts/${id}${path}`;
 export const gazeNewer = (feed, { pending, top }) => call(`/api/gaze/newer${q({ feed, pending: pending ? 'true' : '', top: top.join(',') })}`);
 export const gazeFeed = (feed, { pending, before } = {}) => call(`/api/gaze${q({ feed, pending: pending ? 'true' : '', before })}`);
 export const userPosts = (name, tab, before) => call(user(name, '/posts') + q({ tab, before }));
-export const postCreate = (title, body, applyBy) => call('/api/posts', { method: 'POST', body: { title, body, applyBy } }, 'Could not post your idea.');
+// fields: title, body, applyBy, hashtags[], mediaIds[], commentsOn, shoutsOn, shareWith[] (usernames), draftId
+export const postCreate = (fields) => call('/api/posts', { method: 'POST', body: fields }, 'Could not post your idea.');
+export const postGet = (id) => call(post(id));
+
+// pictures and videos: the raw file is the request body; nothing is on a post until it is posted
+export const mediaUpload = (file) => call('/api/media', { method: 'POST', body: file }, 'Could not upload that file.');
+export const mediaDiscard = (id) => call(`/api/media/${id}`, { method: 'DELETE' });
+export const mediaUrl = (id) => `/api/media/${id}`;
+
+// drafts: your own unfinished posts. draftSave creates one, or replaces the one named by fields.id
+export const draftsOf = () => call('/api/drafts');
+export const draftGet = (id) => call(`/api/drafts/${id}`);
+export const draftSave = (fields) => call('/api/drafts', { method: 'PUT', body: fields }, 'Could not save the draft.');
+export const draftDelete = (id) => call(`/api/drafts/${id}`, { method: 'DELETE' });
 export const postDelete = (id) => call(post(id), { method: 'DELETE' });
 export const postWindow = (id, applyBy) => call(post(id, '/window'), { method: 'PATCH', body: { applyBy } });
 export const postShout = (id) => call(post(id, '/shout'), { method: 'PUT' });

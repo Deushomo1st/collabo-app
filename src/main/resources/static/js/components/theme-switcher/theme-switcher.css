@@ -72,3 +72,15 @@
 @media (prefers-reduced-motion: reduce) {
     .theme-switcher, .theme-switcher__label { transition: none; }
 }
+
+/* Small screens: a header's switcher becomes a gear that opens Settings (see openSettings in the .js) */
+.theme-switcher__gear {
+    display: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; flex: none; place-items: center;
+    border: 1px solid var(--sp-line, rgba(255, 255, 255, .18)); background: var(--sp-panel, rgba(255, 255, 255, .08)); color: inherit;
+}
+.theme-switcher__gear:hover { background: var(--sp-panel-hi, rgba(255, 255, 255, .14)); }
+.theme-switcher__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; font-weight: 700; }
+@media (max-width: 560px) {
+    .theme-switcher--inline:not(.theme-switcher--plain) { display: none; }
+    .theme-switcher__gear { display: inline-grid; }
+}

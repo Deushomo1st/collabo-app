@@ -138,6 +138,15 @@ public class YarnService {
         return viewFor(me, t.getId());
     }
 
+    /**
+     * Yarns someone a link to a post. False (and nothing sent) when it cannot be delivered: a block either way, a declined request, or a
+     * request of yours they have not accepted yet. The self-call keeps a refusal from rolling back the caller's transaction.
+     */
+    public boolean tryShare(User me, User target, String body) {
+        try { startMySpace(me, target.getUsername(), body); return true; }
+        catch (YarnException refused) { return false; }
+    }
+
     // ---- yarns ------------------------------------------------------------
 
     @Transactional(readOnly = true)

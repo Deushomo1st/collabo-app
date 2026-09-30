@@ -102,7 +102,16 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 @media (max-width: 560px) { #bottom-nav { --nav-link-padding: 9px 7px; --nav-font-size: 13px; }
     #bottom-nav .nav-selector-fluid-hold__nav { padding-inline: 0; } }
 @media (max-width: 560px) {
-    .sp-header .sp-tag, .sp-header .theme-switcher__label { display: none; }
+    .sp-header .sp-tag { display: none; }
     .sp-header { gap: 8px; }
 }
 #bottom-nav, .gz-filters { --nav-link-padding: 9px 12px; --nav-font-size: 14px; }
+
+/* pictures, videos and hashtags on a post card */
+.pc-media { display: grid; gap: 6px; border-radius: 14px; overflow: hidden; }
+.pc-media--2 { grid-template-columns: 1fr 1fr; }
+.pc-media--3 { grid-template-columns: 1fr 1fr 1fr; }
+.pc-media img, .pc-media video { width: 100%; max-height: 420px; object-fit: cover; display: block; background: #000; border-radius: 12px; }
+.pc-media--2 img, .pc-media--2 video, .pc-media--3 img, .pc-media--3 video { aspect-ratio: 1; max-height: none; }
+.pc-tags { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--sp-brand); font-weight: 700; font-size: 13px; }
+.gz-linked { display: grid; }

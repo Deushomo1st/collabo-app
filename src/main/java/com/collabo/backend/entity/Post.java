@@ -2,6 +2,7 @@ package com.collabo.backend.entity;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /** An idea posted to The Gaze. applyBy null means the application window is open indefinitely. */
@@ -32,6 +33,16 @@ public class Post {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private boolean formed;
 
+    /** Space-separated, lower case, no '#'. Null when there are none. */
+    @Column(length = 400)
+    private String hashtags;
+
+    @Column(name = "comments_on", nullable = false, columnDefinition = "boolean default true")
+    private boolean commentsOn = true;
+
+    @Column(name = "shouts_on", nullable = false, columnDefinition = "boolean default true")
+    private boolean shoutsOn = true;
+
     public Post() {}
     public Post(UUID authorId, String title, String body, Instant applyBy) {
         this.authorId = authorId; this.title = title; this.body = body; this.applyBy = applyBy;
@@ -44,6 +55,12 @@ public class Post {
     public Instant getApplyBy() { return applyBy; }
     public void setApplyBy(Instant applyBy) { this.applyBy = applyBy; }
     public Instant getCreatedAt() { return createdAt; }
+    public List<String> tags() { return hashtags == null || hashtags.isBlank() ? List.of() : List.of(hashtags.split(" ")); }
+    public void setTags(List<String> tags) { this.hashtags = tags.isEmpty() ? null : String.join(" ", tags); }
+    public boolean isCommentsOn() { return commentsOn; }
+    public void setCommentsOn(boolean commentsOn) { this.commentsOn = commentsOn; }
+    public boolean isShoutsOn() { return shoutsOn; }
+    public void setShoutsOn(boolean shoutsOn) { this.shoutsOn = shoutsOn; }
     public boolean isFormed() { return formed; }
     public void setFormed(boolean formed) { this.formed = formed; }
 

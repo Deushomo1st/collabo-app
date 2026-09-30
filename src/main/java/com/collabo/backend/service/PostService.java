@@ -40,10 +40,13 @@ public class PostService {
     private final ShoutRepository shouts;
     private final ApplicationRepository applications;
     private final LiveSignals signals;
+    private final MediaService media;
+    private final DraftService drafts;
+    private final YarnService yarns;
 
     public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts,
-                       ApplicationRepository applications, LiveSignals signals) {
-        this.signals = signals;
+                       ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns) {
+        this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
         this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts; this.applications = applications;
     }
 
@@ -54,9 +57,24 @@ public class PostService {
         if (title.length() > MAX_TITLE) throw new InvalidProfileException("Keep the title under " + MAX_TITLE + " characters.");
         if (body.length() > MAX_BODY) throw new InvalidProfileException("Keep the description under " + MAX_BODY + " characters.");
         if (req.applyBy() != null && !req.applyBy().isAfter(Instant.now())) throw new InvalidProfileException("The application deadline must be in the future.");
-        Post saved = posts.save(new Post(me.getId(), title, body, req.applyBy()));
+        List<String> tags = Hashtags.clean(req.hashtags());
+        List<String> recipients = DraftService.names(req.shareWith());
+        List<com.collabo.backend.entity.Media> files = media.mine(me, req.mediaIds());
+        Post p = new Post(me.getId(), title, body, req.applyBy());
+        p.setTags(tags);
+        p.setCommentsOn(!Boolean.FALSE.equals(req.commentsOn()));
+        p.setShoutsOn(!Boolean.FALSE.equals(req.shoutsOn()));
+        Post saved = posts.save(p);
+        media.attach(files, saved.getId());
+        drafts.consume(me, req.draftId());
         signals.gaze();
-        return view(saved, me);
+        int delivered = 0;
+        String note = me.getUsername() + " shared a post with you: \"" + title + "\"\n/HTML-pages/gaze.html?post=" + saved.getId();
+        for (String name : recipients) {
+            User to = users.findByUsername(name).orElse(null);
+            if (to != null && yarns.tryShare(me, to, note)) delivered++;
+        }
+        return view(saved, me).withShared(delivered);
     }
 
     @Transactional(readOnly = true)
@@ -70,6 +88,7 @@ public class PostService {
         comments.deleteByPostId(id);
         shouts.deleteByPostId(id);
         applications.deleteByPostId(id);
+        media.removeOfPost(id);
         posts.delete(p);
         signals.postGone(id);
     }
@@ -92,6 +111,10 @@ public class PostService {
         if (blocked(viewer.getId(), p.getAuthorId())) throw new ResourceNotFoundException("That post is gone.");
         return p;
     }
+
+    /** For other layers: throws "gone" unless the viewer may see this post. */
+    @Transactional(readOnly = true)
+    public void checkVisible(User viewer, UUID id) { visible(viewer, id); }
 
     boolean blocked(UUID a, UUID b) {
         return blocks.existsByBlockerIdAndBlockedId(a, b) || blocks.existsByBlockerIdAndBlockedId(b, a);
@@ -118,11 +141,12 @@ public class PostService {
         Map<UUID, Long> applicants = new HashMap<>();
         Set<UUID> mineIds = ps.stream().filter(p -> p.getAuthorId().equals(viewer.getId())).map(Post::getId).collect(Collectors.toSet());
         if (!mineIds.isEmpty()) for (Object[] row : applications.counts(mineIds, ApplicationState.WITHDRAWN)) applicants.put((UUID) row[0], (Long) row[1]);
+        Map<UUID, List<com.collabo.backend.entity.Media>> files = media.ofPosts(ids);
         return ps.stream().map(p -> {
             User author = authors.get(p.getAuthorId());
             if (author == null) throw new ResourceNotFoundException("That post is gone.");
             return PostResponse.of(p, author, viewer, counts.getOrDefault(p.getId(), 0L), mineShouted.contains(p.getId()), shouters.get(p.getId()),
-                    applied.get(p.getId()), mineIds.contains(p.getId()) ? applicants.getOrDefault(p.getId(), 0L) : null);
+                    applied.get(p.getId()), mineIds.contains(p.getId()) ? applicants.getOrDefault(p.getId(), 0L) : null, files.getOrDefault(p.getId(), List.of()));
         }).toList();
     }
 
@@ -130,6 +154,7 @@ public class PostService {
     public PostResponse shout(User me, UUID id) {
         Post p = visible(me, id);
         if (p.getAuthorId().equals(me.getId())) throw new InvalidProfileException("That one is already yours.");
+        if (!p.isShoutsOn()) throw new InvalidProfileException("The author turned shout-outs off for this post.");
         if (!shouts.existsByPostIdAndUserId(id, me.getId())) shouts.save(new Shout(id, me.getId()));
         return view(p, me);
     }

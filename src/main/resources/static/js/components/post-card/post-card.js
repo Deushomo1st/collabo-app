@@ -22,6 +22,11 @@ export function postCard(initial, { onGone } = {}) {
         try { p = await fn(); draw(); } catch (err) { toast(err.message); }
     }
 
+    async function copyLink() {
+        try { await navigator.clipboard.writeText(`${location.origin}/HTML-pages/gaze.html?post=${p.id}`); toast('Link copied.'); }
+        catch { toast('Could not copy. Copy the address from the link instead.'); }
+    }
+
     async function toggleComments() {
         open = !open;
         if (open && !comments) {
@@ -31,6 +36,7 @@ export function postCard(initial, { onGone } = {}) {
     }
 
     function commentBox() {
+        const on = p.commentsOn !== false;
         const input = h('input', { class: 'sp-input', maxlength: MAX_COMMENT, placeholder: 'Add a comment', 'aria-label': 'Add a comment' });
         const form = h('form', { class: 'pc-cform' }, input, h('button', { class: 'sp-btn sp-btn--brand', type: 'submit', text: 'Post' }));
         form.addEventListener('submit', async (e) => {
@@ -48,7 +54,7 @@ export function postCard(initial, { onGone } = {}) {
                     try { await commentDelete(p.id, c.id); comments = comments.filter((x) => x.id !== c.id); draw(); }
                     catch (err) { toast(err.message); }
                 } }))),
-            form);
+            on ? form : h('p', { class: 'pc-hint', text: 'The author turned comments off for this post.' }));
     }
 
     async function editWindow() {
@@ -88,12 +94,17 @@ export function postCard(initial, { onGone } = {}) {
                 h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) })),
             h('h3', { class: 'pc-title', text: p.title }),
             h('p', { class: 'pc-body', text: p.body }),
+            p.media?.length > 0 && h('div', { class: `pc-media pc-media--${Math.min(p.media.length, 3)}` }, ...p.media.map((m) => m.kind === 'VIDEO'
+                ? h('video', { src: `/api/media/${m.id}`, controls: true, preload: 'metadata', playsinline: true })
+                : h('img', { src: `/api/media/${m.id}`, alt: 'Attached picture', loading: 'lazy' }))),
+            p.hashtags?.length > 0 && h('p', { class: 'pc-tags' }, ...p.hashtags.map((t) => h('span', { text: `#${t}` }))),
             h('p', { class: 'pc-hint', text: formed ? 'A space was formed for this idea.' : p.applyBy ? `${closed ? 'Applications closed' : 'Applications close'} ${when(p.applyBy)}` : 'Open to applications, no deadline' }),
             h('div', { class: 'pc-actions' },
-                !p.mine && h('button', { class: `pc-btn ${p.shouted ? 'is-on' : ''}`, type: 'button', 'aria-pressed': String(p.shouted),
+                !p.mine && p.shoutsOn !== false && h('button', { class: `pc-btn ${p.shouted ? 'is-on' : ''}`, type: 'button', 'aria-pressed': String(p.shouted),
                     text: `${p.shouted ? 'Shouted out' : 'Shout out'} · ${p.shouts}`, onclick: () => act(() => (p.shouted ? postUnshout : postShout)(p.id)) }),
                 p.mine && p.shouts > 0 && h('span', { class: 'pc-hint', text: `${p.shouts} shout-out${p.shouts === 1 ? '' : 's'}` }),
                 h('button', { class: 'pc-btn', type: 'button', 'aria-expanded': String(open), text: open ? 'Hide comments' : 'Comments', onclick: toggleComments }),
+                h('button', { class: 'pc-btn', type: 'button', text: 'Copy link', onclick: copyLink }),
                 !p.mine && p.applied && p.applied !== 'WITHDRAWN' && h('span', { class: 'sp-tag sp-tag--ok', text: 'Applied' }),
                 !p.mine && !closed && !formed && (!p.applied || p.applied === 'WITHDRAWN') && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Apply',
                     onclick: () => openApply(p, (state) => { p = { ...p, applied: state }; draw(); }) }),

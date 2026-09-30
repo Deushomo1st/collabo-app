@@ -45,7 +45,7 @@ public class CommentService {
     }
 
     public CommentResponse add(User me, UUID postId, String text) {
-        posts.visible(me, postId);
+        if (!posts.visible(me, postId).isCommentsOn()) throw new InvalidProfileException("The author turned comments off for this post.");
         String body = text == null ? "" : text.trim();
         if (body.isEmpty()) throw new InvalidProfileException("Write something first.");
         if (body.length() > MAX_BODY) throw new InvalidProfileException("Keep comments under " + MAX_BODY + " characters.");

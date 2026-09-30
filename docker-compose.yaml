@@ -19,9 +19,13 @@ services:
       - .env
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/collabo
+      - MEDIA_DIR=/app/media
+    volumes:
+      - media_data:/app/media
     depends_on:
       - db
     restart: always
 
 volumes:
   postgres_data:
+  media_data:
