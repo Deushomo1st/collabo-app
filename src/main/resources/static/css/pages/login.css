@@ -9,3 +9,13 @@
 .lg-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
 .lg-foot { margin: 16px 0 0; text-align: center; color: var(--sp-muted); font-size: 13px; }
 .lg-foot a { color: var(--sp-brand); font-weight: 700; }
+
+/* Register page: the OTP / challenge boxes and the result message (shown by the page script) */
+.lg-box { display: none; margin-top: 14px; padding: 14px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-panel); gap: 10px; }
+.lg-box p, .lg-box label { margin: 0 0 8px; font-size: 13px; color: var(--sp-muted); }
+.lg-box .sp-input { margin-bottom: 8px; }
+.lg-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.message { display: none; margin-top: 14px; padding: 10px 12px; border-radius: 12px; font-size: 13px; border: 1px solid var(--sp-line); }
+.message.success { color: var(--sp-ok); border-color: color-mix(in srgb, var(--sp-ok) 50%, transparent); }
+.message.error { color: var(--sp-danger); border-color: color-mix(in srgb, var(--sp-danger) 50%, transparent); }
+.lg-box .sp-input { width: 100%; box-sizing: border-box; }

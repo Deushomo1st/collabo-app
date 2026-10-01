@@ -15,7 +15,10 @@ const error = document.getElementById('error');
 const submit = document.getElementById('submit');
 let countdown;
 
-function show(text) { error.textContent = text; error.hidden = !text; }
+function show(text) {
+    error.textContent = text; error.hidden = !text;
+    if (text) error.scrollIntoView({ behavior: 'smooth', block: 'center' });   // the error may sit below the fold on a small screen
+}
 
 function lockout(seconds) {   // "too many attempts": count down, then let them try again
     clearInterval(countdown);
