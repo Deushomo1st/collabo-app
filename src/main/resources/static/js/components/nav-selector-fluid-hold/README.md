@@ -47,6 +47,7 @@ const nav = await mountNavSelector('#nav', {
 | `icons` | string[] | built-in 6 | SVG markup per link. Only used together with `links`. Falls back to the built-in icons. |
 | `collapseWhenIdle` | boolean | `false` | Collapse after `idleMs` without interaction **anywhere** on the page, even above `threshold` or when nothing scrolls. Hover and keyboard focus pause the countdown. |
 | `collapsedLabel` | `'icon'` \| `'number'` | `'icon'` | What the collapsed pill shows: the active link's icon, or its position (1, 2, 3…). |
+| `holdActions` | `{ label, icon, onSelect }[]` | none | Up to 3. **Press and hold the collapsed icon** and these fan out as round buttons ([hold-fan](../hold-fan/README.md)). A tap still expands the nav. |
 
 **Handle:**
 

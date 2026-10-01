@@ -1,4 +1,4 @@
-// theme-switcher: dusk/light toggle that sets <html data-theme> and remembers the choice.
+// theme-switcher: dusk/light round button that sets <html data-theme> and remembers the choice.
 // Ported from SchoolHub (app.js theme block + style.css .theme-toggle).
 // What the themes look like is decided by css/global/theme.css, not by this component.
 //
@@ -6,7 +6,7 @@
 //   import { mountThemeSwitcher, initTheme, getTheme, setTheme }
 //       from '/js/components/theme-switcher/theme-switcher.js';
 //   initTheme();                           // apply the saved choice (see README for the no-flash snippet)
-//   await mountThemeSwitcher('body');      // fixed bottom-right pill
+//   await mountThemeSwitcher('body');      // fixed bottom-right round button
 //
 // Every switcher on the page stays in sync through the 'collabo:themechange' event.
 
@@ -69,15 +69,14 @@ export async function mountThemeSwitcher(target, opts = {}) {
     if (opts.inline) root.classList.add('theme-switcher--inline');
     if (opts.collapse) root.classList.add('theme-switcher--collapse');
 
-    const label = root.querySelector('.theme-switcher__label');
     const icon = root.querySelector('.theme-switcher__icon');
 
     function update() {
         const light = getTheme() === 'light';
         root.classList.toggle('theme-switcher--light', light);
-        label.textContent = light ? 'Light' : 'Dark';
-        icon.textContent = light ? '☀' : '☾';
-        root.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+        icon.textContent = light ? '☾' : '☀';   // the icon is the theme a tap gives you
+        const next = light ? 'Switch to dark theme' : 'Switch to light theme';
+        root.setAttribute('aria-label', next); root.title = next;
     }
 
     function onThemeChange(e) {

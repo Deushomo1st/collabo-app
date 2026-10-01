@@ -7,6 +7,7 @@ import { createActionBanner, preloadActionBanner } from '/js/components/action-b
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import { live } from '/js/services/live.js';
+import { fanActions } from '/js/services/fan-actions.js';
 import {
     logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock, yarnReport, avatarUrl,
@@ -101,7 +102,7 @@ let navMode = '', navIds = '', navQueue = Promise.resolve();
 const mountNav = async (opts) => {
     nav?.destroy();
     nav = await mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000,
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(),
         onChange: (_l, href) => go(href.slice(href.lastIndexOf('#'))),   // href can arrive absolute
         ...opts,
     });

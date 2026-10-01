@@ -8,9 +8,12 @@
 //        mountNavSelector(el, { placement: 'bottom', align: 'start' });           // docked bottom-left, grows rightwards
 //        mountNavSelector(el, { collapseWhenIdle: true, idleMs: 3000 });          // collapse after 3s idle, even at the top
 //        mountNavSelector(el, { collapsedLabel: 'number' });                      // collapsed pill shows "3" instead of the icon
+//        mountNavSelector(el, { holdActions: [{ label, icon, onSelect }] });       // hold the collapsed icon: up to 3 buttons fan out (hold-fan)
 //        nav.setActive(2);                                                         // select a link from code (no onChange)
 //        nav.destroy();                                                            // remove listeners + DOM
 // Scrolling is watched on `scrollRoot` (default: the window). If nothing there scrolls, it never iconizes.
+
+import { mountHoldFan } from '/js/components/hold-fan/hold-fan.js';
 
 const ICONS = [
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
@@ -120,6 +123,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     document.addEventListener('pointerdown', onOutside, true);
 
     navIcon.addEventListener('click', () => { expand(); armIdle(); });
+    const fan = options.holdActions?.length ? mountHoldFan(navIcon, { actions: options.holdActions }) : null;
     root.addEventListener('mouseenter', () => clearTimeout(idleTimer));
     root.addEventListener('mouseleave', () => { if (canIdleCollapse() && !isIconized()) armIdle(); });
     // Keyboard: leaving the nav with Tab restarts the countdown.
@@ -205,6 +209,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         setActive,
         destroy() {
             clearTimeout(idleTimer);
+            fan?.destroy();
             scrollRoot.removeEventListener('scroll', onScroll);
             document.removeEventListener('pointerdown', onOutside, true);
             window.removeEventListener('resize', update);

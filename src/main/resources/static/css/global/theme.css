@@ -69,6 +69,12 @@
     --nav-selector-fluid-hold-arrow-bg: rgba(18, 18, 18, .9);
     --nav-selector-fluid-hold-arrow-ink: #ccc;
 
+    /* ---- hold-fan (dark metal buttons, like the nav pill) ---- */
+    --hold-fan-bg: linear-gradient(145deg, #2a2a2a, #0d0d0f);
+    --hold-fan-ink: #f1f3f6;
+    --hold-fan-border: #333;
+    --hold-fan-shadow: inset 0 2px 5px rgba(255,255,255,.06), 0 8px 22px rgba(2,20,32,.5), 0 0 18px rgba(2,20,32,.45);
+
     /* ---- floating-drawer (the drawer itself stays dark metal in both themes) ---- */
     --floating-drawer-line: #d9e7ee;
     --floating-drawer-accent: rgba(255, 255, 255, .95);
