@@ -49,6 +49,7 @@ class AdminBulkUsersTest {
         assertTrue(encoder.matches(generated, users.findByEmail("a@bulk.dev").orElseThrow().getPassword()));
         assertTrue(encoder.matches("Chosen#Pass1", users.findByEmail("b@bulk.dev").orElseThrow().getPassword()));
         assertFalse(users.existsByUsername("bulkbad"));
+        assertTrue(users.findByEmail("a@bulk.dev").orElseThrow().isVerified(), "admin-created accounts can sign in straight away");
     }
 
     @Test

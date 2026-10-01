@@ -86,6 +86,7 @@ export const yarnUnblock = (userId) => yarn(`/blocks/${userId}`, { method: 'DELE
 const user = (name, path = '') => `/api/users/${encodeURIComponent(name)}${path}`;
 export const profileGet = (name) => call(user(name));
 export const profileUpdate = (fields) => call('/api/users/me', { method: 'PATCH', body: fields }, 'Could not save your profile.');
+export const markWelcomed = () => call('/api/users/me/welcomed', { method: 'POST' }, 'Could not finish setup.');
 export const profileLinks = (links) => call('/api/users/me/links', { method: 'PUT', body: links }, 'Could not save your links.');
 export const avatarUrl = (name, version) => user(name, '/avatar') + (version ? `?v=${version}` : '');
 export const avatarSave = (jpegBlob) => call('/api/users/me/avatar', { method: 'PUT', body: jpegBlob }, 'Could not save the picture.');

@@ -5,7 +5,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { currentUser, gazeFeed, gazeNewer, postGet } from '/js/services/api.js';
+import { currentUser, gazeFeed, gazeNewer, postGet, profileGet } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
 const EMPTY = {
@@ -226,9 +226,23 @@ async function mountBottom(username) {
     });
 }
 
+// Someone who skipped the welcome flow keeps a gentle reminder until they add a photo or a bio (or close it for this tab).
+async function nudge(name) {
+    try {
+        if (sessionStorage.getItem('collaboNudge')) return;
+        const p = await profileGet(name);
+        if (p.bio || p.avatarVersion) return;
+        const bar = h('div', { class: 'gz-nudge sp-glass' },
+            h('a', { href: '/HTML-pages/profile.html', text: 'Finish your profile: a photo and a short bio help people say yes to you.' }),
+            h('button', { type: 'button', 'aria-label': 'Dismiss', text: '×', onclick: () => { bar.remove(); try { sessionStorage.setItem('collaboNudge', '1'); } catch { /* it just comes back */ } } }));
+        list().before(bar);
+    } catch { /* a reminder is never worth an error */ }
+}
+
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return toLogin();
+    if (me.needsWelcome) return location.replace('/HTML-pages/welcome.html');   // first visit: set up before browsing
     who = me.username;
     mountFeeds();
     mountBottom(me.username);
@@ -240,6 +254,7 @@ async function boot() {
     show();
     try { const msg = sessionStorage.getItem('collaboToast'); if (msg) { sessionStorage.removeItem('collaboToast'); toast(msg); } } catch { /* just no message */ }
     openLinkedPost();
+    nudge(me.username);
 }
 
 preloadGlassBlurDialog();

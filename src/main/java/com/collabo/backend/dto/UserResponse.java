@@ -17,6 +17,7 @@ public record UserResponse(
         Role role,
         boolean verified,
         boolean test,
+        boolean needsWelcome,
         LocalDateTime createdAt
 ) {
     public static UserResponse from(User user) {
@@ -27,6 +28,7 @@ public record UserResponse(
                 user.getRole(),
                 user.isVerified(),
                 user.isTest(),
+                user.needsWelcome(),
                 user.getCreatedAt()
         );
     }

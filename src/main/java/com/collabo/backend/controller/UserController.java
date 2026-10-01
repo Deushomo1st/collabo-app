@@ -52,6 +52,13 @@ public class UserController {
         return profiles.update(current.require(), req);
     }
 
+    /** The welcome flow was finished or skipped; it is never shown again. */
+    @PostMapping("/me/welcomed")
+    public ResponseEntity<Void> welcomed() {
+        profiles.markWelcomed(current.require());
+        return ResponseEntity.noContent().build();
+    }
+
     @PutMapping("/me/links")
     public ProfileResponse replaceLinks(@RequestBody List<LinkDto> links) {
         return profiles.replaceLinks(current.require(), links);

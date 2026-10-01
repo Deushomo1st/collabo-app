@@ -1,4 +1,4 @@
-// avatar: a 3D-tilted 4:3 profile card, plus an upload + crop-to-4:3 dialog.
+// avatar: a round profile picture, plus an upload dialog that crops inside a circle.
 // Ported from SchoolHub app/avatar (avatarCard / openAvatarUpload).
 // Depends on glass-blur-dialog (the upload dialog opens inside one).
 //
@@ -16,8 +16,8 @@
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 
 const BASE = '/js/components/avatar/avatar';
-const VP_W = 320, VP_H = 240;     // crop viewport (4:3)
-const OUT_W = 640, OUT_H = 480;   // saved image (4:3)
+const VP_W = 320, VP_H = 320;     // crop viewport (square; the circle overlay shows what stays)
+const OUT_W = 512, OUT_H = 512;   // saved image (square; shown as a circle)
 const ICON_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>';
 
 let fragmentPromise = null;
@@ -97,7 +97,7 @@ export function createAvatarCard(opts = {}) {
 
 // Upload + crop dialog.
 // opts: { current (URL or data URL), title, onSave(dataUrl, blob) }
-//   Save   -> onSave('data:image/jpeg…', Blob)   (640x480 JPEG, quality .85)
+//   Save   -> onSave('data:image/jpeg…', Blob)   (512x512 JPEG, quality .85)
 //   Remove -> onSave(null, null)                   (only shown when `current` is set)
 // Returns the dialog handle { close, panel }.
 export async function openAvatarUpload(opts = {}) {

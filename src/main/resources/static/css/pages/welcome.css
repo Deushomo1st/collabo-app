@@ -1,0 +1,51 @@
+/* First-run welcome flow. Loaded after workspace.css and login.css (shared card, inputs, buttons). */
+
+.wl-card { width: min(100%, 460px); overflow: hidden; }
+.wl-top { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.wl-bar { flex: 1; height: 5px; border-radius: 999px; background: var(--sp-line); overflow: hidden; }
+.wl-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--sp-brand); transition: width .45s cubic-bezier(.16, 1, .3, 1); }
+.wl-skip { padding: 4px 2px; border: 0; background: none; color: var(--sp-muted); font: 600 12.5px var(--sp-font); cursor: pointer; }
+.wl-skip:hover { color: var(--sp-text); }
+
+.wl-stage { min-height: 280px; }
+.wl-step { display: grid; gap: 12px; align-content: start; animation: wl-in .42s cubic-bezier(.16, 1, .3, 1) both; }
+.wl-step.is-back { animation-name: wl-in-back; }
+.wl-step h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -.01em; }
+.wl-step p { margin: 0; color: var(--sp-muted); font-size: 14px; }
+.wl-step label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
+.wl-step .sp-input { width: 100%; box-sizing: border-box; }
+.wl-step textarea.sp-input { resize: vertical; min-height: 96px; }
+.wl-count { justify-self: end; color: var(--sp-muted); font: 500 11.5px var(--sp-mono); }
+
+@keyframes wl-in { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes wl-in-back { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+
+.wl-points { display: grid; gap: 10px; margin: 6px 0 0; padding: 0; list-style: none; }
+.wl-points li { display: flex; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-panel); font-size: 14px; animation: wl-in .5s cubic-bezier(.16, 1, .3, 1) both; }
+.wl-points li:nth-child(2) { animation-delay: .08s; }
+.wl-points li:nth-child(3) { animation-delay: .16s; }
+.wl-points b { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--sp-brand); color: var(--sp-brand-ink); font-size: 13px; }
+
+.wl-photo { display: grid; justify-items: center; gap: 10px; padding: 8px 0; }
+.wl-photo .avatar-card { --avatar-width: 168px; }
+.wl-photo small { color: var(--sp-muted); font-size: 12.5px; }
+
+.wl-links { display: grid; gap: 8px; }
+.wl-link-row { display: grid; grid-template-columns: 1fr 1.5fr; gap: 6px; }
+
+.wl-paths { display: grid; gap: 10px; }
+.wl-path { display: grid; gap: 3px; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--sp-line); background: var(--sp-panel); color: inherit; text-align: left; font: inherit; cursor: pointer;
+    transition: transform .2s, border-color .2s, background .2s; }
+.wl-path:hover, .wl-path:focus-visible { transform: translateY(-2px); border-color: var(--sp-brand); background: var(--sp-panel-hi); outline: none; }
+.wl-path strong { font-size: 15px; }
+.wl-path span { color: var(--sp-muted); font-size: 13px; }
+
+.wl-nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }
+.wl-nav .sp-btn { margin-top: 0; }
+.wl-nav[hidden], .wl-nav .sp-btn[hidden] { display: none; }
+.wl-nav .sp-btn[hidden] + .sp-btn { margin-left: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+    .wl-step, .wl-points li { animation: none; }
+    .wl-bar i { transition: none; }
+}

@@ -3,6 +3,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { loginUser, currentUser } from '/js/services/api.js';
 
 const DEFAULT_NEXT = '/HTML-pages/gaze.html';
+const WELCOME = '/HTML-pages/welcome.html';   // a brand-new account sees this once, before anything else
 
 // Only same-site paths are allowed as a destination, so a crafted ?next= can't send people elsewhere.
 function safeNext() {
@@ -41,8 +42,8 @@ form.addEventListener('submit', async (e) => {
     show('');
     submit.disabled = true;
     try {
-        await loginUser(identifier, password);
-        location.replace(safeNext());
+        const me = await loginUser(identifier, password);
+        location.replace(me?.needsWelcome ? WELCOME : safeNext());
         return;
     } catch (err) {
         if (err.retryAfterSeconds) return lockout(err.retryAfterSeconds);
@@ -53,5 +54,6 @@ form.addEventListener('submit', async (e) => {
 
 (async () => {
     mountThemeSwitcher('#theme-slot', { inline: true });
-    if (await currentUser()) location.replace(safeNext());   // already signed in
+    const me = await currentUser();
+    if (me) location.replace(me.needsWelcome ? WELCOME : safeNext());   // already signed in
 })();

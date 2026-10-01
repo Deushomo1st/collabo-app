@@ -1,6 +1,6 @@
 # avatar
 
-A 3D-tilted 4:3 profile card, and an **upload + crop** dialog that turns any image into a 640×480 JPEG.
+A round profile picture, and an **upload + crop** dialog (circle overlay) that turns any image into a 512×512 JPEG.
 Ported from SchoolHub `app/avatar`, where it powers the profile page's picture.
 
 **Depends on:** [`glass-blur-dialog`](../glass-blur-dialog/README.md) (the upload dialog), imported automatically.
@@ -53,7 +53,7 @@ Returns a `<button>` when editable or clickable, otherwise a `<div>`.
 | Option | Type | Notes |
 |---|---|---|
 | `current` | string | The existing picture: the dialog starts from it and shows **Remove**. |
-| `onSave` | `(dataUrl, blob) => void` | Save: a 640×480 JPEG (quality .85) as both a data URL and a `Blob`. Remove: `(null, null)`. |
+| `onSave` | `(dataUrl, blob) => void` | Save: a 512×512 JPEG (quality .85) as both a data URL and a `Blob`. Remove: `(null, null)`. |
 | `title` | string | Default `'Profile picture'`. |
 
 **Storing it:** prefer uploading the `Blob` (multipart or raw body) and storing a file URL. SchoolHub stored the
@@ -75,7 +75,6 @@ Loads the CSS and dialog fragment once. Optional.
 
 ## Theming
 
-Shares `--card-tilt` / `--card-tilt-hover` with [`tilt-stack`](../tilt-stack/README.md).
 Public variables: `--avatar-` + `brand`, `card`, `ink`, `muted`, `line`, `shadow`, `shadow-raised`, `width` (180px).
 The upload dialog lives on `<body>`, so set them on `:root`. Light values live in `css/global/theme.css`.
 
@@ -110,11 +109,8 @@ onSave: async (dataUrl, blob) => {
 The crop is set by four constants at the top of `avatar.js`: `VP_W`/`VP_H` (the on-screen frame) and
 `OUT_W`/`OUT_H` (the saved image).
 
-1. For a square picture, set `VP_W = VP_H = 280` and `OUT_W = OUT_H = 512`.
-2. In `avatar.css`, change **both** `aspect-ratio: 4 / 3` rules (`.avatar-card__face` and `.avatar-upload__stage`) to `1 / 1`,
-   and the stage's `width: 320px` to `280px`.
-3. Update the text in `avatar.html` ("the 4:3 frame") and the sizes in this README.
-4. **Verify:** gallery page 10. Save, then check that the reported size and the card's shape match.
+The picture is already square and shown as a circle. To change the saved size, edit `OUT_W`/`OUT_H`; to inset the circle in the editor, edit `inset` on `.avatar-upload__ring` (0 = the circle touches the frame).
+**Verify:** gallery page 10. Save, then check that the reported size and the card's shape match.
 
 ### Accept only certain file types or sizes
 

@@ -58,6 +58,14 @@ public class User {
     @Enumerated(EnumType.STRING)
     private CredentialsPrivacy credentialsPrivacy;
 
+    // First-run flag. Nullable wrapper: legacy rows are null and never see the welcome flow;
+    // new accounts are saved as FALSE and flipped to TRUE when they finish or skip it.
+    @Column
+    private Boolean welcomed;
+
+    public boolean needsWelcome() { return Boolean.FALSE.equals(welcomed); }
+    public void setWelcomed(boolean welcomed) { this.welcomed = welcomed; }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

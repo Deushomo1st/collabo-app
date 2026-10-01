@@ -56,6 +56,8 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(request.role());
         user.setTest(request.test());
+        user.setWelcomed(false);
+        user.setVerified(true);   // the admin vouches for them: there is no email code to send, so they could never verify otherwise
         // NOTE: no welcome email for admin-created users (test accounts shouldn't trigger Resend).
         return AdminUserResponse.from(userRepository.save(user));
     }

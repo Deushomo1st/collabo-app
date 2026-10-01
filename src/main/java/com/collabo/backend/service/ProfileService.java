@@ -59,6 +59,12 @@ public class ProfileService {
         return ProfileResponse.of(users.save(user), true, linksOf(user), avatars.versionOf(user), follows.stateFor(user, user));
     }
 
+    public void markWelcomed(User me) {
+        User user = users.findById(me.getId()).orElseThrow();
+        user.setWelcomed(true);
+        users.save(user);
+    }
+
     /** Replaces the whole list; the order sent is the order shown. All-or-nothing: one bad entry rejects the lot. */
     public ProfileResponse replaceLinks(User me, List<LinkDto> incoming) {
         if (incoming == null) throw new InvalidProfileException("Send a list of links.");

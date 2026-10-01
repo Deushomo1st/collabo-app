@@ -127,6 +127,7 @@ public class AuthService {
         // Registration always creates a USER account — the client cannot pick a
         // role here. ADMIN accounts are created only via the admin panel.
         user.setRole(Role.USER);
+        user.setWelcomed(false);   // brand-new account: show the welcome flow once
 
         if (testAccount) {
             // Test account: verified immediately, no OTP, no email send.
