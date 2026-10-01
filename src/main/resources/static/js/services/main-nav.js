@@ -25,10 +25,11 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
         icons: pages.map((p) => p[2]),
         onChange: (label, href) => {
             if (label === active) { if (label === 'Gaze' && onGaze) onGaze(); if (label === 'Settings' && onSettings) onSettings(); return; }
-            if (label === 'Post') nav.setActive(here);   // the post page is a page of its own, so the bar keeps showing where you are
-            location.href = href;
+            setTimeout(() => { location.href = href; }, 250);   // let the bubble slide to the pick before the page changes
         },
     });
+    // coming back (bfcache) the bar shows the page you are on again, not the link you left by
+    addEventListener('pageshow', (e) => { if (e.persisted && here >= 0) nav.setActive(here); });
     return nav;
 }
 
