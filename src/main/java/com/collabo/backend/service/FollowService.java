@@ -78,14 +78,16 @@ public class FollowService {
         return people(follows.findTop50ByFollowerIdOrderByCreatedAtDesc(find(username).getId()), Follow::getFollowedId, viewer);
     }
 
-    /** Up to 500 each way; MyGuy is whoever is in both lists. */
+    /** Up to 500 each way; MyGuy (whoever is in both lists) is returned to the profile's owner only. */
     @Transactional(readOnly = true)
     public ConnectionsDto connections(String username, User viewer) {
         UUID id = find(username).getId();
         var in = people(follows.findTop500ByFollowedIdOrderByCreatedAtDesc(id), Follow::getFollowerId, viewer);
         var out = people(follows.findTop500ByFollowerIdOrderByCreatedAtDesc(id), Follow::getFollowedId, viewer);
         var inNames = new HashSet<String>(); in.forEach(p -> inNames.add(p.username()));
-        return new ConnectionsDto(in, out, out.stream().filter(p -> inNames.contains(p.username())).toList());
+        // MyGuy is private: only the owner of the profile gets it
+        boolean mine = viewer.getUsername().equalsIgnoreCase(username);
+        return new ConnectionsDto(in, out, mine ? out.stream().filter(p -> inNames.contains(p.username())).toList() : List.of());
     }
 
     /** Newest first; anyone who blocked the viewer is left out. */

@@ -127,6 +127,7 @@
 }
 
 /* Centered icon button (iconized mode) */
+.nav-selector-fluid-hold__icon .sp-face { width: 100%; height: 100%; font-size: 15px; --_size: 100%; }
 .nav-selector-fluid-hold__icon {
     position: absolute; left: 50%; top: 50%;
     width: 36px; height: 36px; border-radius: 50%;
@@ -179,6 +180,7 @@
 /* while the links are being dragged or settling, the bubbles ride them rigidly (no lagging edge transitions) */
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble { transition: none; }
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble--hover { opacity: 0 !important; }
+.nav-selector-fluid-hold-wrap--arrows:not(:has(.has-more)) > .nav-selector-fluid-hold__arrow { display: none; }   /* everything already fits */
 .nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__nav { padding-inline: 1px; }   /* tight crescent at the pill's ends */
 .nav-selector-fluid-hold.active-hidden .nav-selector-fluid-hold__bubble--active { opacity: 0; }
 

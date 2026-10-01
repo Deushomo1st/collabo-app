@@ -145,9 +145,9 @@ public variable the way the other components do, for example
 `background: linear-gradient(145deg, var(--nav-selector-bg-from, #2a2a2a), var(--nav-selector-bg-to, #111));`,
 then add light values to `css/global/theme.css`.
 
-## iplement hybrid (more than three links)
+## iplement hybrid (the standard nav)
 
-Opt in with `visible: 3`. With more links than that the pill shows three and hugs them (its width morphs to fit whichever three are showing).
+This is now the default for every nav. `visible` is the most links shown at once (default 3); the pill shows that many and hugs them (its width morphs to fit whichever are showing). On a narrow screen or container it shows 2, or 1, so a link is never half cut off; it refits on resize. With few links that already fit, the arrows are hidden. `visible: 0` brings back the old scrolling pill. `restIcon` may be an svg string or a function returning an element (the profile page passes the person's picture).
 
 - **Arrows** sit outside the pill and slide the window one link at a time. A dimmed arrow means nothing further that way; it still takes the tap, so it never counts as a tap outside. Each arrow has an invisible tap area about 12px bigger than the 26px circle (1px toward the pill, so the end links keep their taps).
 - **Swipe, drag or sideways scroll** (touch, mouse, trackpad or shift-wheel): the links follow your finger, then lock onto the window whose first link is nearest where you stopped, so 2-3-4 and 3-4-5 are reachable and a fourth link is never left half showing. A flick that would round back moves one link; a tiny twitch stays put.

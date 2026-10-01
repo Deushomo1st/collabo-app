@@ -9,7 +9,7 @@ import { h } from '/js/services/dom.js';
 
 const TABS = [['following', 'Following'], ['followers', 'Followers'], ['myguy', 'MyGuy']];
 const params = new URLSearchParams(location.search);
-let data = null, tab = TABS.some(([k]) => k === params.get('tab')) ? params.get('tab') : 'following';
+let data = null, mine = false, tab = TABS.some(([k]) => k === params.get('tab')) ? params.get('tab') : 'following';
 
 const toLogin = () => location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
 const letters = (s) => { const m = {}; for (const c of s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')) m[c] = (m[c] || 0) + 1; return m; };
@@ -19,7 +19,7 @@ export const hasLetters = (name, query) => { const have = letters(name), want = 
 const rows = () => data[tab === 'myguy' ? 'myGuy' : tab];
 
 function drawTabs() {
-    $tabs.replaceChildren(...TABS.map(([k, label]) => h('button', {
+    $tabs.replaceChildren(...TABS.filter(([k]) => k !== 'myguy' || mine).map(([k, label]) => h('button', {
         class: 'cn-tab' + (k === tab ? ' is-on' : ''), type: 'button', role: 'tab', 'aria-selected': String(k === tab),
         onclick: () => { tab = k; history.replaceState(null, '', `?u=${encodeURIComponent(who)}&tab=${k}`); drawTabs(); drawList(); },
     }, h('strong', { text: String(data[k === 'myguy' ? 'myGuy' : k].length) }), h('span', { text: label }))));
@@ -44,6 +44,8 @@ let who = params.get('u');
         who = who || me.username;
         document.getElementById('header-title').textContent = who;
         mountMainNav(me.username, 'Profile');
+        mine = who.toLowerCase() === me.username.toLowerCase();
+        if (!mine && tab === 'myguy') tab = 'following';   // MyGuy is for the owner's eyes only
         data = await connections(who);
         drawTabs(); drawList();
         $q.addEventListener('input', drawList);

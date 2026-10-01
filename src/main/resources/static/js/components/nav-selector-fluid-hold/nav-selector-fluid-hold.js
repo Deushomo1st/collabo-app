@@ -71,7 +71,8 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         const active = root.querySelector('.nav-selector-fluid-hold__link.is-active');
         if (options.restIcon && !picked) {
             if (navIcon.dataset.for !== '(rest)') {
-                navIcon.innerHTML = options.restIcon;
+                if (typeof options.restIcon === 'function') navIcon.replaceChildren(options.restIcon());   // e.g. a profile picture
+                else navIcon.innerHTML = options.restIcon;
                 navIcon.dataset.for = '(rest)';
                 navIcon.setAttribute('aria-label', 'Show navigation');
             }
@@ -145,11 +146,14 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     });
 
     // ---------- horizontal menu logic ----------
-    // Opt-in "hybrid" (options.visible, e.g. 3): show only that many links, the pill fits them, the arrows
-    // (outside the pill) slide the window one link at a time and a swipe moves it a whole page of V.
-    const V = options.visible || 0;
+    // The "hybrid" (default; options.visible = the most links shown, 3 unless set; visible: 0 = the old scrolling pill):
+    // only V links show at once and the pill hugs them. V shrinks to 2 or 1 when the screen is too narrow.
+    // The arrows (outside the pill) slide the window one link at a time; a drag locks onto the nearest window.
+    const hybrid = options.visible !== 0;
+    let V = hybrid ? Math.min(options.visible || 3, getLinks().length) : 0;
     let start = 0;
-    const windowed = () => V > 0 && getLinks().length > V;
+    const windowed = () => hybrid;
+    const movable = () => hybrid && getLinks().length > V;
     function showWindow() {
         const links = getLinks();
         start = Math.max(0, Math.min(links.length - V, start));
@@ -157,8 +161,28 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         root.classList.toggle('active-hidden', !!root.querySelector('.nav-selector-fluid-hold__link.is-active[hidden]'));
         arrowL.classList.toggle('on', start > 0);   // 'on' = there is more that way; the arrow itself always shows
         arrowR.classList.toggle('on', start < links.length - V);
+        root.classList.toggle('has-more', links.length > V);   // no arrows when everything already fits
     }
-    const homeStart = () => Math.max(0, getLinks().findIndex((l) => l.classList.contains('is-active')) - 1);
+    const homeStart = () => Math.max(0, getLinks().findIndex((l) => l.classList.contains('is-active')) - Math.floor((V - 1) / 2));
+
+    // How many links fit: the pill's room is the narrower of the screen rule and the container, less the two arrows and the pill's rim.
+    function fitV() {
+        if (!hybrid || drag || settling) return;
+        const links = getLinks(), top = Math.min(options.visible || 3, links.length);
+        const nv = getComputedStyle(wrap).getPropertyValue('--nav-width').trim();
+        const screen = innerWidth <= 600 ? (nv.endsWith('px') ? parseFloat(nv) : (parseFloat(nv) || 94) * innerWidth / 100) : Math.min(.92 * innerWidth, 560);
+        const room = Math.min(screen, target.clientWidth || screen) - 68 - 12;
+        const hid = links.map((l) => l.hidden); links.forEach((l) => { l.hidden = false; });
+        const fits = (k) => links.every((_, i) => i + k > links.length || links[i + k - 1].offsetLeft + links[i + k - 1].offsetWidth - links[i].offsetLeft + 2 * pad() <= room);
+        let k = top; while (k > 1 && !fits(k)) k--;
+        links.forEach((l, i) => { l.hidden = hid[i]; });
+        if (k !== V) {
+            V = k;
+            const act = links.findIndex((l) => l.classList.contains('is-active'));
+            if (act >= 0 && (act < start || act >= start + V)) start = act < start ? act : act - V + 1;
+        }
+        showWindow();
+    }
     const reveal = (i) => { if (i < start) start = i; else if (i >= start + V) start = i - V + 1; showWindow(); };
 
     function update() {
@@ -220,10 +244,10 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     // swipe / sideways scroll: the links follow the finger (fluid), then lock onto the next or previous V and the pill morphs to fit them
     const navEl = root.querySelector('.nav-selector-fluid-hold__nav');
-    const PAD = parseFloat(getComputedStyle(navEl).paddingLeft) || 0;   // the nav's side padding
+    const pad = () => parseFloat(getComputedStyle(navEl).paddingLeft) || 0;   // the nav's side padding (read late: the is-windowed class sets it)
     const EASE = '.3s cubic-bezier(.2,.8,.2,1)';
-    const offsetOf = (i) => getLinks()[i].offsetLeft - PAD;
-    const spanOf = (i) => { const a = getLinks()[i], b = getLinks()[i + V - 1]; return b.offsetLeft + b.offsetWidth - a.offsetLeft + 2 * PAD; };
+    const offsetOf = (i) => getLinks()[i].offsetLeft - pad();
+    const spanOf = (i) => { const a = getLinks()[i], b = getLinks()[i + V - 1]; return b.offsetLeft + b.offsetWidth - a.offsetLeft + 2 * pad(); };
     let swipeX = null, swiped = false, drag = null, settling = false;
     function dragMove(dx) {
         if (settling) return;
@@ -254,7 +278,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             root.classList.remove('is-dragging'); settling = false; armIdle();
         }, 320);
     }
-    root.addEventListener('pointerdown', (e) => { swipeX = windowed() && !settling ? e.clientX : null; swiped = false; });
+    root.addEventListener('pointerdown', (e) => { swipeX = movable() && !settling ? e.clientX : null; swiped = false; });
     const onSwipeMove = (e) => {
         if (e.pointerType === 'mouse' && e.isTrusted && !e.buttons) return onSwipeEnd();   // the release was missed (off the window): let go
         if (swipeX !== null && (drag || Math.abs(e.clientX - swipeX) > 6)) dragMove(e.clientX - swipeX); };
@@ -264,7 +288,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     document.addEventListener('pointercancel', onSwipeEnd);
     let wheelDx = 0, wheelT = 0;
     root.addEventListener('wheel', (e) => {   // trackpad or shift-wheel sideways
-        if (!windowed() || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+        if (!movable() || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
         e.preventDefault(); wheelDx -= e.deltaX; dragMove(wheelDx);
         clearTimeout(wheelT); wheelT = setTimeout(() => { wheelDx = 0; dragEnd(); }, 140);
     }, { passive: false });
@@ -274,13 +298,16 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     arrowR.addEventListener('click', () => step(1));
     view.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
+    const refit = () => fitV();
+    window.addEventListener('resize', refit);
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(refit) : null;
 
     // Mount inside a sticky wrapper so the pill stays reachable on long pages.
     const wrap = document.createElement('div');
     wrap.className = 'nav-selector-fluid-hold-wrap'
         + (options.placement === 'bottom' ? ' nav-selector-fluid-hold-wrap--bottom' : '')
         + (options.align === 'start' ? ' nav-selector-fluid-hold-wrap--start' : '');
-    if (windowed()) {   // the arrows sit either side of the pill, not inside it
+    if (hybrid) {   // the arrows sit either side of the pill, not inside it
         wrap.classList.add('nav-selector-fluid-hold-wrap--arrows');
         root.classList.add('is-windowed');
         wrap.append(arrowL, root, arrowR);
@@ -291,6 +318,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     syncIcon();
     update();
+    if (hybrid) { fitV(); ro?.observe(target); }
     if (idleAnywhere) armIdle();               // start the countdown straight away
 
     return {
@@ -305,6 +333,8 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             document.removeEventListener('pointercancel', onSwipeEnd);
             document.removeEventListener('pointermove', onSwipeMove);
             window.removeEventListener('resize', update);
+            window.removeEventListener('resize', refit);
+            ro?.disconnect();
             wrap.remove();
         },
     };
