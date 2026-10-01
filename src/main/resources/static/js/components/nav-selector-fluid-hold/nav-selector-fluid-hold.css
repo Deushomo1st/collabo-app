@@ -165,7 +165,11 @@
     position: static; transform: none; flex: none; opacity: .35;   /* dimmed = nothing further that way; still takes the click so it doesn't count as a tap outside */
     background: var(--_nf-arrow-bg, rgba(255,255,255,.92)); border: 1px solid rgba(255,255,255,.75); color: #3a4150;
 }
-.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow { pointer-events: auto; }
+.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow { pointer-events: auto; position: relative; z-index: 8; }
+/* a bigger invisible tap area than the 26px circle: 12px out on three sides, 1px toward the pill (the gap to it is only ~3px) so the end links keep their taps */
+.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow::after { content: ""; position: absolute; inset: -12px; }
+.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow--left::after { right: -1px; }
+.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow--right::after { left: -1px; }
 .nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow.on { opacity: 1; }
 .nav-selector-fluid-hold-wrap--arrows:has(.iconized) > .nav-selector-fluid-hold__arrow { opacity: 0 !important; pointer-events: none; }
 .nav-selector-fluid-hold.is-windowed { max-width: calc(min(92vw, 560px) - 68px); }
