@@ -13,6 +13,8 @@ const when = (iso) => new Date(iso).toLocaleString(undefined, { month: 'short', 
 const localInput = (iso) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 const person = (u) => h('a', { class: 'pc-who', href: profileHref(u.username) }, face(u.username, 'sp-avatar--sm'), u.username);
 
+const eyeIcon = () => { const i = h('span', { 'aria-hidden': 'true' }); i.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'; return i; };   // fixed markup, no user text
+
 export function postCard(initial, { onGone } = {}) {
     let p = initial;
     let open = false;          // comments expanded
@@ -93,7 +95,7 @@ export function postCard(initial, { onGone } = {}) {
                 p.author.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: p.author.preferredTitle }),
                 h('span', { class: `sp-tag ${closed ? 'sp-tag--muted' : 'sp-tag--ok'}`, text: closed ? 'Closed' : formed ? 'Space formed' : 'Pending' }),
                 h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) }),
-                h('span', { class: 'pc-time', title: 'Times someone else opened this idea', text: `${p.views} view${p.views === 1 ? '' : 's'}` })),
+                h('span', { class: 'pc-time pc-views', title: 'Times someone else opened this idea', 'aria-label': `${p.views} views` }, eyeIcon(), String(p.views))),
             h('h3', { class: 'pc-title', text: p.title }),
             h('p', { class: 'pc-body', text: p.body }),
             p.media?.length > 0 && h('div', { class: `pc-media pc-media--${Math.min(p.media.length, 3)}` }, ...p.media.map((m) => m.kind === 'VIDEO'

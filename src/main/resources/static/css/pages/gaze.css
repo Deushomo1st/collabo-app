@@ -143,3 +143,6 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .gz-person .sp-avatar { --_size: 42px; }
 .gz-person small { display: block; color: var(--sp-muted); font-size: 12px; }
 .pc-top .pc-time + .pc-time { margin-left: 0; }
+
+.pc-views { display: inline-flex; align-items: center; gap: 4px; }
+.pc-views > span { display: inline-flex; }
