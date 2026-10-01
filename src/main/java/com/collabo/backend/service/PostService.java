@@ -77,9 +77,11 @@ public class PostService {
         return view(saved, me).withShared(delivered);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PostResponse get(User viewer, UUID id) {
-        return view(visible(viewer, id), viewer);
+        Post p = visible(viewer, id);
+        if (!p.getAuthorId().equals(viewer.getId())) posts.addView(id);   // opening your own post is not a view
+        return view(p, viewer);
     }
 
     public void delete(User me, UUID id) {

@@ -24,6 +24,15 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
             + "and (lower(p.title) like :pat escape '!' or lower(p.body) like :pat escape '!' or lower(coalesce(p.hashtags, '')) like :pat escape '!') order by p.createdAt desc")
     List<Post> search(@Param("before") Instant before, @Param("hidden") Collection<UUID> hidden, @Param("pat") String pattern, Pageable page);
 
+    /** Search, most viewed first (no cursor: a short list, not a feed). */
+    @Query("select p from Post p where p.authorId not in :hidden "
+            + "and (lower(p.title) like :pat escape '!' or lower(p.body) like :pat escape '!' or lower(coalesce(p.hashtags, '')) like :pat escape '!') order by p.views desc, p.createdAt desc")
+    List<Post> searchTop(@Param("hidden") Collection<UUID> hidden, @Param("pat") String pattern, Pageable page);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("update Post p set p.views = p.views + 1 where p.id = :id")
+    void addView(@Param("id") UUID id);
+
     /** Shared Gaze: only posts by the given network of authors. */
     @Query("select p from Post p where p.createdAt < :before and p.authorId in :network "
             + "and (:pendingOnly = false or (p.formed = false and (p.applyBy is null or p.applyBy > :now))) order by p.createdAt desc")

@@ -161,7 +161,7 @@ class ProfileApiTest {
         mvc.perform(putAvatar("image/jpeg", jpeg)).andExpect(status().isOk()).andExpect(jsonPath("$.avatarVersion").isNumber());
         mvc.perform(get("/api/users/" + name + "/avatar").cookie(otherSession)).andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "image/jpeg")).andExpect(header().exists("ETag"))
-                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("max-age=86400")))
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("no-cache")))
                 .andExpect(content().bytes(jpeg));
         mvc.perform(get("/api/users/" + name).cookie(otherSession)).andExpect(jsonPath("$.avatarVersion").isNumber());
         mvc.perform(get("/api/users/" + name + "/avatar")).andExpect(status().isUnauthorized());

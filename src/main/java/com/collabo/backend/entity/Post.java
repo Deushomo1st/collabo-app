@@ -43,7 +43,12 @@ public class Post {
     @Column(name = "shouts_on", nullable = false, columnDefinition = "boolean default true")
     private boolean shoutsOn = true;
 
+    /** How many times someone other than the author has opened the post. */
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    private long views;
+
     public Post() {}
+    public long getViews() { return views; }
     public Post(UUID authorId, String title, String body, Instant applyBy) {
         this.authorId = authorId; this.title = title; this.body = body; this.applyBy = applyBy;
     }

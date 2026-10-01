@@ -5,8 +5,9 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { currentUser, gazeFeed, gazeNewer, gazeSearch, postGet, profileGet } from '/js/services/api.js';
+import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, profileGet } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
+import { face } from '/js/services/face.js';
 import { fanActions } from '/js/services/fan-actions.js';
 
 const EMPTY = {
@@ -70,16 +71,26 @@ function setSearching(on) {
     document.getElementById('filter-nav').hidden = on;
     document.getElementById('tt-end').hidden = on;
     document.getElementById('tt-search').hidden = !on;
-    if (on) { const q = document.getElementById('tt-q'); q.value = ''; q.focus(); list().replaceChildren(h('p', { class: 'gz-empty', text: 'Search ideas by title, words or #hashtag.' })); }
+    document.getElementById('tt-filters').hidden = !on;
+    if (on) { drawFilters(); const q = document.getElementById('tt-q'); q.value = ''; q.focus(); list().replaceChildren(h('p', { class: 'gz-empty', text: 'Search people, or ideas by title, words or #hashtag.' })); }
     else { searchGen++; show(); }
 }
+// Filters under the box, like TikTok: Top (people, then the most viewed ideas), Users, Ideas (newest first).
+const FILTERS = [['top', 'Top'], ['users', 'Users'], ['ideas', 'Ideas']];
+let filter = 'top';
+const drawFilters = () => document.getElementById('tt-filters').replaceChildren(...FILTERS.map(([key, label]) =>
+    h('button', { class: 'tt-tab', type: 'button', role: 'tab', 'aria-selected': String(filter === key), text: label, onclick: () => { filter = key; drawFilters(); runSearch(); } })));
+const personRow = (u) => h('a', { class: 'gz-person sp-glass', href: profileHref(u.username) }, face(u.username),
+    h('span', {}, h('strong', { text: u.username }), u.preferredTitle && h('small', { text: u.preferredTitle })));
 async function runSearch() {
     const text = document.getElementById('tt-q').value.trim(), mine = ++searchGen;
     if (text.length < 2) return void list().replaceChildren(h('p', { class: 'gz-empty', text: 'Type at least two characters.' }));
     try {
-        const page = await gazeSearch(text);
+        const wantPeople = filter !== 'ideas', wantIdeas = filter !== 'users';
+        const [people, ideas] = await Promise.all([wantPeople ? gazePeople(text) : [], wantIdeas ? gazeSearch(text, filter === 'top' ? 'top' : '') : { items: [] }]);
         if (mine !== searchGen) return;   // a newer search is already on its way
-        list().replaceChildren(...(page.items.length ? page.items.map(card) : [h('p', { class: 'gz-empty', text: `No ideas match "${text}".` })]));
+        const rows = [...people.slice(0, filter === 'top' ? 3 : 10).map(personRow), ...ideas.items.map(card)];
+        list().replaceChildren(...(rows.length ? rows : [h('p', { class: 'gz-empty', text: `Nothing matches "${text}".` })]));
     } catch (e) { if (mine === searchGen) list().replaceChildren(h('p', { class: 'gz-empty', text: e.message })); }
 }
 document.getElementById('tt-find').addEventListener('click', () => setSearching(true));
