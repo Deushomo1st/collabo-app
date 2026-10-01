@@ -34,7 +34,7 @@
 .pf-link strong { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pf-link small { color: var(--sp-muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.pf-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--sp-line); }
+.pf-bar { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--sp-line); }
 /* one centred line; on a narrow screen it scrolls sideways instead of stacking (the auto margins centre it only while it fits) */
 .pf-tabs { display: flex; gap: 4px; flex: 1 1 100%; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .pf-tabs::-webkit-scrollbar { display: none; }
@@ -60,7 +60,7 @@
 .pf-eye { display: inline-flex; }
 .pf-more { margin: 12px auto 0; display: block; }
 
-.pf-list { display: grid; gap: 10px; }
+.pf-list { display: grid; gap: 10px; min-width: 0; }
 .pf-entry { display: grid; gap: 8px; padding: 14px 16px; border-radius: 18px; }
 .pf-entry__top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .pf-entry__top strong { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
