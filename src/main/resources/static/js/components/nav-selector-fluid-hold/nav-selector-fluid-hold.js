@@ -241,8 +241,12 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     }
     function dragEnd() {
         if (!drag) return;
-        const dx = drag.dx || 0; drag = null; settling = true;
-        const to = Math.max(0, Math.min(getLinks().length - V, start + (dx < -30 ? V : dx > 30 ? -V : 0)));
+        const dx = drag.dx || 0, base = drag.base; drag = null; settling = true;
+        // lock onto the window whose first link is nearest to where the drag landed; a flick that would round back moves one link
+        const last = getLinks().length - V, pos = Math.max(0, Math.min(offsetOf(last), base - dx));
+        let to = 0;
+        for (let i = 1; i <= last; i++) if (Math.abs(offsetOf(i) - pos) < Math.abs(offsetOf(to) - pos)) to = i;
+        if (to === start && Math.abs(dx) > 25) to = Math.max(0, Math.min(last, start + (dx < 0 ? 1 : -1)));
         view.style.transition = 'width ' + EASE; navEl.style.transition = 'transform ' + EASE;
         view.style.width = spanOf(to) + 'px'; navEl.style.transform = `translateX(${-offsetOf(to)}px)`;
         setTimeout(() => {
