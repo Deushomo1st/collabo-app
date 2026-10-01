@@ -181,6 +181,10 @@
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble { transition: none; }
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble--hover { opacity: 0 !important; }
 .nav-selector-fluid-hold-wrap--arrows:not(:has(.has-more)) > .nav-selector-fluid-hold__arrow { display: none; }   /* everything already fits */
+.nav-selector-fluid-hold.is-windowed:not(.iconized) { padding: 1px 0; }   /* the pill's own padding goes: border 1px + 1px is all that is left. Same 46px pill: the links grow to fill it */
+.nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__clip,
+.nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__viewport,
+.nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__nav { height: 100%; }
 .nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__nav { padding-inline: 1px; }   /* tight crescent at the pill's ends */
 .nav-selector-fluid-hold.active-hidden .nav-selector-fluid-hold__bubble--active { opacity: 0; }
 

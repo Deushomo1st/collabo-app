@@ -125,6 +125,14 @@
     --action-banner-ok-ink: #ffffff;
     --action-banner-line: rgba(2, 48, 71, .16);
 
+    /* ---- blur-banner ---- */
+    --blur-banner-ink: #023047;
+    --blur-banner-muted: #5b7280;
+    --blur-banner-bg: rgba(255, 255, 255, .6);
+    --blur-banner-ok: #0f9d76;
+    --blur-banner-ok-ink: #ffffff;
+    --blur-banner-line: rgba(2, 48, 71, .16);
+
     /* ---- yarn-thread ---- */
     --yarn-thread-ink: #023047;
     --yarn-thread-muted: #5b7280;

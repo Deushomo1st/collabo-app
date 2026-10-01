@@ -1,0 +1,37 @@
+/* blur-banner: the action-banner with everything stripped except the backdrop blur.
+   No glow, no pulse animation, no coloured tint or border, no saturate: nothing repaints on its own.
+   Public variables: --blur-banner-{ink,muted,bg,ok,ok-ink,line,blur}
+   Private: --_bb-* (internal). */
+
+.blur-banner {
+    --_bb-ink: var(--blur-banner-ink, #f4f5f7);
+    --_bb-muted: var(--blur-banner-muted, #9099a8);
+    --_bb-bg: var(--blur-banner-bg, rgba(255, 255, 255, .045));   /* faint neutral so the text stays readable; set transparent for blur only */
+    --_bb-ok: var(--blur-banner-ok, #34d399);
+    --_bb-ok-ink: var(--blur-banner-ok-ink, #032);
+    --_bb-line: var(--blur-banner-line, rgba(255, 255, 255, .10));
+    --_bb-blur: var(--blur-banner-blur, 18px);
+
+    display: flex; align-items: center; flex-wrap: wrap; gap: 14px;
+    padding: 14px 16px; border-radius: 22px; color: var(--_bb-ink);
+    background: var(--_bb-bg);
+    backdrop-filter: blur(var(--_bb-blur));
+    -webkit-backdrop-filter: blur(var(--_bb-blur));
+}
+
+.blur-banner__body { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; flex: 1 1 240px; min-width: 0; }
+.blur-banner__tag { font: 500 10.5px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--_bb-muted); }
+.blur-banner__title { margin-top: 2px; }
+.blur-banner__text { color: var(--_bb-muted); font-size: 13px; }
+
+.blur-banner__actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.blur-banner__note { padding: 5px 8px; border-radius: 999px; border: 1px solid var(--_bb-line); color: var(--_bb-muted); font-size: 12px; }
+.blur-banner__btn {
+    padding: 9px 16px; border-radius: 14px; font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer;
+    color: inherit; border: 1px solid var(--_bb-line); background: color-mix(in srgb, var(--_bb-ink) 10%, transparent);
+}
+.blur-banner__btn:hover { background: color-mix(in srgb, var(--_bb-ink) 18%, transparent); }
+.blur-banner__btn:focus-visible { outline: 2px solid var(--_bb-ink); outline-offset: 2px; }
+.blur-banner__btn--ok { background: var(--_bb-ok); color: var(--_bb-ok-ink); border-color: transparent; }
+.blur-banner__btn--ok:hover { background: var(--_bb-ok); filter: brightness(1.1); }
+.blur-banner__btn--danger { background: transparent; }

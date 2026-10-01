@@ -222,6 +222,7 @@
     import { renderTiltStack, preloadTiltStack } from '/js/components/tilt-stack/tilt-stack.js';
     import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
     import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
+    import { createBlurBanner, preloadBlurBanner } from '/js/components/blur-banner/blur-banner.js';
     import { createSwitch, preloadSwitch } from '/js/components/switch/switch.js';
     import { mountHoldFan } from '/js/components/hold-fan/hold-fan.js';
 
@@ -694,6 +695,34 @@
         },
 
         {
+            id: 'blur-banner',
+            title: 'Blur Banner',
+            files: ['blur-banner.css', 'blur-banner.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                await preloadBlurBanner();
+                const { wrap, result } = mountDemo(stage, {
+                    'Bring the banner back': () => { show(); return 'A new claim is waiting.'; },
+                });
+                const slot = document.createElement('div');
+                slot.style.cssText = 'width:min(640px,100%)';
+                wrap.prepend(slot);
+                function show() {
+                    slot.replaceChildren(createBlurBanner({
+                        title: 'Amaka O. claims ₦30,000 paid to Tolu A.',
+                        text: '“Prototype-day transport & printing” · The action banner with only the blur left: no glow, no pulse.',
+                        actions: [
+                            { label: 'Confirm receipt', variant: 'ok', onClick: () => { slot.replaceChildren(); result.textContent = 'Confirmed. The room is open again.'; } },
+                            { label: 'Cancel claim', variant: 'danger', onClick: () => { slot.replaceChildren(); result.textContent = 'Claim cancelled.'; } },
+                        ],
+                    }).element);
+                }
+                show();
+                result.textContent = 'Pick an action; the banner clears itself.';
+            },
+        },
+
+        {
             id: 'switch',
             title: 'Switch',
             files: ['switch.css', 'switch.js', 'README.md'],
@@ -765,6 +794,7 @@
         'theme-switcher': svg('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>'),
         'tilt-stack': svg('<path d="m12.83 2.18 8.58 3.91a1 1 0 0 1 0 1.83l-8.58 3.9a2 2 0 0 1-1.66 0L2.6 7.92a1 1 0 0 1 0-1.83l8.58-3.9a2 2 0 0 1 1.66 0z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/>'),
         'avatar': ICON.users,
+        'blur-banner': svg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/>'),
         'action-banner': svg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
         'hold-fan': svg('<circle cx="12" cy="18" r="3"/><circle cx="5" cy="8" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="19" cy="8" r="2"/>'),
         'switch': svg('<rect width="20" height="12" x="2" y="6" rx="6"/><circle cx="16" cy="12" r="2"/>'),
