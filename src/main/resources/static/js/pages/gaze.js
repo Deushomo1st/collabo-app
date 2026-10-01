@@ -5,7 +5,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, profileGet } from '/js/services/api.js';
+import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, profileGet, following } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { fanActions } from '/js/services/fan-actions.js';
@@ -72,8 +72,17 @@ function setSearching(on) {
     document.getElementById('tt-end').hidden = on;
     document.getElementById('tt-search').hidden = !on;
     document.getElementById('tt-filters').hidden = !on;
-    if (on) { drawFilters(); const q = document.getElementById('tt-q'); q.value = ''; q.focus(); list().replaceChildren(h('p', { class: 'gz-empty', text: 'Search people, or ideas by title, words or #hashtag.' })); }
+    if (on) { drawFilters(); const q = document.getElementById('tt-q'); q.value = ''; q.focus(); idle(); }
     else { searchGen++; show(); }
+}
+// Before anything is typed: the people you follow as a row of round pictures; the name shows on hover (and as the title on touch).
+async function idle() {
+    const mine = ++searchGen;
+    list().replaceChildren(h('p', { class: 'gz-empty', text: 'Search people, or ideas by title, words or #hashtag.' }));
+    const people = await following(who).catch(() => []);
+    if (mine !== searchGen || !people.length) return;
+    list().prepend(h('div', { class: 'gz-circles', 'aria-label': 'People you follow' }, ...people.map((u) =>
+        h('a', { class: 'gz-circle', href: profileHref(u.username), 'data-name': u.username }, face(u.username)))));
 }
 // Filters under the box, like TikTok: Top (people, then the most viewed ideas), Users, Ideas (newest first).
 const FILTERS = [['top', 'Top'], ['users', 'Users'], ['ideas', 'Ideas']];
@@ -84,7 +93,7 @@ const personRow = (u) => h('a', { class: 'gz-person sp-glass', href: profileHref
     h('span', {}, h('strong', { text: u.username }), u.preferredTitle && h('small', { text: u.preferredTitle })));
 async function runSearch() {
     const text = document.getElementById('tt-q').value.trim(), mine = ++searchGen;
-    if (text.length < 2) return void list().replaceChildren(h('p', { class: 'gz-empty', text: 'Type at least two characters.' }));
+    if (text.length < 2) return void idle();
     try {
         const wantPeople = filter !== 'ideas', wantIdeas = filter !== 'users';
         const [people, ideas] = await Promise.all([wantPeople ? gazePeople(text) : [], wantIdeas ? gazeSearch(text, filter === 'top' ? 'top' : '') : { items: [] }]);

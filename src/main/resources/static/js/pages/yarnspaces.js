@@ -13,6 +13,7 @@ import {
     logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock, yarnReport, avatarUrl,
 } from '/js/services/api.js';
+import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { SECTIONS, TIER_LABEL, inSection, unreadTotal, matches, ago, hue } from '/js/pages/yarnspaces-data.js';
 
 let me = null;
@@ -374,6 +375,7 @@ async function openSettings() {
         h('label', { for: 'default-chat' }, 'Default chat', pick),
         h('p', { class: 'yn-hint', text: 'What opens first when you tap Yarns from the Dash.' }),
         h('div', { class: 'yn-theme' }),
+        await messagePrivacyRow(me.username, toast),
         h('p', { class: 'yn-hint' }, `Signed in as ${me.username}. `, h('a', { href: '/HTML-pages/profile.html' }, 'My profile')),
         h('div', { class: 'glass-blur-dialog__actions' },
             h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: async () => { await logoutUser().catch(() => {}); toLogin(); } }, 'Sign out'),

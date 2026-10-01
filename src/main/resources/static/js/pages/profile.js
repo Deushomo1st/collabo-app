@@ -7,10 +7,11 @@ import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/component
 import { postCard } from '/js/components/post-card/post-card.js';
 import { openMine } from '/js/components/applications/applications.js';
 import { openDrafts } from '/js/components/drafts/drafts.js';
+import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
-    follow, unfollow, followers, following, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts,
+    follow, unfollow, followers, following, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, postGet, mediaUrl, yarnStartMySpace,
 } from '/js/services/api.js';
 
 const MAX_LINKS = 12, MAX_SHIPPED = 5;
@@ -22,7 +23,8 @@ const KIND = { SPACE_FORMED: 'Space formed', MILESTONE_CREDITED: 'Milestone' };
 
 let profile = null;      // ProfileResponse of the person being viewed
 let credentials = null;  // CredentialsResponse, loaded with the profile
-let tab = 'credentials';
+let tab = 'posts';
+let sort = 'latest';    // Latest / Popular / Oldest, applied to the posts already loaded (ponytail: popular covers what is loaded, not the whole history)
 let viewer = '';        // the signed-in username
 let feeds = {};         // Posts / Reposts pages loaded so far: { posts: { items, next, error }, reposts: {...} }
 
@@ -111,6 +113,7 @@ function identity() {
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'My applications', onclick: openMine }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Drafts', onclick: openDrafts }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Settings', onclick: openProfileSettings }),
+                !profile.self && f.canFollow && h('button', { class: 'pf-btn', type: 'button', text: 'Message', onclick: openMessage }),
                 !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow })),
             h('span', { class: 'pf-joined', text: `Joined ${day(profile.joined)}` })));
 }
@@ -188,8 +191,32 @@ function postList(id) {
     if (f.items.length === 0) return h('p', { class: 'pf-empty', text: id === 'posts'
         ? (profile.self ? 'Ideas you post to The Gaze show up here.' : 'No posts yet.')
         : (profile.self ? 'Ideas you shout out show up here.' : 'No reposts yet.') });
-    return h('div', { class: 'pf-list' }, ...f.items.map((p) => { const c = postCard(p, { onGone: () => { f.items = f.items.filter((x) => x.id !== p.id); renderTabs(); } }); return c; }),
-        f.next && h('button', { class: 'pf-btn', type: 'button', text: 'Show more', onclick: () => loadFeed(id, true) }));
+    return h('div', {}, h('div', { class: 'pf-grid' }, ...sorted(f.items).map((p) => tile(p, f))),
+        f.next && h('button', { class: 'pf-btn pf-more', type: 'button', text: 'Show more', onclick: () => loadFeed(id, true) }));
+}
+
+const eye = () => { const i = h('span', { class: 'pf-eye', 'aria-hidden': 'true' }); i.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'; return i; };   // fixed markup, no user text
+
+async function openPost(p, f) {   // opening it counts a view, the same as a shared link
+    try {
+        const full = await postGet(p.id);
+        const { panel, close } = await openGlassBlurDialog({ size: 'lg', label: 'Post', html: '<div class="gz-linked"></div>' });
+        panel.querySelector('.gz-linked').append(postCard(full, { onGone: () => { close(); f.items = f.items.filter((x) => x.id !== p.id); renderTabs(); } }));
+    } catch (err) { toast(err.message); }
+}
+
+function tile(p, f) {
+    const pic = p.media?.find((m) => m.kind !== 'VIDEO');
+    return h('button', { class: 'pf-tile', type: 'button', onclick: () => openPost(p, f) },
+        pic ? h('img', { src: mediaUrl(pic.id), alt: '', loading: 'lazy' }) : h('span', { class: 'pf-tile__text' }, h('strong', { text: p.title }), h('span', { text: p.body })),
+        h('span', { class: 'pf-tile__views', title: 'Times someone else opened this', onclick: (e) => e.stopPropagation() }, eye(), String(p.views)));   // a statistic only: tapping it does nothing
+}
+
+const SORTS = [['latest', 'Latest'], ['popular', 'Popular'], ['oldest', 'Oldest']];
+function sorted(items) {
+    if (sort === 'oldest') return [...items].reverse();
+    if (sort === 'popular') return [...items].sort((a, b) => b.views - a.views);
+    return items;
 }
 
 function renderTabs() {
@@ -199,8 +226,9 @@ function renderTabs() {
         class: 'pf-tab', role: 'tab', type: 'button', 'aria-selected': String(tab === id), text: label,
         onclick: () => { tab = id; renderTabs(); },
     });
+    const postsTab = tab === 'posts' || tab === 'reposts';
     let body;
-    if (tab === 'posts' || tab === 'reposts') body = postList(tab);
+    if (postsTab) body = postList(tab);
     else if (tab === 'removals') body = removalRecordsSection(profile, viewer);
     else if (!credentials.visible) body = h('p', { class: 'pf-empty', text: 'Credentials are private.' });
     else {
@@ -212,9 +240,12 @@ function renderTabs() {
             : h('div', { class: 'pf-list' }, ...shown.map(entryCard));
     }
     box.replaceChildren(
-        h('div', { class: 'pf-tabs', role: 'tablist' }, tabBtn('credentials', `Credentials · ${credentials.visible ? all.length : 0}`),
-            tabBtn('feats', `Feats · ${credentials.visible ? feats.length : 0}`), tabBtn('posts', 'Posts'), tabBtn('reposts', 'Reposts'), tabBtn('removals', 'Removals')),
-        body);
+        h('div', { class: 'pf-bar' },
+            h('div', { class: 'pf-tabs', role: 'tablist' }, tabBtn('posts', 'Posts'), tabBtn('reposts', 'Reposts'), tabBtn('removals', 'Removals'),
+                tabBtn('credentials', `Credentials · ${credentials.visible ? all.length : 0}`), tabBtn('feats', `Feats · ${credentials.visible ? feats.length : 0}`)),
+            postsTab && h('div', { class: 'pf-sort', role: 'group', 'aria-label': 'Sort' }, ...SORTS.map(([k, label]) =>
+                h('button', { class: 'pf-sort__btn', type: 'button', 'aria-pressed': String(sort === k), text: label, onclick: () => { sort = k; renderTabs(); } })))),
+        h('div', { class: 'pf-stage sp-glass' }, body));
 }
 
 function render() {
@@ -263,6 +294,21 @@ async function openEdit() {
     });
 }
 
+// ---- message: starts a MySpace yarn (the server refuses across a block) ------
+async function openMessage() {
+    const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Message', html: '<h3 class="glass-blur-dialog__title"></h3><form class="sp-form"></form>' });
+    panel.querySelector('h3').textContent = `Message ${profile.username}`;
+    const body = h('textarea', { class: 'sp-input', rows: 3, maxlength: 2000, placeholder: 'Your first yarn', required: true });
+    const err = h('p', { class: 'pf-error', hidden: true });
+    const form = panel.querySelector('form');
+    form.append(body, err, h('div', { class: 'glass-blur-dialog__actions' }, h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Send')));
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try { const t = await yarnStartMySpace(profile.username, body.value); location.href = `/HTML-pages/yarnspaces.html#t/${t.id}`; }
+        catch (ex) { err.textContent = ex.message; err.hidden = false; }
+    });
+}
+
 // ---- boot ------------------------------------------------------------------
 async function boot() {
     try {
@@ -277,6 +323,7 @@ preloadGlassBlurDialog(); preloadAvatar().catch(() => {});
 async function openProfileSettings() {
     const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Settings', html: '<h3 class="glass-blur-dialog__title">Settings</h3><div class="pf-settings"></div>' });
     await mountThemeRow(panel.querySelector('.pf-settings'));
+    panel.querySelector('.pf-settings').append(await messagePrivacyRow(viewer, toast));
 }
 
 mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });

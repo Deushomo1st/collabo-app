@@ -141,5 +141,16 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .tt-filters[hidden] { display: none; }
 .gz-person { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 18px; color: inherit; text-decoration: none; }
 .gz-person .sp-avatar { --_size: 42px; }
+.gz-circles { display: flex; gap: 12px; overflow-x: auto; padding: 6px 4px 22px; scrollbar-width: none; }
+.gz-circle { position: relative; flex: none; text-decoration: none; }
+.gz-circle .sp-avatar { --_size: 58px; }
+.gz-circle::after {
+    content: attr(data-name); position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px; padding: 2px 8px; border-radius: 8px;
+    background: var(--sp-panel-hi); color: var(--sp-text); font: 700 11.5px var(--sp-font); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s;
+}
+.gz-circle:hover::after, .gz-circle:focus-visible::after { opacity: 1; }
 .gz-person small { display: block; color: var(--sp-muted); font-size: 12px; }
 .pc-top .pc-time + .pc-time { margin-left: 0; }
+
+.pc-views { display: inline-flex; align-items: center; gap: 4px; }
+.pc-views > span { display: inline-flex; }

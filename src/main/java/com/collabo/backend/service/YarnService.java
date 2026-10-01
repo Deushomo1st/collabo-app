@@ -126,6 +126,7 @@ public class YarnService {
         requireNotBlocked(me.getId(), target.getId());
         String key = dmKey(me.getId(), target.getId());
         YarnThread t = threads.findByDmKey(key).orElseGet(() -> {
+            requireMayMessage(me, target);   // only a brand-new conversation is gated; an existing one carries on
             YarnThread fresh = new YarnThread();
             fresh.setTier(Tier.MYSPACE); fresh.setStatus(Status.PENDING);
             fresh.setCreatedBy(me.getId()); fresh.setDmKey(key);
@@ -136,6 +137,17 @@ public class YarnService {
         });
         send(me, t.getId(), body);
         return viewFor(me, t.getId());
+    }
+
+    private void requireMayMessage(User me, User target) {
+        UUID m = me.getId(), t = target.getId();
+        boolean ok = switch (target.getMessagePrivacy()) {
+            case EVERYONE -> true;
+            case FOLLOWERS -> follows.isFollowing(m, t);
+            case FOLLOWING -> follows.isFollowing(t, m);
+            case MUTUAL -> follows.isFollowing(m, t) && follows.isFollowing(t, m);
+        };
+        if (!ok) throw new YarnException(HttpStatus.FORBIDDEN, "This person only takes new messages from some people.");
     }
 
     /**
