@@ -39,7 +39,7 @@
 .pf-tab { padding: 10px 14px; margin-bottom: -1px; font: 700 14px var(--sp-font); cursor: pointer; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--sp-muted); }
 .pf-tab:hover { color: var(--sp-text); }
 .pf-tab[aria-selected="true"] { color: var(--sp-text); border-bottom-color: var(--sp-text); }
-.pf-sort { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--sp-panel); margin-bottom: 6px; }
+.pf-sort { display: flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--sp-panel); width: fit-content; margin: 0 auto 6px; }
 .pf-sort__btn { padding: 5px 12px; border: 0; border-radius: 8px; font: 700 12.5px var(--sp-font); cursor: pointer; background: none; color: var(--sp-muted); }
 .pf-sort__btn[aria-pressed="true"] { background: var(--sp-panel-hi); color: var(--sp-text); }
 .pf-stage { padding: 14px; border-radius: 22px; min-height: 360px; }
