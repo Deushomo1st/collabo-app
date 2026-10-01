@@ -1,7 +1,7 @@
 /* Sign-in page. Loaded after workspace.css (shared palette, glass, form and button styles). */
 
 .sp-shell { display: grid; align-content: start; gap: 18px; padding-top: 24px; }
-.lg-theme { justify-self: end; }
+.lg-theme { position: fixed; right: var(--sp-gutter, 16px); bottom: 16px; z-index: 20; }   /* theme switch floats bottom right, like the admin console */
 .lg-card { width: min(100%, 420px); margin: 6vh auto 0; padding: 26px; border-radius: 24px; }
 .lg-title { margin: 0 0 4px; font-size: 1.5rem; font-weight: 800; letter-spacing: -.01em; }
 .lg-card .sp-sub { margin-bottom: 18px; }
