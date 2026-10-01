@@ -7,6 +7,7 @@ import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/component
 import { postCard } from '/js/components/post-card/post-card.js';
 import { openMine } from '/js/components/applications/applications.js';
 import { openDrafts } from '/js/components/drafts/drafts.js';
+import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
@@ -208,7 +209,7 @@ function tile(p, f) {
     const pic = p.media?.find((m) => m.kind !== 'VIDEO');
     return h('button', { class: 'pf-tile', type: 'button', onclick: () => openPost(p, f) },
         pic ? h('img', { src: mediaUrl(pic.id), alt: '', loading: 'lazy' }) : h('span', { class: 'pf-tile__text' }, h('strong', { text: p.title }), h('span', { text: p.body })),
-        h('span', { class: 'pf-tile__views', title: 'Times someone else opened this' }, eye(), String(p.views)));
+        h('span', { class: 'pf-tile__views', title: 'Times someone else opened this', onclick: (e) => e.stopPropagation() }, eye(), String(p.views)));   // a statistic only: tapping it does nothing
 }
 
 const SORTS = [['latest', 'Latest'], ['popular', 'Popular'], ['oldest', 'Oldest']];
@@ -322,6 +323,7 @@ preloadGlassBlurDialog(); preloadAvatar().catch(() => {});
 async function openProfileSettings() {
     const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Settings', html: '<h3 class="glass-blur-dialog__title">Settings</h3><div class="pf-settings"></div>' });
     await mountThemeRow(panel.querySelector('.pf-settings'));
+    panel.querySelector('.pf-settings').append(await messagePrivacyRow(viewer, toast));
 }
 
 mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });

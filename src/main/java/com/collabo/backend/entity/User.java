@@ -58,6 +58,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     private CredentialsPrivacy credentialsPrivacy;
 
+    @Column(name = "message_privacy")
+    @Enumerated(EnumType.STRING)
+    private MessagePrivacy messagePrivacy;
+
     // First-run flag. Nullable wrapper: legacy rows are null and never see the welcome flow;
     // new accounts are saved as FALSE and flipped to TRUE when they finish or skip it.
     @Column
@@ -117,6 +121,8 @@ public class User {
     public String getBio() { return bio == null ? "" : bio; }
     public void setBio(String bio) { this.bio = bio; }
 
+    public MessagePrivacy getMessagePrivacy() { return messagePrivacy == null ? MessagePrivacy.EVERYONE : messagePrivacy; }
+    public void setMessagePrivacy(MessagePrivacy messagePrivacy) { this.messagePrivacy = messagePrivacy; }
     public CredentialsPrivacy getCredentialsPrivacy() { return credentialsPrivacy == null ? CredentialsPrivacy.EVERYONE : credentialsPrivacy; }
     public void setCredentialsPrivacy(CredentialsPrivacy credentialsPrivacy) { this.credentialsPrivacy = credentialsPrivacy; }
 }

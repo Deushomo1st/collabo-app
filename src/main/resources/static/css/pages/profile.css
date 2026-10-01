@@ -52,6 +52,7 @@
 .pf-tile__text strong { font-size: 14px; overflow-wrap: anywhere; }
 .pf-tile__text span { color: var(--sp-muted); font-size: 12.5px; overflow-wrap: anywhere; }
 .pf-tile__views { position: absolute; right: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 999px; background: rgba(0, 0, 0, .55); color: #fff; font: 700 12px var(--sp-font); }
+.pf-tile__views { cursor: default; }
 .pf-eye { display: inline-flex; }
 .pf-more { margin: 12px auto 0; display: block; }
 

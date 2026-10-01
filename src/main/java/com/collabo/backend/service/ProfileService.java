@@ -56,6 +56,7 @@ public class ProfileService {
         if (req.preferredTitle() != null) user.setPreferredTitle(cleanTitle(req.preferredTitle()));
         if (req.bio() != null) user.setBio(cleanBio(req.bio()));
         if (req.credentialsPrivacy() != null) user.setCredentialsPrivacy(req.credentialsPrivacy());
+        if (req.messagePrivacy() != null) user.setMessagePrivacy(req.messagePrivacy());
         return ProfileResponse.of(users.save(user), true, linksOf(user), avatars.versionOf(user), follows.stateFor(user, user));
     }
 

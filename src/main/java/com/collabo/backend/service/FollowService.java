@@ -55,6 +55,8 @@ public class FollowService {
     }
 
     @Transactional(readOnly = true)
+    public boolean isFollowing(UUID follower, UUID followed) { return follows.existsByFollowerIdAndFollowedId(follower, followed); }
+
     public FollowState stateFor(User profile, User viewer) {
         UUID p = profile.getId(), v = viewer.getId();
         boolean self = p.equals(v);
