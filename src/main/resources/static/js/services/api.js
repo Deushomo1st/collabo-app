@@ -6,7 +6,7 @@
 // The CSRF token is a readable cookie (XSRF-TOKEN) that we echo back in X-XSRF-TOKEN on writes.
 
 async function parseError(response, data, fallback) {
-    const err = new Error(data.message || fallback);
+    const err = new Error(data.message || `${fallback} (error ${response.status})`);   // the code helps when the server gave no words
     err.status = response.status;
     err.challenge = data.challenge || null;
     err.challengeToken = data.challengeToken || null;
@@ -103,6 +103,7 @@ export const credentialUnship = (id, linkId) => call(`/api/credentials/${id}/shi
 // ---- Posts and The Gaze ------------------------------------------------------
 const post = (id, path = '') => `/api/posts/${id}${path}`;
 export const gazeNewer = (feed, { pending, top }) => call(`/api/gaze/newer${q({ feed, pending: pending ? 'true' : '', top: top.join(',') })}`);
+export const gazeSearch = (text, before) => call(`/api/gaze/search${q({ q: text, before })}`);
 export const gazeFeed = (feed, { pending, before } = {}) => call(`/api/gaze${q({ feed, pending: pending ? 'true' : '', before })}`);
 export const userPosts = (name, tab, before) => call(user(name, '/posts') + q({ tab, before }));
 // fields: title, body, applyBy, hashtags[], mediaIds[], commentsOn, shoutsOn, shareWith[] (usernames), draftId

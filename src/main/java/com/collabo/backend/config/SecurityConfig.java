@@ -72,7 +72,7 @@ public class SecurityConfig {
                         .requestMatchers("/ws/admin").permitAll()   // its one-time ticket is checked in the handshake (AdminSocket)
                         .requestMatchers("/api/moderator/login", "/api/moderator/logout").permitAll()   // the rest of /api/moderator needs a session
                         // Allow public access to the registration/admin pages and static assets
-                        .requestMatchers("/", "/index.html", "/admin.html", "/HTML-pages/**", "/**/*.css", "/**/*.js", "/**/*.html").permitAll()
+                        .requestMatchers("/", "/index.html", "/admin.html", "/HTML-pages/**", "/**/*.css", "/**/*.js", "/**/*.html", "/manifest.webmanifest", "/icons/**").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();

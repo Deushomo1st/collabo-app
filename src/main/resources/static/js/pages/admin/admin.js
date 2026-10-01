@@ -2,6 +2,7 @@
 // Views live next to this file and return a DOM node. An AdminAuthError anywhere sends you back to the gate.
 import * as api from '/js/services/admin-api.js';
 import { h } from '/js/services/dom.js';
+import '/js/components/password-toggle.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { overview, checks } from './overview.js';

@@ -20,7 +20,7 @@ button:focus-visible, a:focus-visible, .md-row:focus-visible { outline: 2px soli
 .md-link { background: none; border: 0; color: var(--md-accent); padding: 0 4px; text-decoration: underline; }
 .md-link:hover:not(:disabled) { background: none; color: var(--md-accent-hi); }
 input, textarea, select { background: #fff; border: 1px solid var(--md-line); border-radius: 4px; padding: 7px 10px; width: 100%; color: inherit; }
-input:focus, textarea:focus, select:focus { outline: 2px solid var(--md-accent); outline-offset: -1px; }
+input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-accent) 22%, transparent); }
 label { display: grid; gap: 4px; color: var(--md-muted); font-size: 13px; margin-bottom: 12px; }
 .md-error { color: var(--md-bad); min-height: 1.3em; font-size: 13px; }
 

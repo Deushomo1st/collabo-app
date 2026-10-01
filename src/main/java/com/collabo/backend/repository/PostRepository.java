@@ -19,6 +19,11 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     List<Post> gaze(@Param("before") Instant before, @Param("hidden") Collection<UUID> hidden,
                     @Param("pendingOnly") boolean pendingOnly, @Param("now") Instant now, Pageable page);
 
+    /** Gaze search: posts whose title, body or hashtags contain the (already lower-cased, LIKE-escaped) pattern, newest first. */
+    @Query("select p from Post p where p.createdAt < :before and p.authorId not in :hidden "
+            + "and (lower(p.title) like :pat escape '!' or lower(p.body) like :pat escape '!' or lower(coalesce(p.hashtags, '')) like :pat escape '!') order by p.createdAt desc")
+    List<Post> search(@Param("before") Instant before, @Param("hidden") Collection<UUID> hidden, @Param("pat") String pattern, Pageable page);
+
     /** Shared Gaze: only posts by the given network of authors. */
     @Query("select p from Post p where p.createdAt < :before and p.authorId in :network "
             + "and (:pendingOnly = false or (p.formed = false and (p.applyBy is null or p.applyBy > :now))) order by p.createdAt desc")

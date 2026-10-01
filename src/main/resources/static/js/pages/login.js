@@ -1,6 +1,7 @@
 // Sign-in page. The network call lives in js/services/api.js.
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { loginUser, currentUser } from '/js/services/api.js';
+import '/js/components/password-toggle.js';
 
 const DEFAULT_NEXT = '/HTML-pages/gaze.html';
 const WELCOME = '/HTML-pages/welcome.html';   // a brand-new account sees this once, before anything else
