@@ -128,7 +128,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     scrollRoot.addEventListener('scroll', onScroll, { passive: true });
 
     // Pressing anywhere outside the nav (another surface) tucks it away at once.
-    const onOutside = (e) => { if (!root.contains(e.target) && !isIconized()) iconize(); };
+    const onOutside = (e) => { if (!root.contains(e.target) && !arrowL.contains(e.target) && !arrowR.contains(e.target) && !isIconized()) iconize(); };
     document.addEventListener('pointerdown', onOutside, true);
 
     navIcon.addEventListener('click', () => { expand(); armIdle(); });
@@ -151,7 +151,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         start = Math.max(0, Math.min(links.length - V, start));
         links.forEach((l, i) => { l.hidden = i < start || i >= start + V; });
         root.classList.toggle('active-hidden', !!root.querySelector('.nav-selector-fluid-hold__link.is-active[hidden]'));
-        arrowL.classList.toggle('on', start > 0);
+        arrowL.classList.toggle('on', start > 0);   // 'on' = there is more that way; the arrow itself always shows
         arrowR.classList.toggle('on', start < links.length - V);
     }
     const reveal = (i) => { if (i < start) start = i; else if (i >= start + V) start = i - V + 1; showWindow(); };

@@ -162,14 +162,15 @@
 .nav-selector-fluid-hold__link[hidden] { display: none; }
 .nav-selector-fluid-hold-wrap--arrows { align-items: center; gap: 8px; }
 .nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow {
-    position: static; transform: none; flex: none; pointer-events: none;
+    position: static; transform: none; flex: none; pointer-events: none; opacity: .35;
     background: var(--_nf-arrow-bg, rgba(255,255,255,.92)); border: 1px solid rgba(255,255,255,.75); color: #3a4150;
 }
-.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow.on { pointer-events: auto; }
+.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow.on { pointer-events: auto; opacity: 1; }
 .nav-selector-fluid-hold-wrap--arrows:has(.iconized) > .nav-selector-fluid-hold__arrow { opacity: 0 !important; pointer-events: none; }
 .nav-selector-fluid-hold.is-windowed { max-width: calc(min(92vw, 560px) - 68px); }
 .nav-selector-fluid-hold.is-windowed.iconized { max-width: 46px; }
-.nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__clip { flex: none; }
+.nav-selector-fluid-hold__clip { flex: 0 1 auto; }
+.nav-selector-fluid-hold__viewport { width: auto; max-width: 100%; }
 .nav-selector-fluid-hold.active-hidden .nav-selector-fluid-hold__bubble--active { opacity: 0; }
 
 @media (max-width: 600px) {
