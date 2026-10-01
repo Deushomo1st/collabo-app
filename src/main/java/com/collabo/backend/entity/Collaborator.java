@@ -10,7 +10,8 @@ import java.util.UUID;
 @Table(name = "collaborator", uniqueConstraints = @UniqueConstraint(columnNames = {"post_id", "user_id"}))
 public class Collaborator {
 
-    public enum State { INVITED, ACTIVE, DECLINED }
+    /** FROZEN: opted out of the room and the review, spot kept. DISBANDED: removed with a reason, spot stays open to return. */
+    public enum State { INVITED, ACTIVE, DECLINED, FROZEN, DISBANDED }
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,6 +30,10 @@ public class Collaborator {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
+    /** Why they were frozen or disbanded; null otherwise. */
+    @Column(length = 300)
+    private String reason;
+
     public Collaborator() {}
     public Collaborator(UUID postId, UUID userId) { this.postId = postId; this.userId = userId; }
 
@@ -37,7 +42,9 @@ public class Collaborator {
     public UUID getUserId() { return userId; }
     public State getState() { return state; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getReason() { return reason; }
     public void setState(State state) { this.state = state; }
-    /** Asking again after a decline starts a fresh request. */
-    public void reinvite() { this.state = State.INVITED; this.createdAt = Instant.now(); }
+    public void setState(State state, String reason) { this.state = state; this.reason = reason; }
+    /** Asking again after a decline or a disband starts a fresh request. */
+    public void reinvite() { this.state = State.INVITED; this.reason = null; this.createdAt = Instant.now(); }
 }

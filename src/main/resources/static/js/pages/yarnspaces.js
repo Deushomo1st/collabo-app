@@ -90,8 +90,9 @@ function setHeader(t) {
     // A Workspace's bar opens its space: the team, milestones and payments. (Member names inside it still go to their profiles.)
     const bar = document.querySelector('.yn-header .sp-title');
     bar.classList.toggle('is-link', !!t?.postId);
-    bar.title = t?.postId ? 'Open the space: team, milestones, payments' : '';
-    bar.onclick = t?.postId ? (e) => { if (!e.target.closest('a')) location.href = `/HTML-pages/space.html?post=${t.postId}`; } : null;
+    const we = t?.tier === 'WESPACE';   // the collaborators' room opens the group page; a Workspace opens its space
+    bar.title = t?.postId ? (we ? 'About the group: collaborators and who decides' : 'Open the space: team, milestones, payments') : '';
+    bar.onclick = t?.postId ? (e) => { if (!e.target.closest('a')) location.href = `/HTML-pages/${we ? 'wespace' : 'space'}.html?post=${t.postId}`; } : null;
     sub.hidden = !!t && t.tier === 'MYSPACE';   // the picture already links to their profile; a room still lists its members
 }
 
@@ -281,9 +282,9 @@ function renderThread() {
             return () => offs.forEach((off) => off());
         },
         isLive: () => live.connected,
-        onPin: t.postId ? (y) => island?.pin(y) : null, canPin: () => !!island?.canPin,
+        onPin: t.tier === 'WORKSPACE' ?  (y) => island?.pin(y) : null, canPin: () => !!island?.canPin,
     });
-    if (t.postId) mountIsland(document.getElementById('island'), t.postId, me).then((i) => {   // tasks belong to Workspaces only
+    if (t.tier === 'WORKSPACE') mountIsland(document.getElementById('island'), t.postId, me).then((i) => {   // tasks belong to Workspaces only
         if (openThread !== t) return i.destroy();
         island = i; threadView?.redraw();
         offIsland = live.on('yarn', (s) => { if (s.thread === t.id) i.reload(); });

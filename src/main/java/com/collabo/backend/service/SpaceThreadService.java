@@ -2,6 +2,7 @@ package com.collabo.backend.service;
 
 import com.collabo.backend.entity.*;
 import com.collabo.backend.live.LiveSignals;
+import com.collabo.backend.repository.CollaboratorRepository;
 import com.collabo.backend.repository.PaymentRecordRepository;
 import com.collabo.backend.repository.SpaceRepository;
 import com.collabo.backend.repository.ThreadMemberRepository;
@@ -29,10 +30,11 @@ public class SpaceThreadService {
     private final SpaceRepository spaces;
     private final PaymentRecordRepository payments;
     private final LiveSignals signals;
+    private final CollaboratorRepository collaborators;
 
     public SpaceThreadService(YarnThreadRepository threads, ThreadMemberRepository seats, YarnRepository yarns, UserRepository users,
-                              SpaceRepository spaces, PaymentRecordRepository payments, LiveSignals signals) {
-        this.signals = signals; this.spaces = spaces; this.payments = payments; this.threads = threads; this.seats = seats; this.yarns = yarns; this.users = users;
+                              SpaceRepository spaces, PaymentRecordRepository payments, LiveSignals signals, CollaboratorRepository collaborators) {
+        this.collaborators = collaborators; this.signals = signals; this.spaces = spaces; this.payments = payments; this.threads = threads; this.seats = seats; this.yarns = yarns; this.users = users;
     }
 
     /** The space's Workspace thread, or null before it exists. */
@@ -62,6 +64,24 @@ public class SpaceThreadService {
 
     public void leaveWeSpace(UUID postId, UUID userId) {
         threads.findByPostIdAndTier(postId, YarnThread.Tier.WESPACE).ifPresent(t -> exit(t, userId));
+    }
+
+    /** The collaborators' room, or null before the first collaborator accepts. */
+    @Transactional(readOnly = true)
+    public UUID weSpaceId(UUID postId) {
+        return threads.findByPostIdAndTier(postId, YarnThread.Tier.WESPACE).map(YarnThread::getId).orElse(null);
+    }
+
+    /** A system yarn in the collaborators' room, so freezing and disbanding are never silent. */
+    public void announceWeSpace(UUID postId, String body) {
+        threads.findByPostIdAndTier(postId, YarnThread.Tier.WESPACE).ifPresent(t -> say(t, body));
+    }
+
+    /** A frozen collaborator can read the WeSpace but not write in it. */
+    @Transactional(readOnly = true)
+    public boolean isFrozenIn(YarnThread t, UUID userId) {
+        return t.getTier() == YarnThread.Tier.WESPACE && t.getPostId() != null
+                && collaborators.existsByPostIdAndUserIdAndState(t.getPostId(), userId, Collaborator.State.FROZEN);
     }
 
     /** The Workspace thread carries the space's name. */

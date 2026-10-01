@@ -169,6 +169,10 @@ export const collaboratorInvite = (postId, username) => call(post(postId, '/coll
 export const collaboratorAnswer = (postId, accept) => call(post(postId, accept ? '/collaborators/accept' : '/collaborators/decline'), { method: 'POST' });
 export const collaboratorRemove = (postId, username) => call(post(postId, `/collaborators/${encodeURIComponent(username)}`), { method: 'DELETE' });
 export const collaborationsMine = () => call('/api/collaborations');
+// the WeSpace "about the group": the idea, the seats, and what the founder can do to a seat
+export const wespaceAbout = (postId) => call(post(postId, '/wespace'));
+export const collaboratorAct = (postId, username, action, reason) =>
+    call(post(postId, `/collaborators/${encodeURIComponent(username)}/${action}`), { method: 'POST', body: reason === undefined ? undefined : { reason } }, 'Could not do that.');
 
 // milestones and payment records of a space
 const sp = (id, path) => `/api/spaces/${id}${path}`;

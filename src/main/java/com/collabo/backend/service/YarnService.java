@@ -189,6 +189,7 @@ public class YarnService {
         if (spaceThreads.isHeld(t)) {
             throw new YarnException(HttpStatus.CONFLICT, "A payment claim is waiting. The room reopens once it is confirmed or cancelled.");
         }
+        if (spaceThreads.isFrozenIn(t, me.getId())) throw new YarnException(HttpStatus.FORBIDDEN, "You are frozen in this room. You can read, but not write, until the founder unfreezes you.");
         if (t.getTier() == Tier.MYSPACE) {
             requireNotBlocked(me.getId(), otherOf(members.findByThreadId(threadId), me.getId()));
             if (t.getStatus() == Status.DECLINED) throw new YarnException(HttpStatus.FORBIDDEN, CANT_DELIVER);
@@ -363,7 +364,7 @@ public class YarnService {
                 requester, t.getStatus() == Status.PENDING && !requester && t.getTier() == Tier.MYSPACE,
                 t.getLastBody(), last == null ? "System" : last.getUsername(), t.getLastYarnAt(),
                 yarns.countUnread(t.getId(), mine.getLastReadAt(), me.getId()),
-                mine.isPinned(), mine.isMuted(), mine.isArchived(), other, who, t.getTier() == Tier.WORKSPACE ? t.getPostId() : null);
+                mine.isPinned(), mine.isMuted(), mine.isArchived(), other, who, t.getTier() == Tier.MYSPACE ? null : t.getPostId());
     }
 
     private static boolean matches(ThreadView v, String needle) {

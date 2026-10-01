@@ -57,8 +57,8 @@ public class CollaboratorService {
         }
         Collaborator c = collaborators.findByPostIdAndUserId(postId, target.getId()).orElse(null);
         if (c == null) c = new Collaborator(postId, target.getId());
-        else if (c.getState() == Collaborator.State.DECLINED) c.reinvite();
-        else throw new InvalidProfileException(c.getState() == Collaborator.State.ACTIVE ? "That person is already a collaborator." : "You already asked that person.");
+        else if (c.getState() == Collaborator.State.DECLINED || c.getState() == Collaborator.State.DISBANDED) c.reinvite();   // a disbanded spot stays open to them
+        else throw new InvalidProfileException(c.getState() == Collaborator.State.INVITED ? "You already asked that person." : "That person is already a collaborator.");
         return new CollaboratorResponse(PersonDto.of(target), collaborators.save(c).getState().name(), c.getCreatedAt());
     }
 
@@ -69,7 +69,7 @@ public class CollaboratorService {
         if (!post.getAuthorId().equals(me.getId()) && !collaborators.existsByPostIdAndUserIdAndState(postId, me.getId(), Collaborator.State.ACTIVE)) {
             throw new ResourceNotFoundException(GONE);
         }
-        List<Collaborator> rows = collaborators.findByPostIdAndStateInOrderByCreatedAtAsc(postId, List.of(Collaborator.State.INVITED, Collaborator.State.ACTIVE));
+        List<Collaborator> rows = collaborators.findByPostIdAndStateInOrderByCreatedAtAsc(postId, List.of(Collaborator.State.INVITED, Collaborator.State.ACTIVE, Collaborator.State.FROZEN, Collaborator.State.DISBANDED));
         Map<UUID, User> people = users.findAllById(rows.stream().map(Collaborator::getUserId).toList()).stream().collect(Collectors.toMap(User::getId, Function.identity()));
         return rows.stream().filter(c -> people.containsKey(c.getUserId()))
                 .map(c -> new CollaboratorResponse(PersonDto.of(people.get(c.getUserId())), c.getState().name(), c.getCreatedAt())).toList();
@@ -78,7 +78,7 @@ public class CollaboratorService {
     /** Collaborations the viewer was asked into or has accepted. */
     @Transactional(readOnly = true)
     public List<RequestResponse> mine(User me) {
-        return collaborators.findByUserIdAndStateInOrderByCreatedAtDesc(me.getId(), List.of(Collaborator.State.INVITED, Collaborator.State.ACTIVE)).stream().map(c -> {
+        return collaborators.findByUserIdAndStateInOrderByCreatedAtDesc(me.getId(), List.of(Collaborator.State.INVITED, Collaborator.State.ACTIVE, Collaborator.State.FROZEN)).stream().map(c -> {
             Post p = posts.findById(c.getPostId()).orElse(null);
             User founder = p == null ? null : users.findById(p.getAuthorId()).orElse(null);
             return founder == null ? null : new RequestResponse(p.getId(), p.getTitle(), p.status(), PersonDto.of(founder), c.getState().name(), c.getCreatedAt());
