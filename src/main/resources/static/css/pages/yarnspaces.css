@@ -8,14 +8,9 @@
 }
 .yn-gear:hover { background: var(--sp-panel-hi); }
 .yn-hint { margin: 0; opacity: .7; font-size: 13px; }
-.yn-search {
-    width: 100%; padding: 10px 14px; border-radius: 14px; font: inherit; color: inherit;
-    border: 1px solid var(--sp-line); background: var(--sp-panel);
-}
-.yn-search::placeholder { color: var(--sp-muted); }
 
 .sp-top { margin-bottom: 0; }
-#section { display: grid; gap: 14px; }
+#section { display: grid; gap: 14px; padding-bottom: 96px; }   /* room for the bottom bar */
 .yn-group, .yn-list { display: grid; gap: 8px; }
 
 .yn-row {
@@ -89,3 +84,33 @@
 .yn-settings__sep { margin: 8px 2px 0; }
 .yn-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
 #header-sub a { color: inherit; text-decoration: underline dotted; } #header-sub a:hover { color: var(--sp-text); }
+
+/* the search bubble: grows out of the search icon, top right */
+.yn-find { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0); transition: background .2s; }
+.yn-find.is-open { background: rgba(0, 0, 0, .35); }
+.yn-find__bubble {
+    position: absolute; top: 64px; right: 12px; width: min(440px, calc(100vw - 24px)); max-height: calc(100vh - 90px); overflow: auto; padding: 12px; border-radius: 26px;
+    transform-origin: 85% 0; transform: scale(.15); opacity: 0; transition: transform .22s cubic-bezier(.2, .9, .3, 1.15), opacity .15s;
+}
+.yn-find.is-open .yn-find__bubble { transform: none; opacity: 1; }
+.yn-find__bar { display: flex; gap: 8px; align-items: center; }
+.yn-find__input { flex: 1; min-width: 0; padding: 10px 14px; border-radius: 999px; font: inherit; color: inherit; border: 1px solid var(--sp-line); background: var(--sp-panel); }
+.yn-find__input:focus { outline: 2px solid var(--sp-brand); }
+.yn-find__x { width: 34px; height: 34px; border: 0; border-radius: 50%; font-size: 20px; cursor: pointer; background: var(--sp-panel); color: var(--sp-muted); }
+.yn-find__people { padding-top: 14px; }
+.yn-find__list { display: grid; gap: 8px; }
+.yn-find__tablet {
+    display: grid; gap: 3px; padding: 10px 14px; border-radius: 16px; text-align: left; cursor: pointer; font: inherit; color: inherit;
+    border: 1px solid var(--sp-line); background: var(--sp-panel);
+}
+.yn-find__tablet:hover { background: var(--sp-panel-hi); }
+.yn-find__top { display: flex; justify-content: space-between; gap: 8px; }
+.yn-find__top time { color: var(--sp-muted); font: 500 11px var(--sp-mono); }
+.yn-find__text { color: var(--sp-muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yn-find__text mark { background: none; color: var(--sp-brand); font-weight: 800; }
+@media (prefers-reduced-motion: reduce) { .yn-find__bubble, .yn-find { transition: none; } }
+
+/* Yarns settings page */
+.yn-card { padding: 16px; border-radius: 22px; }
+.yn-signout { justify-self: start; padding: 10px 16px; }
+.yn-row { text-decoration: none; color: inherit; }

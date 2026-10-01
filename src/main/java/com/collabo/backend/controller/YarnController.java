@@ -50,6 +50,11 @@ public class YarnController {
         return service.directory(caller.require(), q);
     }
 
+    @GetMapping("/search")
+    public List<YarnHit> search(@RequestParam String q) {
+        return service.search(caller.require(), q);
+    }
+
     @GetMapping("/threads")
     public List<ThreadView> threads(@RequestParam(defaultValue = "inbox") String view,
                                     @RequestParam(required = false) String tier,

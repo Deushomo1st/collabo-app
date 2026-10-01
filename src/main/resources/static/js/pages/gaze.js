@@ -4,11 +4,10 @@ import { live } from '/js/services/live.js';   // keeps the live socket open (ya
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
-import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, profileGet, following } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
-import { fanActions } from '/js/services/fan-actions.js';
 
 const EMPTY = {
     gaze: 'Nothing here yet. Be the first to post an idea.',
@@ -255,24 +254,7 @@ async function openLinkedPost() {
     history.replaceState(null, '', location.pathname);   // a refresh should not pop it open again
 }
 
-// The bottom nav: back to the top of the Gaze, Yarns, a plus to post, and your profile.
-async function mountBottom(username) {
-    const pages = [
-        ['Gaze', '#top', svg('<path d="M3 10.5 12 3l9 7.5V21H3z"/>')],
-        ['Yarns', '/HTML-pages/yarnspaces.html', svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')],
-        ['Post', '#post', svg('<path d="M12 5v14M5 12h14"/>')],
-        ['Profile', profileHref(username), svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')],
-    ];
-    const nav = await mountNavSelector('#bottom-nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: 0, holdActions: fanActions(),
-        links: pages.map((p) => p[0]), hrefs: pages.map((p) => p[1]), icons: pages.map((p) => p[2]),
-        onChange: (label, href) => {
-            if (label === 'Gaze') return window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (label === 'Post') { nav.setActive(0); location.href = '/HTML-pages/post.html'; return; }   // the post page is a page of its own
-            location.href = href;
-        },
-    });
-}
+const mountBottom = (username) => mountMainNav(username, 'Gaze', { onGaze: () => window.scrollTo({ top: 0, behavior: 'smooth' }) });   // Gaze again goes back to the top
 
 // Someone who skipped the welcome flow keeps a gentle reminder until they add a photo or a bio (or close it for this tab).
 async function nudge(name) {

@@ -1,13 +1,10 @@
 // Yarnspaces hub: section list + small pure helpers. No DOM, no network (those are in yarnspaces.js and js/services/api.js).
 
 export const SECTIONS = [
-    { id: 'all',       label: 'All yarns',  tier: null },
-    { id: 'myspace',   label: 'MySpace',    tier: 'MYSPACE' },
-    { id: 'wespace',   label: 'WeSpace',    tier: 'WESPACE' },
-    { id: 'workspace', label: 'Workspaces', tier: 'WORKSPACE' },
-    { id: 'archive',   label: 'Archive',    tier: null },
-    { id: 'blocked',   label: 'Blocked',    tier: null },
-];
+    { id: 'myspace',   label: 'MySpaces',   tier: 'MYSPACE' },
+    { id: 'wespace',   label: 'WeSpaces',   tier: 'WESPACE' },
+    { id: 'workspace', label: 'WorkSpaces', tier: 'WORKSPACE' },
+];   // Archive and Blocked live on the Yarns settings page
 
 export const TIER_LABEL = { MYSPACE: 'MySpace', WESPACE: 'WeSpace', WORKSPACE: 'Workspace' };
 

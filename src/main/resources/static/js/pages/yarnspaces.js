@@ -2,7 +2,7 @@
 // Reached through the "Yarns" label. All network calls live in js/services/api.js.
 // Text goes in through textContent only (h() never sets innerHTML for user text).
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
+import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { face as faceOf } from '/js/services/face.js';
@@ -10,18 +10,17 @@ import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/
 import { live } from '/js/services/live.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import {
-    logoutUser, following, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
-    yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock, yarnReport, avatarUrl,
+    following, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
+    yarnMarkRead, yarnPrefs, yarnRespond, yarnBlock, yarnReport, avatarUrl,
 } from '/js/services/api.js';
-import { messagePrivacyRow } from '/js/services/message-privacy.js';
-import { SECTIONS, TIER_LABEL, inSection, unreadTotal, matches, ago, hue } from '/js/pages/yarnspaces-data.js';
+import { openFind } from '/js/pages/yarn-find.js';
+import { SECTIONS, TIER_LABEL, inSection, unreadTotal, ago, hue } from '/js/pages/yarnspaces-data.js';
 
 let me = null;
-let inbox = [], archived = [], blocked = [];
-let query = '';
+let inbox = [], archived = [];
 let openThread = null;      // the thread being read, if any
 let threadView = null;      // its yarn-thread instance
-let lastSection = 'all';
+let lastSection = 'myspace';
 let nav;
 
 // ---- tiny DOM helper -------------------------------------------------------
@@ -40,12 +39,10 @@ function h(tag, props = {}, ...kids) {
 }
 const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 const ICON = {
-    all: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
     myspace: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     wespace: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     workspace: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',
-    archive: '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
-    blocked: '<circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/>',
+    settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
 };
 
 function toast(text) {
@@ -79,14 +76,13 @@ function setHeader(t) {
     faces.hidden = !t;
     faces.replaceChildren(...(t ? headFaces(t) : []));
     document.getElementById('new-btn').hidden = !!t;
-    document.getElementById('settings-btn').hidden = !!t;
+    document.getElementById('find-btn').hidden = !!t;
     document.getElementById('header-title').textContent = t ? t.name : 'Yarns';
     document.getElementById('header-tag').textContent = t ? TIER_LABEL[t.tier] : 'Yarnspaces';
     const sub = document.getElementById('header-sub');
     if (t) {   // each member links to their profile
         sub.replaceChildren(...t.members.flatMap((m, i) => [i ? ', ' : '', h('a', { href: `/HTML-pages/profile.html?u=${encodeURIComponent(m.username)}`, text: m.username })]).filter(Boolean));
     } else sub.textContent = n ? `${n} unread ${n === 1 ? 'yarn' : 'yarns'}` : 'All caught up';
-    document.getElementById('search').hidden = !!t;
     document.getElementById('thread-wrench').hidden = !t;
     sub.hidden = !!t && t.tier === 'MYSPACE';   // the picture already links to their profile; a room still lists its members
 }
@@ -105,7 +101,7 @@ const mountNav = async (opts) => {
     nav?.destroy();
     nav = await mountNavSelector('#nav', {
         placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(),
-        onChange: (_l, href) => go(href.slice(href.lastIndexOf('#'))),   // href can arrive absolute
+        onChange: (_l, href) => { if (href.includes('yarn-settings.html')) location.href = '/HTML-pages/yarn-settings.html'; else go(href.slice(href.lastIndexOf('#'))); },   // href can arrive absolute
         ...opts,
     });
 };
@@ -122,7 +118,8 @@ async function doSyncNav() {
     if (!openThread) {
         if (navMode !== 'sections') {
             navMode = 'sections';
-            await mountNav({ links: SECTIONS.map((s) => s.label), hrefs: SECTIONS.map((s) => '#' + s.id), icons: SECTIONS.map((s) => svg(ICON[s.id])), activeIndex: SECTIONS.indexOf(currentSection()) });
+            await mountNav({ links: [...SECTIONS.map((s) => s.label), 'Settings'], hrefs: [...SECTIONS.map((s) => '#' + s.id), '/HTML-pages/yarn-settings.html'],
+                icons: [...SECTIONS.map((s) => svg(ICON[s.id])), svg(ICON.settings)], activeIndex: SECTIONS.indexOf(currentSection()) });
         }
         nav?.setActive(SECTIONS.indexOf(currentSection()));
         return;
@@ -138,7 +135,7 @@ async function doSyncNav() {
 const syncNav = () => (navQueue = navQueue.then(doSyncNav).catch(() => {}));   // one at a time, so a quick hash change cannot mount two navs
 
 async function loadAll() {
-    [inbox, archived, blocked] = await Promise.all([yarnThreads('inbox'), yarnThreads('archived'), yarnBlocked()]);
+    [inbox, archived] = await Promise.all([yarnThreads('inbox'), yarnThreads('archived')]);
 }
 
 function stopThread() { threadView?.destroy(); threadView = null; openThread = null; }
@@ -208,10 +205,8 @@ function renderSection() {
     const sec = currentSection();
     lastSection = sec.id;
     const root = document.getElementById('section');
-    if (sec.id === 'blocked') return renderBlocked(root);
-    const source = sec.id === 'archive' ? archived : inSection(inbox, sec);
-    const list = source.filter((t) => matches(t, query));
-    const requests = sec.id === 'archive' ? [] : list.filter((t) => t.incomingRequest);
+    const list = inSection(inbox, sec);
+    const requests = list.filter((t) => t.incomingRequest);
     const rest = list.filter((t) => !requests.includes(t));
     fill(root,
         ...requests.map((t) => createActionBanner({
@@ -222,23 +217,9 @@ function renderSection() {
             ],
         }).element),
         rest.length ? h('section', { class: 'yn-group' },
-            h('h2', { class: 'sp-h2', text: sec.id === 'all' ? 'Recent yarns' : sec.label }),
+            h('h2', { class: 'sp-h2', text: sec.label }),
             h('div', { class: 'yn-list' }, ...rest.map(row))) : null,
-        list.length ? null : h('p', { class: 'yn-empty', text: query ? 'No yarns match that search.' : sec.id === 'archive' ? 'Nothing archived.' : sec.id === 'wespace' ? 'The collaborators room opens here once someone accepts your request.' : sec.id === 'workspace' ? 'A Workspace opens here when a space forms and you are in it.' : 'No yarns here yet. Tap + to start one.' }));
-}
-
-function renderBlocked(root) {
-    const shown = blocked.filter((b) => b.username.toLowerCase().includes(query.trim().toLowerCase()));
-    root.replaceChildren(
-        h('section', { class: 'yn-group' },
-            h('h2', { class: 'sp-h2', text: 'Blocked' }),
-            h('p', { class: 'sp-sub', text: 'They are not told. Neither of you can send new MySpace yarns. Shared WeSpaces and Workspaces are unaffected.' }),
-            shown.length
-                ? h('div', { class: 'yn-list' }, ...shown.map((b) => h('div', { class: 'yn-item' },
-                    h('div', { class: 'yn-row yn-row--static' }, face(b.username, 'sp-avatar--sm'),
-                        h('span', { class: 'yn-body' }, h('strong', { text: b.username }), h('span', { class: 'yn-last', text: (ago(b.since) === 'now' ? 'Blocked just now' : `Blocked ${ago(b.since)} ago`) }))),
-                    h('button', { class: 'yn-quick', type: 'button', text: 'Unblock', onclick: () => act(() => yarnUnblock(b.userId), `Unblocked ${b.username}.`) }))))
-                : h('p', { class: 'yn-empty', text: blocked.length ? 'No one blocked matches that search.' : 'You have not blocked anyone.' })));
+        list.length ? null : h('p', { class: 'yn-empty', text: sec.id === 'wespace' ? 'The collaborators room opens here once someone accepts your request.' : sec.id === 'workspace' ? 'A Workspace opens here when a space forms and you are in it.' : 'No yarns here yet. Tap + to start one.' }));
 }
 
 async function respond(t, accept) {
@@ -335,9 +316,9 @@ async function blockPerson(t) {
 
 // ---- dialogs ---------------------------------------------------------------
 // A new yarn is always one person: WeSpaces and Workspaces open by themselves from posts and spaces.
-async function openNew() {
+async function openNew(prefill = '') {
     const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'New yarn', html: '<h3 class="glass-blur-dialog__title">New yarn</h3><form class="sp-form"></form>' });
-    const who = h('input', { class: 'sp-input', id: 'new-who', autocomplete: 'off', placeholder: 'Search people or pick one', required: true });
+    const who = h('input', { class: 'sp-input', id: 'new-who', autocomplete: 'off', placeholder: 'Search people or pick one', required: true, value: prefill });
     const people = h('div', { class: 'gz-circles', 'aria-label': 'People to yarn' });   // the people you follow, or whoever the search finds
     const first = h('textarea', { class: 'sp-input', id: 'new-body', rows: '3', maxlength: '2000', placeholder: 'Your first yarn', required: true });
     const err = h('p', { class: 'yn-error', role: 'alert', hidden: true });
@@ -368,24 +349,6 @@ async function openNew() {
     });
 }
 
-async function openSettings() {
-    const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'Yarns settings', html: '<h3 class="glass-blur-dialog__title">Yarns settings</h3><form class="sp-form"></form>' });
-    const pick = h('select', { class: 'sp-input', id: 'default-chat' }, ...SECTIONS.map((s) => h('option', { value: s.id, text: s.label, selected: s.id === (savedDefault() || 'all') })));
-    panel.querySelector('.sp-form').append(
-        h('label', { for: 'default-chat' }, 'Default chat', pick),
-        h('p', { class: 'yn-hint', text: 'What opens first when you tap Yarns from the Dash.' }),
-        h('div', { class: 'yn-theme' }),
-        await messagePrivacyRow(me.username, toast),
-        h('p', { class: 'yn-hint' }, `Signed in as ${me.username}. `, h('a', { href: '/HTML-pages/profile.html' }, 'My profile')),
-        h('div', { class: 'glass-blur-dialog__actions' },
-            h('button', { class: 'glass-blur-dialog__btn glass-blur-dialog__btn--ghost', type: 'button', onclick: async () => { await logoutUser().catch(() => {}); toLogin(); } }, 'Sign out'),
-            h('button', { class: 'glass-blur-dialog__btn', type: 'button', onclick: () => {
-                try { localStorage.setItem(PREF_KEY, pick.value); } catch { /* private mode: setting just won't stick */ }
-                toast('Default chat saved.'); close();
-            } }, 'Save')));
-    await mountThemeRow(panel.querySelector('.yn-theme'));
-}
-
 // ---- boot ------------------------------------------------------------------
 async function start() {
     try {
@@ -400,10 +363,10 @@ async function boot() {
     preloadGlassBlurDialog(); preloadYarnThread();
     await preloadActionBanner();
     await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
-    document.getElementById('settings-btn').addEventListener('click', () => me && openSettings());
+    document.getElementById('find-btn').addEventListener('click', () => me && openFind({ me, threads: () => [...inbox, ...archived],
+        openThread: (id) => { location.hash = '#t/' + id; }, startWith: (name) => openNew(name) }));
     document.getElementById('thread-wrench').addEventListener('click', () => openThread && openThreadSettings(openThread));
     document.getElementById('new-btn').addEventListener('click', () => me && openNew());
-    document.getElementById('search').addEventListener('input', (e) => { query = e.target.value; if (!openThread && me) renderSection(); });
     document.getElementById('header-back').addEventListener('click', (e) => { if (openThread) { e.preventDefault(); go('#' + lastSection); } });
     window.addEventListener('hashchange', () => { if (me) route(); });
     // The lists (unread counts, last yarn, new requests) refresh when the server says a yarn arrived, and again after a reconnect.

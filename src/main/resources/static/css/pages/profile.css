@@ -1,7 +1,7 @@
 /* Profile page. Loaded after workspace.css (shared palette, glass, tags); only profile-specific bits here. */
 
 .sp-top { margin-bottom: 0; }
-#section { display: grid; gap: 14px; }
+#section { display: grid; gap: 14px; padding-bottom: 96px; }   /* room for the bottom bar */
 
 .pf-card { display: grid; grid-template-columns: auto 1fr; gap: 18px; padding: 18px; border-radius: 22px; align-items: start; }
 .pf-id { display: grid; gap: 8px; min-width: 0; }
@@ -89,3 +89,7 @@
 .pf-address strong { font-size: 12.5px; }
 .pf-address a { color: inherit; }
 .pf-address p { margin: 2px 0 0; }
+
+#bottom-nav { --nav-link-padding: 9px 12px; --nav-font-size: 14px; }
+@media (max-width: 560px) { #bottom-nav { --nav-link-padding: 9px 7px; --nav-font-size: 13px; }
+    #bottom-nav .nav-selector-fluid-hold__nav { padding-inline: 0; } }

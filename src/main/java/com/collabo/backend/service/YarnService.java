@@ -120,6 +120,16 @@ public class YarnService {
         addYarn(t, null, Yarn.Kind.SYSTEM, body);
     }
 
+    /** Keyword search over my own yarns (at least 2 characters), newest first, 30 at most. */
+    @Transactional(readOnly = true)
+    public List<YarnHit> search(User me, String q) {
+        String text = q == null ? "" : q.trim().toLowerCase();
+        if (text.length() < 2) throw new YarnException(HttpStatus.BAD_REQUEST, "Type at least two characters.");
+        String pattern = "%" + text.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";   // ! is the LIKE escape character
+        return yarns.searchMine(me.getId(), pattern, org.springframework.data.domain.PageRequest.of(0, 30)).stream()
+                .map(y -> new YarnHit(y.getThreadId(), y.getSenderId(), y.getBody(), y.getCreatedAt())).toList();
+    }
+
     public ThreadView startMySpace(User me, String username, String body) {
         User target = users.findByUsername(username.trim()).orElseThrow(() -> new YarnException(HttpStatus.NOT_FOUND, "No one with that username."));
         if (target.getId().equals(me.getId())) throw new YarnException(HttpStatus.BAD_REQUEST, "You can't yarn yourself.");

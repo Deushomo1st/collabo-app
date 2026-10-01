@@ -14,6 +14,11 @@ public interface YarnRepository extends JpaRepository<Yarn, UUID> {
 
     List<Yarn> findByThreadIdAndCreatedAtBeforeOrderByCreatedAtDesc(UUID threadId, Instant before, Pageable page);
 
+    /** Words someone wrote, newest first, only in threads I sit in. System notes are not searched. */
+    @Query("select y from Yarn y where y.kind = com.collabo.backend.entity.Yarn.Kind.USER and lower(y.body) like :pat escape '!' "
+            + "and y.threadId in (select m.threadId from ThreadMember m where m.userId = :me) order by y.createdAt desc")
+    List<Yarn> searchMine(@Param("me") UUID me, @Param("pat") String pattern, Pageable page);
+
     long countByThreadId(UUID threadId);
 
     List<Yarn> findByThreadIdAndCreatedAtBetweenOrderByCreatedAtAsc(UUID threadId, Instant from, Instant to);

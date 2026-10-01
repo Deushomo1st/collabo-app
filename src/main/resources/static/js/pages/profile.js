@@ -7,6 +7,7 @@ import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/component
 import { postCard } from '/js/components/post-card/post-card.js';
 import { openMine } from '/js/components/applications/applications.js';
 import { openDrafts } from '/js/components/drafts/drafts.js';
+import { mountMainNav } from '/js/services/main-nav.js';
 import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
@@ -315,6 +316,7 @@ async function boot() {
         const me = await currentUser();
         if (!me) return toLogin();
         viewer = me.username;
+        mountMainNav(viewer, 'Profile');
         await load(usernameInUrl() || me.username);
     } catch (err) { fail(err); }
 }

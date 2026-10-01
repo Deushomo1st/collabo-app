@@ -24,6 +24,9 @@ public final class YarnDtos {
     /** receipt is only set on the caller's own yarns: SENT (saved), DELIVERED (every other member's browser has it) or READ (every other member has opened it). */
     public record YarnView(UUID id, UUID senderId, String sender, String kind, String body, Instant at, String receipt) {}
 
+    /** A yarn found by keyword. The page already holds the thread and its members, so only ids come back. */
+    public record YarnHit(UUID threadId, UUID senderId, String body, Instant at) {}
+
     public record BlockView(UUID userId, String username, Instant since) {}
 
     public record StartMySpace(

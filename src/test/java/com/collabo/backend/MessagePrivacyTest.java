@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,5 +59,17 @@ class MessagePrivacyTest {
 
         mvc.perform(put("/api/users/bob" + tag + "/follow").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t")).andExpect(status().is2xxSuccessful());
         mvc.perform(post("/api/yarns/threads/myspace").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content(hello)).andExpect(status().isCreated());
+    }
+
+    @Test
+    void keywordSearchFindsOnlyMyOwnYarns() throws Exception {
+        String tag = UUID.randomUUID().toString().substring(0, 6);
+        Cookie ann = signIn("ann" + tag), bob = signIn("bob" + tag), cara = signIn("cara" + tag);
+        mvc.perform(post("/api/yarns/threads/myspace").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json")
+                .content("{\"username\":\"bob" + tag + "\",\"body\":\"meet at the NEEDLE" + tag + " cafe\"}")).andExpect(status().isCreated());
+
+        mvc.perform(get("/api/yarns/search").param("q", "needle" + tag).cookie(bob)).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
+        mvc.perform(get("/api/yarns/search").param("q", "needle" + tag).cookie(cara)).andExpect(jsonPath("$", hasSize(0)));   // not her thread
+        mvc.perform(get("/api/yarns/search").param("q", "n").cookie(bob)).andExpect(status().isBadRequest());
     }
 }
