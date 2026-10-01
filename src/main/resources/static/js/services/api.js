@@ -174,6 +174,12 @@ export const wespaceAbout = (postId) => call(post(postId, '/wespace'));
 export const collaboratorAct = (postId, username, action, reason) =>
     call(post(postId, `/collaborators/${encodeURIComponent(username)}/${action}`), { method: 'POST', body: reason === undefined ? undefined : { reason } }, 'Could not do that.');
 
+// flagging a quiet collaborator, the founder's response clock, pleas and the freeze-or-disband vote
+export const wespaceClock = (postId, hours) => call(post(postId, '/wespace/clock'), { method: 'PUT', body: { hours } }, 'Could not set the clock.');
+export const casesOf = (postId) => call(post(postId, '/cases'));
+export const caseStart = (postId, username, reason) => call(post(postId, '/cases'), { method: 'POST', body: { username, reason } });
+export const caseAct = (postId, id, action, body) => call(post(postId, `/cases/${id}/${action}`), { method: 'POST', body });
+
 // milestones and payment records of a space
 const sp = (id, path) => `/api/spaces/${id}${path}`;
 export const milestonesOf = (id) => call(sp(id, '/milestones'));

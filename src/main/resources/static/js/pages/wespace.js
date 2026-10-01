@@ -7,11 +7,13 @@ import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur
 import { fanActions } from '/js/services/fan-actions.js';
 import { face } from '/js/services/face.js';
 import { CHAT, PERSON, PEOPLE, BRIEFCASE, svg } from '/js/services/icons.js';
-import { currentUser, wespaceAbout, collaboratorAct, collaboratorRemove } from '/js/services/api.js';
+import { currentUser, wespaceAbout, wespaceClock, collaboratorAct, collaboratorRemove } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
+import { openFlag, casesSection } from '/js/components/wespace/cases.js';
 
 const YARNS = '/HTML-pages/yarnspaces.html';
 const MAX_REASON = 300;
+const MIN_CLOCK = 48;
 const STATE = { ACTIVE: null, FROZEN: ['Frozen', 'sp-tag--muted'], DISBANDED: ['Disbanded', 'sp-tag--muted'], INVITED: ['Asked', 'sp-tag--brand'] };
 const ROLE = { FOUNDER: 'Founder', COLLABORATOR: 'Collaborator', FROZEN: 'Frozen' };
 
@@ -58,10 +60,20 @@ function seatRow(s) {
         s.reason && h('small', { class: 'pc-hint', text: s.reason }),
         h('span', { class: 'spc-perms' },
             live && !mineRow && about.role !== 'FROZEN' && btn('Nudge', act(name, 'nudge', `${name} was nudged.`)),
+            live && !mineRow && about.role !== 'FROZEN' && btn('Flag as quiet', () => openFlag(about, s, refresh)),
             founder && live && btn('Freeze', act(name, 'freeze', `${name} was frozen.`)),
             founder && s.state === 'FROZEN' && btn('Unfreeze', act(name, 'unfreeze', `${name} was unfrozen.`)),
             founder && (live || s.state === 'FROZEN') && btn('Disband', () => openDisband(name)),
             mineRow && !s.founder && about.role !== 'FOUNDER' && btn('Step down', async () => { try { await collaboratorRemove(postId, name); location.replace(YARNS); } catch (err) { toast(err.message); } })));
+}
+
+/** The founder sets how long a flagged collaborator has to answer; everyone else just reads it. Never under 48 hours. */
+function clockRow() {
+    const text = h('p', { class: 'sp-sub', text: `Response clock: ${about.responseClockHours} hours. A flagged collaborator has this long to answer before the others vote.` });
+    if (about.role !== 'FOUNDER') return text;
+    const hours = h('input', { class: 'sp-input', type: 'number', min: MIN_CLOCK, max: 8760, value: about.responseClockHours, 'aria-label': 'Response clock in hours' });
+    const save = async () => { try { await wespaceClock(postId, Number(hours.value)); toast('Response clock updated.'); await refresh(); } catch (err) { toast(err.message); } };
+    return h('div', {}, text, h('span', { class: 'spc-perms' }, hours, h('button', { class: 'sp-btn', type: 'button', text: 'Set clock', onclick: save })));
 }
 
 function draw() {
@@ -78,6 +90,8 @@ function draw() {
             h('h2', { class: 'sp-h2', text: `Collaborators · ${about.seats.filter((s) => s.state === 'ACTIVE' || s.state === 'FROZEN').length}` }),
             h('p', { class: 'sp-sub', text: 'The people who decide who joins. Frozen collaborators read but do not write or review. A disbanded spot stays open.' }),
             h('div', { class: 'spc-members' }, ...about.seats.map(seatRow))),
+        about.role !== 'FROZEN' && clockRow(),
+        about.role !== 'FROZEN' && casesSection(about, { me, onDecided: refresh }),
         about.threadId && h('a', { class: 'sp-btn sp-btn--brand', href: `${YARNS}#t/${about.threadId}`, text: 'Open the room' }),
         about.role === 'FOUNDER' && h('a', { class: 'sp-btn', href: `/HTML-pages/applicants.html?post=${postId}`, text: 'Review applicants' }),
         about.spaceId && h('a', { class: 'sp-btn', href: `/HTML-pages/space.html?id=${about.spaceId}`, text: 'Open the Workspace' }),

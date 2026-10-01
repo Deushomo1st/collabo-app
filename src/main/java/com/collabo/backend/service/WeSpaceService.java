@@ -7,6 +7,7 @@ import com.collabo.backend.entity.*;
 import com.collabo.backend.exception.ForbiddenException;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
+import com.collabo.backend.repository.CollaboratorCaseRepository;
 import com.collabo.backend.repository.CollaboratorRepository;
 import com.collabo.backend.repository.PostRepository;
 import com.collabo.backend.repository.SpaceRepository;
@@ -21,14 +22,15 @@ import java.util.UUID;
 /**
  * The collaborators' side of governance: the WeSpace "about the group" view, and nudging, freezing and disbanding a collaborator.
  * Frozen opts someone out without removing them; disbanded needs a reason and leaves the spot open to return.
- * ponytail: the founder decides alone. The poster-and-collaborators vote, the response clock on a nudge and pleas for collaborators
- * are in Governance and moderation but not built; add them on top of freeze/disband when wanted.
+ * The founder can decide alone here; CollaboratorCaseService is the slower route (flag, clock, plea, vote).
  */
 @Service
 @Transactional
 public class WeSpaceService {
 
     static final int MAX_REASON = 300;
+    static final int MIN_CLOCK_HOURS = 48;
+    static final int MAX_CLOCK_HOURS = 8760;
     private static final String GONE = "That post is gone.";
 
     private final CollaboratorRepository collaborators;
@@ -39,9 +41,11 @@ public class WeSpaceService {
     private final SpaceThreadService threads;
     private final YarnService yarns;
     private final NotificationService notifications;
+    private final CollaboratorCaseRepository cases;
 
     public WeSpaceService(CollaboratorRepository collaborators, PostRepository posts, UserRepository users, SpaceRepository spaces,
-                          SpaceService spaceService, SpaceThreadService threads, YarnService yarns, NotificationService notifications) {
+                          SpaceService spaceService, SpaceThreadService threads, YarnService yarns, NotificationService notifications, CollaboratorCaseRepository cases) {
+        this.cases = cases;
         this.collaborators = collaborators; this.posts = posts; this.users = users; this.spaces = spaces;
         this.spaceService = spaceService; this.threads = threads; this.yarns = yarns; this.notifications = notifications;
     }
@@ -63,7 +67,7 @@ public class WeSpaceService {
         }
         String role = founder ? "FOUNDER" : mine.getState() == Collaborator.State.FROZEN ? "FROZEN" : "COLLABORATOR";
         UUID spaceId = spaces.findByPostId(postId).map(Space::getId).orElse(null);
-        return new WeSpaceAbout(postId, post.getTitle(), post.getBody(), post.status(), role, threads.weSpaceId(postId), spaceId, seats);
+        return new WeSpaceAbout(postId, post.getTitle(), post.getBody(), post.status(), role, threads.weSpaceId(postId), spaceId, post.getResponseClockHours(), seats);
     }
 
     /** Any active collaborator or the founder can remind someone; it lands in that person's MySpace and notifications. */
@@ -82,12 +86,17 @@ public class WeSpaceService {
     public void freeze(User me, UUID postId, String username) {
         Post post = founderPost(me, postId);
         User target = target(username);
-        Collaborator c = seat(postId, target);
+        freezeSeat(post, seat(postId, target), target, me.getUsername());
+    }
+
+    /** Shared by the founder's own call and a collaborators' vote; `by` is who the room hears it from. */
+    void freezeSeat(Post post, Collaborator c, User target, String by) {
         if (c.getState() != Collaborator.State.ACTIVE) throw new InvalidProfileException("Only an active collaborator can be frozen.");
         c.setState(Collaborator.State.FROZEN, null);
         collaborators.save(c);
-        threads.announceWeSpace(postId, me.getUsername() + " froze " + target.getUsername() + ". They can read but not write until unfrozen.");
-        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were frozen", "You are opted out of the collaborators' room of \"" + post.getTitle() + "\" until " + me.getUsername() + " unfreezes you.", "/HTML-pages/yarnspaces.html");
+        closeCases(post.getId(), target.getId());
+        threads.announceWeSpace(post.getId(), by + " froze " + target.getUsername() + ". They can read but not write until unfrozen.");
+        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were frozen", "You are opted out of the collaborators' room of \"" + post.getTitle() + "\" until the founder unfreezes you.", "/HTML-pages/yarnspaces.html");
     }
 
     public void unfreeze(User me, UUID postId, String username) {
@@ -105,16 +114,40 @@ public class WeSpaceService {
     public void disband(User me, UUID postId, String username, String rawReason) {
         Post post = founderPost(me, postId);
         User target = target(username);
-        Collaborator c = seat(postId, target);
+        disbandSeat(post, seat(postId, target), target, me.getUsername(), rawReason);
+    }
+
+    void disbandSeat(Post post, Collaborator c, User target, String by, String rawReason) {
+        UUID postId = post.getId();
         if (c.getState() != Collaborator.State.ACTIVE && c.getState() != Collaborator.State.FROZEN) throw new InvalidProfileException("That person is not on the team.");
         String reason = rawReason == null ? "" : rawReason.trim();
         if (reason.isEmpty() || reason.length() > MAX_REASON) throw new InvalidProfileException("Give a reason of up to " + MAX_REASON + " characters.");
         c.setState(Collaborator.State.DISBANDED, reason);
         collaborators.save(c);
-        threads.announceWeSpace(postId, me.getUsername() + " disbanded " + target.getUsername() + " for: " + reason);
+        closeCases(postId, target.getId());
+        threads.announceWeSpace(postId, by + " disbanded " + target.getUsername() + " for: " + reason);
         threads.leaveWeSpace(postId, target.getId());
         spaces.findByPostId(postId).ifPresent(s -> spaceService.unseat(s, target.getId()));
-        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were disbanded", me.getUsername() + ": " + reason + ". Your spot on \"" + post.getTitle() + "\" stays open if you come back.", "/HTML-pages/yarnspaces.html");
+        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were disbanded", by + ": " + reason + ". Your spot on \"" + post.getTitle() + "\" stays open if you come back.", "/HTML-pages/yarnspaces.html");
+    }
+
+    /** The founder (or a vote) deciding ends any case still open on that person. */
+    private void closeCases(UUID postId, UUID targetId) {
+        for (CollaboratorCase k : cases.findByPostIdAndTargetIdAndStateIn(postId, targetId, List.of(CollaboratorCase.State.RUNNING, CollaboratorCase.State.VOTING))) {
+            k.setState(CollaboratorCase.State.DECIDED);
+            cases.save(k);
+            notifications.resolve("ccase:" + k.getId());
+        }
+    }
+
+    /** The founder sets how long a flagged collaborator has to answer: never under 48 hours, so it cannot be used to purge people. */
+    public void setClock(User me, UUID postId, int hours) {
+        Post post = founderPost(me, postId);
+        if (hours < MIN_CLOCK_HOURS || hours > MAX_CLOCK_HOURS) throw new InvalidProfileException("Choose between " + MIN_CLOCK_HOURS + " and " + MAX_CLOCK_HOURS + " hours.");
+        if (post.getResponseClockHours() == hours) return;
+        post.setResponseClockHours(hours);
+        posts.save(post);
+        threads.announceWeSpace(postId, me.getUsername() + " set the response clock to " + hours + " hours.");
     }
 
     private Post post(UUID postId) { return posts.findById(postId).orElseThrow(() -> new ResourceNotFoundException(GONE)); }

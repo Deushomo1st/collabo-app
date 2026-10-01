@@ -63,6 +63,10 @@ public class Post {
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private long views;
 
+    /** How long a quiet collaborator has to answer a flag; null means the 72 hour fallback. */
+    @Column(name = "response_clock_hours")
+    private Integer responseClockHours;
+
     public Post() {}
     public long getViews() { return views; }
     public Post(UUID authorId, String title, String body, Instant applyBy) {
@@ -91,6 +95,8 @@ public class Post {
     }
     public boolean isAnonymous() { return anonymous; }
     public void setAnonymous(boolean anonymous) { this.anonymous = anonymous; }
+    public int getResponseClockHours() { return responseClockHours == null ? 72 : responseClockHours; }
+    public void setResponseClockHours(int hours) { this.responseClockHours = hours; }
     public boolean isFormed() { return formed; }
     public void setFormed(boolean formed) { this.formed = formed; }
 
