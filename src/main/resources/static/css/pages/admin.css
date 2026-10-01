@@ -42,7 +42,7 @@ small { color: var(--ad-muted); font-weight: 500; }
 /* ---------- shell ---------- */
 .ad-app { min-height: 100vh; }
 .ad-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 64px; padding: 0 var(--sp-gutter); }
-.ad-top__end { display: flex; align-items: center; gap: 10px; }   /* theme switch and sign out sit on the right edge */
+.ad-theme { position: fixed; right: var(--sp-gutter); bottom: 16px; z-index: 20; }   /* theme switch floats bottom right */
 .ad-nav { display: flex; justify-content: center; padding: 0 var(--sp-gutter); position: sticky; top: 8px; z-index: 5; }
 .ad-brand { font-weight: 700; letter-spacing: .04em; }
 .ad-main { min-width: 0; max-width: 1140px; margin: 0 auto; }

@@ -71,11 +71,12 @@ async function unlock() {
     catch (e) { api.setKey(''); showGate(e instanceof api.AdminAuthError ? e.message : `Could not reach the server (${e.message}).`); }
 }
 
+function signOut() { api.setKey(''); showGate(); }
+
 let nav;   // the pill nav; route() keeps its bubble on the current view
-mountNavSelector('#nav', { links: Object.values(VIEWS).map((v) => v.label), hrefs: Object.keys(VIEWS).map((k) => `#${k}`), activeIndex: Object.keys(VIEWS).indexOf(current()),
-    onChange: (_l, href) => { location.hash = href.slice(href.lastIndexOf('#')); } }).then((n) => { nav = n; nav?.setActive(Object.keys(VIEWS).indexOf(current())); });
+mountNavSelector('#nav', { links: [...Object.values(VIEWS).map((v) => v.label), 'Sign out'], hrefs: [...Object.keys(VIEWS).map((k) => `#${k}`), '#signout'], activeIndex: Object.keys(VIEWS).indexOf(current()),
+    onChange: (_l, href) => { const to = href.slice(href.lastIndexOf('#')); if (to === '#signout') signOut(); else location.hash = to; } }).then((n) => { nav = n; nav?.setActive(Object.keys(VIEWS).indexOf(current())); });
 $('gate-form').addEventListener('submit', (e) => { e.preventDefault(); unlock(); });
-$('signout').addEventListener('click', () => { api.setKey(''); showGate(); });
 window.addEventListener('hashchange', () => { if (!$('app').hidden) route(); });
 // A view that hits a wrong key from inside a click handler lands here.
 window.addEventListener('unhandledrejection', (e) => {
