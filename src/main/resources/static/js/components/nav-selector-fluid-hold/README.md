@@ -147,4 +147,12 @@ then add light values to `css/global/theme.css`.
 
 ## iplement hybrid (more than three links)
 
-Opt in with `visible: 3`. With more links than that the pill shows three and hugs them. The arrows sit outside the pill and slide the window one link at a time. A dimmed arrow means nothing further that way; it still takes the click, so it never counts as a tap outside. A swipe on the pill jumps to the next (or previous) three. If you slide away and pick nothing, the pill reopens on the lineup that holds the active link. Live demo: `/HTML-pages/components.html#iplement-hybrid`.
+Opt in with `visible: 3`. With more links than that the pill shows three and hugs them (its width morphs to fit whichever three are showing).
+
+- **Arrows** sit outside the pill and slide the window one link at a time. A dimmed arrow means nothing further that way; it still takes the tap, so it never counts as a tap outside. Each arrow has an invisible tap area about 12px bigger than the 26px circle (1px toward the pill, so the end links keep their taps).
+- **Swipe, drag or sideways scroll** (touch, mouse, trackpad or shift-wheel): the links follow your finger, then lock onto the window whose first link is nearest where you stopped, so 2-3-4 and 3-4-5 are reachable and a fourth link is never left half showing. A flick that would round back moves one link; a tiny twitch stays put.
+- **Resting icon:** `restIcon` (an svg string) is what the collapsed pill shows until a link is picked. Links whose href is `#` (in-page actions) don't count as a pick.
+- **Reopen:** if you slide away and pick nothing, the pill reopens on the lineup around the active link.
+- The ends of the pill hug the first and last link (1px strip padding on top of the pill's own rim).
+
+The Yarns, Yarn settings, Workspace, Space, Post, Report, Profile, Gaze and Admin bars all use it. Live demo: `/HTML-pages/components.html#iplement-hybrid`.
