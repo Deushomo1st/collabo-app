@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.util.List;
 
 /** Profiles: read anyone's, edit your own. Thin shell over ProfileService. Sign-in required (default rule). */
@@ -85,7 +84,7 @@ public class UserController {
         current.require();
         UserAvatar a = avatars.of(username);
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG)
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePrivate())
+                .cacheControl(CacheControl.noCache().cachePrivate())   // always revalidated by the ETag, so a new picture shows at once
                 .eTag("\"" + a.getUpdatedAt().toEpochMilli() + "\"")
                 .body(a.getImage());
     }

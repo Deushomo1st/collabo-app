@@ -13,6 +13,8 @@
 //       onRead: () => yarnMarkRead(id),
 //       signals: (refresh) => unsubscribe,           // optional: call refresh() when the server signals a change
 //       isLive: () => true,                           // optional: while true, the backup poll slows down
+//       avatar: (name) => element,                    // optional: a picture beside their yarns (the component never fetches one itself)
+//       avatarOn: 'every',                            // 'every' (default; group chats) or 'latest' (only their newest yarn; one-to-one chats)
 //   });
 //   host.append(t.element);  ...  t.destroy();      // destroy() stops the polling
 
@@ -52,7 +54,9 @@ export function createYarnThread(opts) {
     }
     const clearError = () => { error.hidden = true; };
 
+    let lastTheirs = null;   // their newest yarn, for avatarOn: 'latest'
     function render(keepScroll) {
+        lastTheirs = items.findLast((y) => y.kind !== 'SYSTEM' && y.senderId !== opts.meId) || null;
         const before = document.documentElement.scrollHeight - window.scrollY;
         list.replaceChildren(...[
             more ? h('button', { class: 'yarn-thread__more', type: 'button', text: 'Load earlier yarns', onclick: loadEarlier }) : null,
@@ -63,6 +67,12 @@ export function createYarnThread(opts) {
     function bubble(y) {
         if (y.kind === 'SYSTEM') return h('p', { class: 'yarn-thread__system', text: y.body });
         const mine = y.senderId === opts.meId;
+        const msg = message(y, mine);
+        if (mine || !opts.avatar) return msg;
+        const shown = opts.avatarOn !== 'latest' || y === lastTheirs;
+        return h('div', { class: 'yarn-thread__row' }, h('span', { class: 'yarn-thread__pic' }, shown ? opts.avatar(y.sender) : null), msg);
+    }
+    function message(y, mine) {
         return h('div', { class: `yarn-thread__msg ${mine ? 'yarn-thread__msg--mine' : 'yarn-thread__msg--theirs'}` },
             !mine && opts.showNames ? h('strong', { class: 'yarn-thread__name', text: y.sender }) : null,
             h('span', { class: 'yarn-thread__text' }, ...linkify(y.body)),

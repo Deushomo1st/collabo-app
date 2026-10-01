@@ -34,7 +34,7 @@ public final class PostDtos {
     public record PostResponse(UUID id, PersonDto author, String title, String body, Instant applyBy,
                                String status, Instant createdAt, boolean mine, long shouts, boolean shouted,
                                PersonDto shoutedBy, String applied, Long applicants,
-                               java.util.List<String> hashtags, java.util.List<MediaDto> media, boolean commentsOn, boolean shoutsOn, Integer shared) {
+                               java.util.List<String> hashtags, java.util.List<MediaDto> media, boolean commentsOn, boolean shoutsOn, Integer shared, long views) {
         /** shoutedBy: who in your network shouted this out, when it appears in Shared Gaze or a Reposts tab. */
         /** applied: the viewer's own application state. applicants: how many applied, shown to the author only (nobody else learns it). */
         public static PostResponse of(Post p, User author, User viewer, long shouts, boolean shouted, User shoutedBy,
@@ -42,13 +42,13 @@ public final class PostDtos {
             return new PostResponse(p.getId(), PersonDto.of(author), p.getTitle(), p.getBody(), p.getApplyBy(),
                     p.status(), p.getCreatedAt(), author.getId().equals(viewer.getId()), shouts, shouted,
                     shoutedBy == null ? null : PersonDto.of(shoutedBy), applied, applicants,
-                    p.tags(), media.stream().map(m -> new MediaDto(m.getId(), m.kind())).toList(), p.isCommentsOn(), p.isShoutsOn(), null);
+                    p.tags(), media.stream().map(m -> new MediaDto(m.getId(), m.kind())).toList(), p.isCommentsOn(), p.isShoutsOn(), null, p.getViews());
         }
 
         /** On the response to creating a post: how many of the people you picked got it as a yarn. */
         public PostResponse withShared(int n) {
             return new PostResponse(id, author, title, body, applyBy, status, createdAt, mine, shouts, shouted, shoutedBy, applied, applicants,
-                    hashtags, media, commentsOn, shoutsOn, n);
+                    hashtags, media, commentsOn, shoutsOn, n, views);
         }
     }
 }

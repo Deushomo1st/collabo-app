@@ -5,6 +5,7 @@ import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-sel
 import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
+import { face as faceOf } from '/js/services/face.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import { live } from '/js/services/live.js';
 import { fanActions } from '/js/services/fan-actions.js';
@@ -255,6 +256,7 @@ function renderThread() {
     const reason = t.status === 'DECLINED' ? 'This yarn request was declined.' : t.incomingRequest ? 'Accept the request to reply.' : '';
     threadView = createYarnThread({
         meId: me.id, showNames: t.tier !== 'MYSPACE', disabledReason: reason,
+        avatar: (name) => faceOf(name, 'sp-avatar--sm'), avatarOn: t.tier === 'MYSPACE' ? 'latest' : 'every',   // a one-to-one chat: only their newest yarn; a group: every yarn
         load: (before) => yarnHistory(t.id, before),
         send: (body) => yarnSend(t.id, body),
         onRead: () => yarnMarkRead(t.id).catch(() => {}),

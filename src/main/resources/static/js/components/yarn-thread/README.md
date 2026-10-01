@@ -38,6 +38,8 @@ thread.destroy();
 | `load(before?)` | async fn | — | Returns up to 50 yarns, newest first. `before` is the `at` of the oldest yarn shown. |
 | `send(body)` | async fn | — | Returns the created yarn. |
 | `onRead()` | fn | — | Called when new yarns arrive while the tab is visible. |
+| `avatar(name)` | fn → element | — | A picture drawn beside their yarns. The component never fetches one itself. |
+| `avatarOn` | `'every'` \| `'latest'` | `'every'` | `'latest'`: only their newest yarn gets the picture (one-to-one chats); `'every'` is for groups. |
 | `pollMs` | number | `6000` | Polling interval. |
 | `disabledReason` | string | — | Replaces the composer with this text (pending request, blocked...). |
 | `onError(err)` | fn | — | Errors are also shown inline. |

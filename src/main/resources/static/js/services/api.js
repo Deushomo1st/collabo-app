@@ -103,7 +103,8 @@ export const credentialUnship = (id, linkId) => call(`/api/credentials/${id}/shi
 // ---- Posts and The Gaze ------------------------------------------------------
 const post = (id, path = '') => `/api/posts/${id}${path}`;
 export const gazeNewer = (feed, { pending, top }) => call(`/api/gaze/newer${q({ feed, pending: pending ? 'true' : '', top: top.join(',') })}`);
-export const gazeSearch = (text, before) => call(`/api/gaze/search${q({ q: text, before })}`);
+export const gazeSearch = (text, sort) => call(`/api/gaze/search${q({ q: text, sort })}`);   // sort: 'top' (most viewed) or newest
+export const gazePeople = (text) => call(`/api/gaze/search/people${q({ q: text })}`);
 export const gazeFeed = (feed, { pending, before } = {}) => call(`/api/gaze${q({ feed, pending: pending ? 'true' : '', before })}`);
 export const userPosts = (name, tab, before) => call(user(name, '/posts') + q({ tab, before }));
 // fields: title, body, applyBy, hashtags[], mediaIds[], commentsOn, shoutsOn, shareWith[] (usernames), draftId

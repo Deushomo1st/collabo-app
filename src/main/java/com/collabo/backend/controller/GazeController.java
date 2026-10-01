@@ -29,9 +29,13 @@ public class GazeController {
     }
 
     @GetMapping("/search")
-    public FeedPage search(@RequestParam String q, @RequestParam(required = false) Instant before, @RequestParam(required = false) Integer limit) {
-        return gaze.search(current.require(), q, before, limit);
+    public FeedPage search(@RequestParam String q, @RequestParam(required = false) Instant before, @RequestParam(required = false) Integer limit,
+                           @RequestParam(defaultValue = "new") String sort) {
+        return gaze.search(current.require(), q, before, limit, "top".equals(sort));
     }
+
+    @GetMapping("/search/people")
+    public java.util.List<com.collabo.backend.dto.PersonDto> people(@RequestParam String q) { return gaze.people(current.require(), q); }
 
     @GetMapping
     public FeedPage feed(@RequestParam(required = false) String feed,

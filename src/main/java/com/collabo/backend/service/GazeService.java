@@ -76,14 +76,27 @@ public class GazeService {
     }
 
     /** Ideas matching a search, newest first. Needs two characters so a stray letter cannot scan every post. */
-    public FeedPage search(User viewer, String q, Instant before, Integer limit) {
+    public FeedPage search(User viewer, String q, Instant before, Integer limit) { return search(viewer, q, before, limit, false); }
+
+    /** top = most viewed first, one short list (no cursor); otherwise newest first, paged. */
+    public FeedPage search(User viewer, String q, Instant before, Integer limit, boolean top) {
         String text = q == null ? "" : q.trim().toLowerCase();
         if (text.length() < 2) throw new InvalidProfileException("Type at least two characters to search.");
         String pattern = "%" + text.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";   // ! is the LIKE escape character
         int n = limit(limit);
         Set<UUID> hidden = hiddenFor(viewer);
         hidden.remove(viewer.getId());   // you can find your own ideas too
+        if (top) return new FeedPage(page(ofPosts(posts.searchTop(hidden, pattern, PageRequest.of(0, n))), n, viewer).items(), null);
         return page(ofPosts(posts.search(cursor(before), hidden, pattern, PageRequest.of(0, n + 1))), n, viewer);
+    }
+
+    /** People whose username contains the text (ten at most), minus anyone the viewer has a block with. */
+    public List<com.collabo.backend.dto.PersonDto> people(User viewer, String q) {
+        String text = q == null ? "" : q.trim();
+        if (text.length() < 2) throw new InvalidProfileException("Type at least two characters to search.");
+        Set<UUID> hidden = hiddenFor(viewer);
+        return users.findTop10ByUsernameContainingIgnoreCaseAndIdNot(text, viewer.getId()).stream()
+                .filter((u) -> !hidden.contains(u.getId())).map(com.collabo.backend.dto.PersonDto::of).toList();
     }
 
     /**

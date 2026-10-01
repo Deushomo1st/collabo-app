@@ -5,12 +5,13 @@ import { postShout, postUnshout, postDelete, postWindow, commentsOf, commentAdd,
 import { openApply, openReview } from '/js/components/applications/applications.js';
 import { openCollaborators } from '/js/components/collaborators/collaborators.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
+import { face } from '/js/services/face.js';
 
 const MAX_COMMENT = 500;
 const when = (iso) => new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 // <input type="datetime-local"> wants local time without a zone.
 const localInput = (iso) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
-const person = (u) => h('a', { class: 'pc-who', href: profileHref(u.username), text: u.username });
+const person = (u) => h('a', { class: 'pc-who', href: profileHref(u.username) }, face(u.username, 'sp-avatar--sm'), u.username);
 
 export function postCard(initial, { onGone } = {}) {
     let p = initial;
@@ -91,7 +92,8 @@ export function postCard(initial, { onGone } = {}) {
                 person(p.author),
                 p.author.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: p.author.preferredTitle }),
                 h('span', { class: `sp-tag ${closed ? 'sp-tag--muted' : 'sp-tag--ok'}`, text: closed ? 'Closed' : formed ? 'Space formed' : 'Pending' }),
-                h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) })),
+                h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) }),
+                h('span', { class: 'pc-time', title: 'Times someone else opened this idea', text: `${p.views} view${p.views === 1 ? '' : 's'}` })),
             h('h3', { class: 'pc-title', text: p.title }),
             h('p', { class: 'pc-body', text: p.body }),
             p.media?.length > 0 && h('div', { class: `pc-media pc-media--${Math.min(p.media.length, 3)}` }, ...p.media.map((m) => m.kind === 'VIDEO'
