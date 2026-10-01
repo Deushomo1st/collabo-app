@@ -285,7 +285,7 @@
                 const box = document.createElement('div');
                 box.className = 'gallery__scrollbox';
                 stage.appendChild(box);
-                const nav = await mountNavSelector(box, { scrollRoot: box });
+                const nav = await mountNavSelector(box, { scrollRoot: box, visible: 0 });   // visible: 0 = the original scrolling pill, not the hybrid
 
                 const content = document.createElement('div');
                 content.className = 'gallery__scrollbox-content';
@@ -800,6 +800,7 @@
 
     // Bottom page nav: the nav-selector component, docked bottom-left, growing to the right.
     pageNav = await mountNavSelector('#gallery-nav', {
+        visible: 0,   // the original scrolling pill, not the hybrid
         placement: 'bottom',
         align: 'start',
         links: catalog.map((c) => c.title),
