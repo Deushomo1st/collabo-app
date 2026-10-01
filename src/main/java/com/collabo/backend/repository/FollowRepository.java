@@ -15,6 +15,8 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
     void deleteByFollowerIdAndFollowedId(UUID followerId, UUID followedId);
     List<Follow> findTop50ByFollowedIdOrderByCreatedAtDesc(UUID followedId);
     List<Follow> findTop50ByFollowerIdOrderByCreatedAtDesc(UUID followerId);
+    List<Follow> findTop500ByFollowedIdOrderByCreatedAtDesc(UUID followedId);
+    List<Follow> findTop500ByFollowerIdOrderByCreatedAtDesc(UUID followerId);
 
     /** Everyone this user follows plus everyone who follows them. */
     @Query("select f.followedId from Follow f where f.followerId = :u union select f.followerId from Follow f where f.followedId = :u")

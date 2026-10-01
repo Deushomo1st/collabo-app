@@ -1,5 +1,6 @@
 package com.collabo.backend.service;
 
+import com.collabo.backend.dto.ConnectionsDto;
 import com.collabo.backend.dto.FollowState;
 import com.collabo.backend.dto.PersonDto;
 import com.collabo.backend.entity.Follow;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,6 +76,16 @@ public class FollowService {
     @Transactional(readOnly = true)
     public List<PersonDto> following(String username, User viewer) {
         return people(follows.findTop50ByFollowerIdOrderByCreatedAtDesc(find(username).getId()), Follow::getFollowedId, viewer);
+    }
+
+    /** Up to 500 each way; MyGuy is whoever is in both lists. */
+    @Transactional(readOnly = true)
+    public ConnectionsDto connections(String username, User viewer) {
+        UUID id = find(username).getId();
+        var in = people(follows.findTop500ByFollowedIdOrderByCreatedAtDesc(id), Follow::getFollowerId, viewer);
+        var out = people(follows.findTop500ByFollowerIdOrderByCreatedAtDesc(id), Follow::getFollowedId, viewer);
+        var inNames = new HashSet<String>(); in.forEach(p -> inNames.add(p.username()));
+        return new ConnectionsDto(in, out, out.stream().filter(p -> inNames.contains(p.username())).toList());
     }
 
     /** Newest first; anyone who blocked the viewer is left out. */

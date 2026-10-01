@@ -12,7 +12,7 @@ import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
-    follow, unfollow, followers, following, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, postGet, mediaUrl, yarnStartMySpace,
+    follow, unfollow, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, postGet, mediaUrl, yarnStartMySpace,
 } from '/js/services/api.js';
 
 const MAX_LINKS = 12, MAX_SHIPPED = 5;
@@ -95,7 +95,7 @@ async function toggleFollow() {
 
 function identity() {
     const f = profile.follow;
-    const count = (n, label, load) => h('button', { class: 'pf-count', type: 'button', onclick: () => openPeople(label, load) },
+    const count = (n, label, tab) => h('button', { class: 'pf-count', type: 'button', onclick: () => { location.href = `/HTML-pages/connections.html?u=${encodeURIComponent(profile.username)}&tab=${tab}`; } },
         h('strong', { text: String(n) }), ' ', h('span', { text: label }));
     return h('section', { class: 'pf-card sp-glass' },
         picture(),
@@ -106,7 +106,7 @@ function identity() {
                 f.followsMe && !profile.self && h('span', { class: 'sp-tag sp-tag--muted', text: 'Follows you' })),
             profile.bio ? h('p', { class: 'pf-bio', text: profile.bio })
                 : h('p', { class: 'pf-bio is-empty', text: profile.self ? 'Add a short bio so people know what you build.' : 'No bio yet.' }),
-            h('div', { class: 'pf-counts' }, count(f.followers, 'followers', followers), count(f.following, 'following', following)),
+            h('div', { class: 'pf-counts' }, count(f.followers, 'followers', 'followers'), count(f.following, 'following', 'following')),
             profile.links.length > 0 && h('div', { class: 'pf-links' }, ...profile.links.map((l) =>
                 externalLink({ class: 'pf-link', href: l.url }, h('strong', { text: l.title }), h('small', { text: l.note || l.url })))),
             h('div', { class: 'pf-actions' },
@@ -116,20 +116,6 @@ function identity() {
                 !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow }),
                 !profile.self && f.canFollow && h('button', { class: 'pf-btn', type: 'button', text: 'Message', onclick: openMessage })),
             h('span', { class: 'pf-joined', text: `Joined ${day(profile.joined)}` })));
-}
-
-async function openPeople(label, load) {
-    const { panel } = await openGlassBlurDialog({ size: 'sm', label, html: `<h3 class="glass-blur-dialog__title"></h3><ul class="pf-people"></ul>` });
-    panel.querySelector('h3').textContent = `${profile.username} · ${label}`;
-    const ul = panel.querySelector('ul');
-    try {
-        const people = await load(profile.username);
-        if (people.length === 0) ul.append(h('li', { class: 'pf-hint', text: 'No one yet.' }));
-        for (const p of people) {
-            ul.append(h('li', {}, h('a', { href: `/HTML-pages/profile.html?u=${encodeURIComponent(p.username)}` },
-                h('strong', { text: p.username }), p.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: p.preferredTitle }))));
-        }
-    } catch (err) { ul.append(h('li', { class: 'pf-error', text: err.message })); }
 }
 
 // ---- credentials / feats ---------------------------------------------------

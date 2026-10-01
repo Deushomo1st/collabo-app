@@ -96,6 +96,7 @@ export const follow = (name) => call(user(name, '/follow'), { method: 'PUT' });
 export const unfollow = (name) => call(user(name, '/follow'), { method: 'DELETE' });
 export const followers = (name) => call(user(name, '/followers'));
 export const following = (name) => call(user(name, '/following'));
+export const connections = (name) => call(user(name, '/connections'));
 export const credentialsOf = (name) => call(user(name, '/credentials'));
 export const credentialFeature = (id, featured) => call(`/api/credentials/${id}`, { method: 'PATCH', body: { featured } });
 export const credentialShip = (id, title, url) => call(`/api/credentials/${id}/shipped`, { method: 'POST', body: { title, url } });

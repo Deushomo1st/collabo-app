@@ -1,6 +1,7 @@
 package com.collabo.backend.controller;
 
 import com.collabo.backend.config.CurrentUser;
+import com.collabo.backend.dto.ConnectionsDto;
 import com.collabo.backend.dto.LinkDto;
 import com.collabo.backend.dto.ProfileResponse;
 import com.collabo.backend.dto.UpdateProfileRequest;
@@ -111,6 +112,11 @@ public class UserController {
     @GetMapping("/{username}/following")
     public List<PersonDto> following(@PathVariable String username) {
         return follows.following(username, current.require());
+    }
+
+    @GetMapping("/{username}/connections")
+    public ConnectionsDto connections(@PathVariable String username) {
+        return follows.connections(username, current.require());
     }
 
     @GetMapping("/{username}/credentials")
