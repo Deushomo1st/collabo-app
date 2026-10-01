@@ -171,7 +171,7 @@
 .nav-selector-fluid-hold.is-windowed { max-width: calc(min(92vw, 560px) - 68px); }
 .nav-selector-fluid-hold.is-windowed.iconized { max-width: 46px; }
 .nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__clip { flex: 0 1 auto; }
-.nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__viewport { width: auto; max-width: 100%; overflow-x: hidden; touch-action: pan-y; }
+.nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__viewport { width: auto; max-width: 100%; overflow-x: hidden; touch-action: pan-y; user-select: none; }
 .nav-selector-fluid-hold.active-hidden .nav-selector-fluid-hold__bubble--active { opacity: 0; }
 
 @media (max-width: 600px) {

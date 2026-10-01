@@ -103,7 +103,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     const iconize = () => {
         clearTimeout(idleTimer); syncIcon(); root.classList.add('iconized');
         // scrolled away with the arrows and picked nothing: reopen on the lineup that holds the black focus
-        setTimeout(() => { if (isIconized() && windowed()) { start = homeStart(); showWindow(); } }, 250);
+        setTimeout(() => { if (isIconized() && windowed() && !drag && !settling) { start = homeStart(); showWindow(); } }, 250);
     };
     const expand = () => root.classList.remove('iconized');
 
@@ -218,16 +218,47 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         });
     });
 
-    // swipe: locks onto the next (or previous) V links, never lands in between
-    let swipeX = null, swiped = false;
-    root.addEventListener('pointerdown', (e) => { swipeX = windowed() ? e.clientX : null; swiped = false; });
-    const onSwipeEnd = (e) => {   // on the document: a drag that ends off the pill still counts
-        if (swipeX === null) return;
-        const dx = e.clientX - swipeX; swipeX = null;
-        if (Math.abs(dx) < 30) return;
-        swiped = true; start += dx < 0 ? V : -V; showWindow(); armIdle();
-    };
+    // swipe / sideways scroll: the links follow the finger (fluid), then lock onto the next or previous V and the pill morphs to fit them
+    const navEl = root.querySelector('.nav-selector-fluid-hold__nav');
+    const PAD = 6;   // the nav's side padding
+    const EASE = '.3s cubic-bezier(.2,.8,.2,1)';
+    const offsetOf = (i) => getLinks()[i].offsetLeft - PAD;
+    const spanOf = (i) => { const a = getLinks()[i], b = getLinks()[i + V - 1]; return b.offsetLeft + b.offsetWidth - a.offsetLeft + 2 * PAD; };
+    let swipeX = null, swiped = false, drag = null, settling = false;
+    function dragMove(dx) {
+        if (settling) return;
+        if (!drag) {
+            drag = { w: view.offsetWidth, base: 0 };
+            getLinks().forEach((l) => { l.hidden = false; });
+            drag.base = offsetOf(start);
+            view.style.width = drag.w + 'px'; navEl.style.transition = 'none';
+        }
+        swiped = true;
+        navEl.style.transform = `translateX(${-Math.max(0, Math.min(offsetOf(getLinks().length - V), drag.base - dx))}px)`;
+        drag.dx = dx;
+    }
+    function dragEnd() {
+        if (!drag) return;
+        const dx = drag.dx || 0; drag = null; settling = true;
+        const to = Math.max(0, Math.min(getLinks().length - V, start + (dx < -30 ? V : dx > 30 ? -V : 0)));
+        view.style.transition = 'width ' + EASE; navEl.style.transition = 'transform ' + EASE;
+        view.style.width = spanOf(to) + 'px'; navEl.style.transform = `translateX(${-offsetOf(to)}px)`;
+        setTimeout(() => {
+            start = to; view.removeAttribute('style'); navEl.removeAttribute('style'); showWindow(); settling = false; armIdle();
+        }, 320);
+    }
+    root.addEventListener('pointerdown', (e) => { swipeX = windowed() && !settling ? e.clientX : null; swiped = false; });
+    const onSwipeMove = (e) => { if (swipeX !== null && (drag || Math.abs(e.clientX - swipeX) > 6)) dragMove(e.clientX - swipeX); };
+    const onSwipeEnd = () => { swipeX = null; dragEnd(); };   // on the document: a drag that ends off the pill still counts
+    document.addEventListener('pointermove', onSwipeMove);
     document.addEventListener('pointerup', onSwipeEnd);
+    document.addEventListener('pointercancel', onSwipeEnd);
+    let wheelDx = 0, wheelT = 0;
+    root.addEventListener('wheel', (e) => {   // trackpad or shift-wheel sideways
+        if (!windowed() || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+        e.preventDefault(); wheelDx -= e.deltaX; dragMove(wheelDx);
+        clearTimeout(wheelT); wheelT = setTimeout(() => { wheelDx = 0; dragEnd(); }, 140);
+    }, { passive: false });
     root.addEventListener('click', (e) => { if (swiped) { e.preventDefault(); e.stopImmediatePropagation(); swiped = false; } }, true);
     const step = (d) => { if (windowed()) { start += d; showWindow(); armIdle(); } else goTo(centerIndex() + d); };
     arrowL.addEventListener('click', () => step(-1));
@@ -262,6 +293,8 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             scrollRoot.removeEventListener('scroll', onScroll);
             document.removeEventListener('pointerdown', onOutside, true);
             document.removeEventListener('pointerup', onSwipeEnd);
+            document.removeEventListener('pointercancel', onSwipeEnd);
+            document.removeEventListener('pointermove', onSwipeMove);
             window.removeEventListener('resize', update);
             wrap.remove();
         },
