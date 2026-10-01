@@ -229,7 +229,9 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         if (settling) return;
         if (!drag) {
             drag = { w: view.offsetWidth, base: 0 };
+            root.classList.add('is-dragging');
             getLinks().forEach((l) => { l.hidden = false; });
+            view.scrollLeft = 0;
             drag.base = offsetOf(start);
             view.style.width = drag.w + 'px'; navEl.style.transition = 'none';
         }
@@ -244,7 +246,8 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         view.style.transition = 'width ' + EASE; navEl.style.transition = 'transform ' + EASE;
         view.style.width = spanOf(to) + 'px'; navEl.style.transform = `translateX(${-offsetOf(to)}px)`;
         setTimeout(() => {
-            start = to; view.removeAttribute('style'); navEl.removeAttribute('style'); showWindow(); settling = false; armIdle();
+            start = to; view.removeAttribute('style'); navEl.removeAttribute('style'); showWindow(); view.scrollLeft = 0;
+            root.classList.remove('is-dragging'); settling = false; armIdle();
         }, 320);
     }
     root.addEventListener('pointerdown', (e) => { swipeX = windowed() && !settling ? e.clientX : null; swiped = false; });
