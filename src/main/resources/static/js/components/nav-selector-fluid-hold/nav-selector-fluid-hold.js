@@ -210,7 +210,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             getLinks().forEach(l => l.classList.remove('is-active'));
             link.classList.add('is-active');
             if (!windowed()) link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
-            picked = true;
+            picked = link.getAttribute('href') !== '#';   // an in-page action (profile Settings) keeps the page's own resting icon
             syncIcon();
             armIdle();
             setTimeout(update, 50);
@@ -221,12 +221,13 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     // swipe: locks onto the next (or previous) V links, never lands in between
     let swipeX = null, swiped = false;
     root.addEventListener('pointerdown', (e) => { swipeX = windowed() ? e.clientX : null; swiped = false; });
-    root.addEventListener('pointerup', (e) => {
+    const onSwipeEnd = (e) => {   // on the document: a drag that ends off the pill still counts
         if (swipeX === null) return;
         const dx = e.clientX - swipeX; swipeX = null;
         if (Math.abs(dx) < 30) return;
         swiped = true; start += dx < 0 ? V : -V; showWindow(); armIdle();
-    });
+    };
+    document.addEventListener('pointerup', onSwipeEnd);
     root.addEventListener('click', (e) => { if (swiped) { e.preventDefault(); e.stopImmediatePropagation(); swiped = false; } }, true);
     const step = (d) => { if (windowed()) { start += d; showWindow(); armIdle(); } else goTo(centerIndex() + d); };
     arrowL.addEventListener('click', () => step(-1));
@@ -260,6 +261,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             fan?.destroy();
             scrollRoot.removeEventListener('scroll', onScroll);
             document.removeEventListener('pointerdown', onOutside, true);
+            document.removeEventListener('pointerup', onSwipeEnd);
             window.removeEventListener('resize', update);
             wrap.remove();
         },
