@@ -42,6 +42,17 @@ export const tables = () => call('/db/tables');
 export const tableRows = (name, limit, offset) => call(`/db/tables/${encodeURIComponent(name)}/rows?limit=${limit}&offset=${offset}`);
 export const cleanTable = (name) => call(`/db/tables/${encodeURIComponent(name)}/truncate`, { method: 'POST' });
 
+export const reports = () => call('/reports');
+export const resolveReport = (id, resolved) => call(`/reports/${id}/resolve`, { method: 'POST', body: { resolved } });
+
+/** A report's screenshot or video: needs the key header, so it comes down as a blob. Returns an object URL. */
+export async function reportMediaUrl(reportId, mediaId) {
+    const res = await fetch(`/api/admin/reports/${reportId}/media/${mediaId}`, { headers: { 'X-Admin-Key': getKey() } });
+    if (res.status === 403) throw new AdminAuthError('wrong');
+    if (!res.ok) throw new Error('Could not load the file.');
+    return URL.createObjectURL(await res.blob());
+}
+
 export const liveTicket = () => call('/live/ticket', { method: 'POST' });
 export const investigations = (status = 'active') => call(`/investigations?status=${status}`);
 export const investigation = (id) => call(`/investigations/${id}`);

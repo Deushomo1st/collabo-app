@@ -9,6 +9,7 @@ import { overview, checks } from './overview.js';
 import { usersView } from './users.js';
 import { moderatorsView } from './moderators.js';
 import { investigationsView } from './investigations.js';
+import { reportsView } from './reports.js';
 import { databaseView } from './database.js';
 import { helpView } from './help.js';
 
@@ -17,6 +18,7 @@ let latest = null, latestAt = 0;   // the last status answer, shared by the stri
 const VIEWS = {
     overview: { label: 'Overview', build: async () => overview(latest) },
     investigations: { label: 'Investigations', build: investigationsView },
+    reports: { label: 'Reports', build: reportsView },
     users: { label: 'Users', build: usersView },
     moderators: { label: 'Moderators', build: moderatorsView },
     database: { label: 'Database', build: databaseView },

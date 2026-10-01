@@ -1,5 +1,6 @@
 // Workspace screen: rendering + wiring. State lives in workspace-data.js.
 // All text goes in through textContent (h() never sets innerHTML), so user text is safe.
+import { fanActions } from '/js/services/fan-actions.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
@@ -329,7 +330,7 @@ async function boot() {
     await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     nav = await mountNavSelector('#nav', {
         placement: 'bottom', links: SECTIONS.map((s) => s.title), hrefs: SECTIONS.map((s) => '#' + s.id), icons: SECTIONS.map((s) => s.icon),
-        activeIndex: SECTIONS.findIndex((s) => s.id === currentId()), collapseWhenIdle: true, idleMs: 5000,
+        activeIndex: SECTIONS.findIndex((s) => s.id === currentId()), collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(),
         onChange: (_l, href) => {   // href can arrive absolute
             const hash = href.slice(href.lastIndexOf('#'));
             if (location.hash === hash) goSection(); else location.hash = hash;

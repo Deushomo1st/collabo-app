@@ -1,0 +1,41 @@
+/* The Report page. Loaded after workspace.css and gaze.css (palette, glass, .gz-nav). Two cards side by side: the screenshot, and the write-up. */
+
+.sp-top { margin-bottom: 12px; }
+.sp-sub { display: block; color: var(--sp-muted); font-size: 12px; }
+
+.rp-main { padding-bottom: 40px; }
+.rp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.rp-card { display: grid; gap: 10px; padding: 16px 18px; border-radius: 22px; min-height: 340px; align-content: start; }
+.rp-card h2 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+.rp-hint { margin: 0; color: var(--sp-muted); font-size: 13px; }
+.rp-card textarea { resize: vertical; min-height: 220px; width: 100%; }
+.rp-meta { display: flex; justify-content: space-between; gap: 10px; color: var(--sp-muted); font: 500 11.5px var(--sp-mono); }
+.rp-meta #rp-from { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* the round + in the middle of the empty card; thumbnails once something is added */
+.rp-shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; align-items: center; justify-items: center; min-height: 240px; }
+.rp-shots--empty { grid-template-columns: 1fr; }
+.rp-add {
+    display: grid; place-items: center; width: 108px; height: 108px; border-radius: 50%; cursor: pointer;
+    border: 2px dashed var(--sp-line); background: var(--sp-panel); color: var(--sp-muted); transition: background .2s, color .2s, border-color .2s, transform .2s;
+}
+.rp-add:hover, .rp-add:focus-visible { background: var(--sp-panel-hi); color: var(--sp-text); border-color: var(--sp-brand); transform: scale(1.04); }
+.rp-add svg { width: 34px; height: 34px; }
+.rp-add--small { width: 64px; height: 64px; }
+.rp-add--small svg { width: 24px; height: 24px; }
+.rp-tile { position: relative; width: 100%; aspect-ratio: 1; border-radius: 16px; overflow: hidden; border: 1px solid var(--sp-line); background: var(--sp-panel); }
+.rp-tile img, .rp-tile video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rp-tile--wait { display: grid; place-items: center; color: var(--sp-muted); font-size: 12.5px; }
+.rp-x {
+    position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; border: 0; cursor: pointer;
+    display: grid; place-items: center; background: rgba(0, 0, 0, .62); color: #fff;
+}
+.rp-x svg { width: 16px; height: 16px; }
+
+/* after sending */
+.rp-done { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 40px 18px; border-radius: 22px; }
+.rp-done h2 { margin: 0; }
+.rp-done p { margin: 0; color: var(--sp-muted); max-width: 46ch; }
+
+@media (max-width: 720px) { .rp-grid { grid-template-columns: 1fr; } .rp-card { min-height: 0; } .rp-shots { min-height: 160px; } }
+@media (prefers-reduced-motion: reduce) { .rp-add { transition: none; } }

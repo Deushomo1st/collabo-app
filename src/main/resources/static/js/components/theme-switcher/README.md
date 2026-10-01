@@ -1,6 +1,6 @@
 # theme-switcher
 
-A pill toggle between **dusk** (dark, the default) and **light**. It sets `<html data-theme>`,
+A round button that flips between **dusk** (dark, the default) and **light**. It sets `<html data-theme>`,
 saves the choice in `localStorage`, and keeps every switcher on the page in sync.
 Ported from SchoolHub (`app.js` theme block, `style.css` `.theme-toggle`).
 
@@ -51,7 +51,8 @@ Change the theme through `setTheme()`, not by editing `data-theme` directly, or 
 ## Notes
 
 - SchoolHub's CSS defined `.theme-toggle` twice; this port uses the second (redesigned) block only.
-  The first block's leftovers made the dusk pill near-black and changed its hover shadow by accident.
+  The first block's leftovers made the dusk button near-black and changed its hover shadow by accident.
+- It is now a round icon button (no "Dark"/"Light" label), the same size family as the notification bell. The icon is the theme a tap gives you.
 - The switcher colours itself from its own state, so it needs nothing in `theme.css`.
 - Public variables: `--theme-switcher-z` (60).
 

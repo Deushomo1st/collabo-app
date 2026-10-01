@@ -223,6 +223,7 @@
     import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
     import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
     import { createSwitch, preloadSwitch } from '/js/components/switch/switch.js';
+    import { mountHoldFan } from '/js/components/hold-fan/hold-fan.js';
 
     // Placeholder "photos" for demos: a gradient with a head-and-shoulders silhouette (no network needed).
     const photo = (hue) => 'data:image/svg+xml,' + encodeURIComponent(
@@ -686,6 +687,31 @@
             },
         },
 
+        {
+            id: 'hold-fan',
+            title: 'Hold Fan',
+            files: ['hold-fan.css', 'hold-fan.js', 'README.md'],
+            stageClass: 'gallery__stage--full',
+            render: async (stage) => {
+                const { wrap, result } = mountDemo(stage, {});
+                result.textContent = 'Tap the round button, then press and hold it.';
+                const btn = document.createElement('button');
+                btn.type = 'button'; btn.setAttribute('aria-label', 'Hold me');
+                btn.style.cssText = 'width:46px;height:46px;margin:90px auto 8px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.75);background:linear-gradient(145deg,#2b2f38,#0b0c0f);color:#fff;cursor:pointer';
+                btn.innerHTML = ICON.home;
+                btn.firstElementChild.style.cssText = 'width:18px;height:18px';
+                btn.addEventListener('click', () => { result.textContent = 'A tap: the button keeps its normal click.'; });
+                const pick = (name) => () => { result.textContent = `You chose ${name}.`; };
+                const fan = mountHoldFan(btn, { actions: [
+                    { label: 'Home', icon: ICON.home, onSelect: pick('Home') },
+                    { label: 'Report', icon: svg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'), onSelect: pick('Report') },
+                    { label: 'Back', icon: svg('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'), onSelect: pick('Back') },
+                ] });
+                wrap.prepend(btn);
+                return fan.destroy;
+            },
+        },
+
     ];
 
     const stage = document.getElementById('gallery-stage');
@@ -706,6 +732,7 @@
         'tilt-stack': svg('<path d="m12.83 2.18 8.58 3.91a1 1 0 0 1 0 1.83l-8.58 3.9a2 2 0 0 1-1.66 0L2.6 7.92a1 1 0 0 1 0-1.83l8.58-3.9a2 2 0 0 1 1.66 0z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/>'),
         'avatar': ICON.users,
         'action-banner': svg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
+        'hold-fan': svg('<circle cx="12" cy="18" r="3"/><circle cx="5" cy="8" r="2"/><circle cx="12" cy="4" r="2"/><circle cx="19" cy="8" r="2"/>'),
         'switch': svg('<rect width="20" height="12" x="2" y="6" rx="6"/><circle cx="16" cy="12" r="2"/>'),
     };
 

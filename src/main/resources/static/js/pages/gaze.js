@@ -7,6 +7,7 @@ import { postCard } from '/js/components/post-card/post-card.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 import { currentUser, gazeFeed, gazeNewer, gazeSearch, postGet, profileGet } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
+import { fanActions } from '/js/services/fan-actions.js';
 
 const EMPTY = {
     gaze: 'Nothing here yet. Be the first to post an idea.',
@@ -243,7 +244,7 @@ async function mountBottom(username) {
         ['Profile', profileHref(username), svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')],
     ];
     const nav = await mountNavSelector('#bottom-nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: 0,
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: 0, holdActions: fanActions(),
         links: pages.map((p) => p[0]), hrefs: pages.map((p) => p[1]), icons: pages.map((p) => p[2]),
         onChange: (label, href) => {
             if (label === 'Gaze') return window.scrollTo({ top: 0, behavior: 'smooth' });
