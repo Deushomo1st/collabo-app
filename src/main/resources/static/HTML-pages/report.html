@@ -26,15 +26,12 @@
     <div class="sp-aurora__blob sp-aurora__blob--c"></div>
 </div>
 
-<!-- A page of its own, like the post page: only the way back. -->
+<!-- A page of its own, like the post page: the bar is Gaze, Yarns, Settings; hold it to leave. -->
 <div class="sp-shell">
     <div class="sp-top">
         <header class="sp-header sp-glass">
-            <button type="button" class="sp-back" id="back" aria-label="Back">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
             <div class="sp-title"><h1>Report a problem</h1><span class="sp-sub">Goes straight to the admin</span></div>
-            <button type="submit" form="rp-form" class="gz-nav gz-nav--brand" id="send">Send</button>
+            <button type="submit" form="rp-form" class="gz-nav gz-nav--brand rp-send" id="send" aria-label="Send" title="Send"></button>
         </header>
     </div>
 
@@ -58,6 +55,7 @@
     </main>
 </div>
 
+<div id="nav"></div>
 <div class="sp-toast" id="toast" role="status"></div>
 <script type="module" src="/js/pages/report.js"></script>
 </body>

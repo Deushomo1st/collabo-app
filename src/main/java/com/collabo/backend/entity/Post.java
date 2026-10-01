@@ -43,6 +43,18 @@ public class Post {
     @Column(name = "shouts_on", nullable = false, columnDefinition = "boolean default true")
     private boolean shoutsOn = true;
 
+    /** Who may see it: EVERYONE, FOLLOWERS (the author's followers), ONLY (the people in audienceList) or EXCEPT (everyone but them). The author always sees it. */
+    @Column(nullable = false, length = 12, columnDefinition = "varchar(12) default 'EVERYONE'")
+    private String audience = "EVERYONE";
+
+    /** Space-separated user ids for ONLY / EXCEPT. */
+    @Column(name = "audience_list", length = 4000)
+    private String audienceList;
+
+    /** Others see "Anonymous" instead of the author. */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean anonymous;
+
     /** How many times someone other than the author has opened the post. */
     @Column(nullable = false, columnDefinition = "bigint default 0")
     private long views;
@@ -66,6 +78,13 @@ public class Post {
     public void setCommentsOn(boolean commentsOn) { this.commentsOn = commentsOn; }
     public boolean isShoutsOn() { return shoutsOn; }
     public void setShoutsOn(boolean shoutsOn) { this.shoutsOn = shoutsOn; }
+    public String getAudience() { return audience == null ? "EVERYONE" : audience; }
+    public java.util.Set<String> audienceIds() { return audienceList == null || audienceList.isBlank() ? java.util.Set.of() : java.util.Set.of(audienceList.split(" ")); }
+    public void setAudience(String audience, java.util.Collection<UUID> ids) {
+        this.audience = audience; this.audienceList = ids.isEmpty() ? null : String.join(" ", ids.stream().map(UUID::toString).toList());
+    }
+    public boolean isAnonymous() { return anonymous; }
+    public void setAnonymous(boolean anonymous) { this.anonymous = anonymous; }
     public boolean isFormed() { return formed; }
     public void setFormed(boolean formed) { this.formed = formed; }
 

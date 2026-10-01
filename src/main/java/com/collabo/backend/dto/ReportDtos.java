@@ -8,7 +8,7 @@ public final class ReportDtos {
     private ReportDtos() {}
 
     /** mediaIds are the user's own uploads from POST /api/media (at most 3). pageUrl is the page they came from. */
-    public record SubmitRequest(String summary, String pageUrl, List<UUID> mediaIds) {}
+    public record SubmitRequest(String summary, String pageUrl, List<UUID> mediaIds, Boolean anonymous) {}
 
     public record Submitted(UUID id) {}
 

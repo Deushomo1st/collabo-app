@@ -34,7 +34,7 @@ public class ReportService {
 
     public ReportService(ProblemReportRepository reports, UserRepository users, MediaService media) { this.reports = reports; this.users = users; this.media = media; }
 
-    public ProblemReport submit(User me, String summary, String pageUrl, List<UUID> mediaIds) {
+    public ProblemReport submit(User me, String summary, String pageUrl, List<UUID> mediaIds, boolean anonymous) {
         String text = summary == null ? "" : summary.trim();
         if (text.length() < MIN_SUMMARY) throw new InvalidProfileException("Tell us a little more: say what went wrong in a sentence or two.");
         if (text.length() > MAX_SUMMARY) throw new InvalidProfileException("Keep the write-up under " + MAX_SUMMARY + " characters.");
@@ -42,7 +42,9 @@ public class ReportService {
         if (reports.countByReporterIdAndCreatedAtAfter(me.getId(), Instant.now().minus(Duration.ofHours(1))) >= PER_HOUR)
             throw new InvalidProfileException("You have sent several reports in the last hour. Give us a little time to read them.");
         List<Media> files = media.mine(me, mediaIds);   // the caller's own unposted uploads, or it refuses
-        ProblemReport r = reports.save(new ProblemReport(me.getId(), text, onSite(pageUrl)));
+        ProblemReport r = new ProblemReport(me.getId(), text, onSite(pageUrl));
+        r.setAnonymous(anonymous);
+        r = reports.save(r);
         media.attach(files, r.getId());                  // a report's files ride on post_id, so no post or draft can pick them up again
         return r;
     }
@@ -59,7 +61,7 @@ public class ReportService {
         Map<UUID, User> people = users.findAllById(all.stream().map(ProblemReport::getReporterId).collect(Collectors.toSet())).stream()
                 .collect(Collectors.toMap(User::getId, Function.identity()));
         Map<UUID, List<Media>> files = all.isEmpty() ? Map.of() : media.ofPosts(all.stream().map(ProblemReport::getId).toList());
-        return all.stream().map(r -> new AdminView(r.getId(), people.containsKey(r.getReporterId()) ? people.get(r.getReporterId()).getUsername() : "(deleted account)",
+        return all.stream().map(r -> new AdminView(r.getId(), r.isAnonymous() ? "Anonymous" : people.containsKey(r.getReporterId()) ? people.get(r.getReporterId()).getUsername() : "(deleted account)",
                 r.getSummary(), r.getPageUrl(), r.getCreatedAt(), r.isResolved(),
                 files.getOrDefault(r.getId(), List.of()).stream().map(m -> new MediaDto(m.getId(), m.kind())).toList())).toList();
     }

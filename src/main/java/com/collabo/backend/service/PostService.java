@@ -9,6 +9,7 @@ import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.entity.ApplicationState;
 import com.collabo.backend.repository.ApplicationRepository;
+import com.collabo.backend.repository.FollowRepository;
 import com.collabo.backend.repository.PostCommentRepository;
 import com.collabo.backend.repository.PostRepository;
 import com.collabo.backend.repository.ShoutRepository;
@@ -43,10 +44,11 @@ public class PostService {
     private final MediaService media;
     private final DraftService drafts;
     private final YarnService yarns;
+    private final FollowRepository follows;
 
     public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts,
-                       ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns) {
-        this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
+                       ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns, FollowRepository follows) {
+        this.follows = follows; this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
         this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts; this.applications = applications;
     }
 
@@ -64,12 +66,14 @@ public class PostService {
         p.setTags(tags);
         p.setCommentsOn(!Boolean.FALSE.equals(req.commentsOn()));
         p.setShoutsOn(!Boolean.FALSE.equals(req.shoutsOn()));
+        p.setAnonymous(Boolean.TRUE.equals(req.anonymous()));
+        setAudience(p, req.audience(), req.audienceWith());
         Post saved = posts.save(p);
         media.attach(files, saved.getId());
         drafts.consume(me, req.draftId());
         signals.gaze();
         int delivered = 0;
-        String note = me.getUsername() + " shared a post with you: \"" + title + "\"\n/HTML-pages/gaze.html?post=" + saved.getId();
+        String note = (p.isAnonymous() ? "Someone" : me.getUsername()) + " shared a post with you: \"" + title + "\"\n/HTML-pages/gaze.html?post=" + saved.getId();
         for (String name : recipients) {
             User to = users.findByUsername(name).orElse(null);
             if (to != null && yarns.tryShare(me, to, note)) delivered++;
@@ -110,8 +114,31 @@ public class PostService {
     /** The post, unless it is missing or the viewer and its author have a block between them. */
     Post visible(User viewer, UUID id) {
         Post p = posts.findById(id).orElseThrow(() -> new ResourceNotFoundException("That post is gone."));
-        if (blocked(viewer.getId(), p.getAuthorId())) throw new ResourceNotFoundException("That post is gone.");
+        if (blocked(viewer.getId(), p.getAuthorId()) || !sees(viewer, p)) throw new ResourceNotFoundException("That post is gone.");
         return p;
+    }
+
+    static final int MAX_AUDIENCE = 200;
+
+    private void setAudience(Post p, String kind, List<String> names) {
+        String k = kind == null ? "EVERYONE" : kind.trim().toUpperCase();
+        if (!List.of("EVERYONE", "FOLLOWERS", "ONLY", "EXCEPT").contains(k)) throw new InvalidProfileException("Unknown audience.");
+        List<UUID> ids = k.equals("ONLY") || k.equals("EXCEPT") ? DraftService.names(names).stream().limit(MAX_AUDIENCE)
+                .map(n -> users.findByUsername(n).map(User::getId).orElse(null)).filter(Objects::nonNull).toList() : List.of();
+        if (k.equals("ONLY") && ids.isEmpty()) throw new InvalidProfileException("Pick at least one person who can see this post.");
+        p.setAudience(k, ids);
+    }
+
+    /** The author always; otherwise by the post's audience. A listed person who has been deleted simply matches nothing. */
+    boolean sees(User viewer, Post p) {
+        if (p.getAuthorId().equals(viewer.getId())) return true;
+        String id = viewer.getId().toString();
+        return switch (p.getAudience()) {
+            case "FOLLOWERS" -> follows.existsByFollowerIdAndFollowedId(viewer.getId(), p.getAuthorId());
+            case "ONLY" -> p.audienceIds().contains(id);
+            case "EXCEPT" -> !p.audienceIds().contains(id);
+            default -> true;
+        };
     }
 
     /** For other layers: throws "gone" unless the viewer may see this post. */

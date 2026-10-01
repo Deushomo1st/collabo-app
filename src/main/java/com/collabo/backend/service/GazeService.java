@@ -121,7 +121,8 @@ public class GazeService {
         PageRequest page = PageRequest.of(0, n + 1);
         List<Entry> entries;
         switch (tab == null || tab.isBlank() ? "posts" : tab) {
-            case "posts" -> entries = ofPosts(posts.byAuthor(owner.getId(), cursor, page));
+            case "posts" -> entries = ofPosts(posts.byAuthor(owner.getId(), cursor, page)).stream()
+                    .filter(e -> owner.getId().equals(viewer.getId()) || !e.post().isAnonymous()).toList();   // an anonymous post is not on its author's profile
             case "reposts" -> entries = ofShouts(shouts.byUser(owner.getId(), cursor, hidden, page));
             default -> throw new InvalidProfileException("Unknown tab.");
         }
@@ -165,12 +166,13 @@ public class GazeService {
     // ponytail: cursor is the entry time alone; two entries in the same microsecond could straddle a page. Add an id tiebreak if it ever happens.
     private FeedPage page(List<Entry> entries, int n, User viewer) {
         boolean more = entries.size() > n;
-        List<Entry> shown = more ? entries.subList(0, n) : entries;
+        List<Entry> shown = (more ? entries.subList(0, n) : entries).stream().filter(e -> postService.sees(viewer, e.post())).toList();
+        // ponytail: a page can come up short when posts are hidden from the viewer; "more" still follows the unfiltered rows
         Map<UUID, User> shouters = users.findAllById(shown.stream().map(Entry::shouter).filter(Objects::nonNull).collect(Collectors.toSet()))
                 .stream().collect(Collectors.toMap(User::getId, Function.identity()));
         Map<UUID, User> byPost = new HashMap<>();
         shown.stream().filter(e -> e.shouter() != null).forEach(e -> byPost.put(e.post().getId(), shouters.get(e.shouter())));
         return new FeedPage(postService.present(shown.stream().map(Entry::post).toList(), viewer, byPost),
-                more ? shown.get(shown.size() - 1).at() : null);
+                more ? entries.get(n - 1).at() : null);
     }
 }

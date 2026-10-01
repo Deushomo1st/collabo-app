@@ -1,5 +1,7 @@
 /* The space page: the idea it grew from, the join step, and the people in it. Loaded after workspace.css and gaze.css. */
 
+#space { padding-bottom: 110px; }
+@media (max-width: 480px) { #nav .nav-selector-fluid-hold__link { padding: 9px 5px; font-size: 12px; gap: 4px; } }   /* five items */
 .spc-card { display: grid; gap: 10px; padding: 16px 18px; border-radius: 20px; }
 .spc-card h2 { margin: 0; font-size: 1.05rem; font-weight: 800; }
 .spc-idea { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }

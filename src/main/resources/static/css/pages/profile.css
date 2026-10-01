@@ -93,3 +93,4 @@
 #bottom-nav { --nav-link-padding: 9px 12px; --nav-font-size: 14px; }
 @media (max-width: 560px) { #bottom-nav { --nav-link-padding: 9px 7px; --nav-font-size: 13px; }
     #bottom-nav .nav-selector-fluid-hold__nav { padding-inline: 0; } }
+@media (max-width: 420px) { #bottom-nav .nav-selector-fluid-hold__link { padding: 9px 5px; font-size: 12.5px; gap: 5px; } }   /* the component's own small-screen rule is stronger than the variables, and Settings is longer than Profile */

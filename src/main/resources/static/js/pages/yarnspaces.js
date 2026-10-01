@@ -9,6 +9,7 @@ import { face as faceOf } from '/js/services/face.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import { live } from '/js/services/live.js';
 import { fanActions } from '/js/services/fan-actions.js';
+import { GEAR } from '/js/services/icons.js';
 import {
     following, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlock, yarnReport, avatarUrl,
@@ -42,7 +43,7 @@ const ICON = {
     myspace: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     wespace: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     workspace: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',
-    settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    settings: GEAR,
 };
 
 function toast(text) {
@@ -261,7 +262,7 @@ function renderThread() {
 // ---- settings for one Yarnspace ----------------------------------------------
 // Pin, mute, archive, report and block live here, reached by the wrench on a row in the list or in a thread's header,
 // so they take no room on the screen until you want them.
-const WRENCH = '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>';
+const WRENCH = GEAR;
 
 /** After a change: refresh the lists, and leave the thread if it just went to the Archive (or came back). */
 async function afterChange(message, leave) {
@@ -367,7 +368,6 @@ async function boot() {
         openThread: (id) => { location.hash = '#t/' + id; }, startWith: (name) => openNew(name) }));
     document.getElementById('thread-wrench').addEventListener('click', () => openThread && openThreadSettings(openThread));
     document.getElementById('new-btn').addEventListener('click', () => me && openNew());
-    document.getElementById('header-back').addEventListener('click', (e) => { if (openThread) { e.preventDefault(); go('#' + lastSection); } });
     window.addEventListener('hashchange', () => { if (me) route(); });
     // The lists (unread counts, last yarn, new requests) refresh when the server says a yarn arrived, and again after a reconnect.
     // The timer is only the net underneath: every 15s with no live socket, every 60s with one.

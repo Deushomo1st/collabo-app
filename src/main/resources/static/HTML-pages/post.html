@@ -25,15 +25,12 @@
     <div class="sp-aurora__blob sp-aurora__blob--c"></div>
 </div>
 
-<!-- A page of its own: no nav bars here, only the way back. -->
+<!-- The bar at the bottom is Gaze, Yarns, Settings; hold it for Home, Report, Back. -->
 <div class="sp-shell">
     <div class="sp-top">
         <header class="sp-header sp-glass">
-            <button type="button" class="sp-back" id="back" aria-label="Back">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
-            </button>
             <div class="sp-title"><h1>Post</h1></div>
-            <button type="submit" form="post-form" class="gz-nav gz-nav--brand" id="publish">Publish</button>
+            <button type="submit" form="post-form" class="gz-nav gz-nav--brand ps-send" id="publish" aria-label="Publish" title="Publish"></button>
         </header>
     </div>
 
@@ -47,21 +44,18 @@
             <div class="ps-media" id="ps-media" aria-live="polite"></div>
             <input type="file" id="ps-file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm" multiple hidden>
 
+            <div class="ps-tags" id="ps-tags"></div>
+
             <label for="ps-by">Applications close (optional)</label>
             <input class="sp-input" id="ps-by" type="datetime-local">
+            <div class="ps-actions" id="ps-actions"></div>
+            <p class="ps-sum" id="ps-sum"></p>
             <p class="gz-error" id="ps-error" role="alert" hidden></p>
         </form>
     </main>
 </div>
 
-<!-- Pinned to the bottom: hashtags, then Comment · Shoutout · Save · Share spread evenly -->
-<div class="ps-dock">
-    <div class="ps-dock__in sp-glass">
-        <div class="ps-tags" id="ps-tags"></div>
-        <div class="ps-actions" id="ps-actions"></div>
-    </div>
-</div>
-
+<div id="nav"></div>
 <div class="sp-toast" id="toast" role="status"></div>
 
 <script type="module" src="/js/pages/post.js"></script>

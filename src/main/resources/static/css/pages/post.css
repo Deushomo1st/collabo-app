@@ -2,7 +2,7 @@
    through the nav's own public variables, so it follows the theme the same way. */
 
 .sp-top { margin-bottom: 12px; }
-.ps-main { padding-bottom: 190px; }   /* room for the pinned dock */
+.ps-main { padding-bottom: 110px; }   /* room for the bar */
 .ps-form { display: grid; gap: 8px; padding: 16px 18px; border-radius: 22px; }
 .ps-form label { font: 700 12.5px var(--sp-font); color: var(--sp-muted); margin-top: 6px; }
 .ps-form .sp-input { width: 100%; }
@@ -25,10 +25,8 @@
 .ps-ico { display: inline-grid; place-items: center; }
 .ps-ico svg { width: 20px; height: 20px; }
 
-/* ---- the dock: hashtags, then the four actions ---- */
-.ps-dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 0 var(--sp-gutter) calc(12px + env(safe-area-inset-bottom)); pointer-events: none; }
-.ps-dock__in { background: color-mix(in srgb, var(--sp-bg) 88%, transparent); pointer-events: auto; max-width: 980px; margin: 0 auto; border-radius: 26px; padding: 10px 12px; display: grid; gap: 8px; }
-.ps-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 4px 6px; max-height: 84px; overflow-y: auto; }
+/* ---- hashtags and the Save / Share row, inside the form ---- */
+.ps-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 10px; margin-top: 4px; border: 1px solid var(--sp-line); border-radius: 14px; background: var(--sp-panel); }
 .ps-tags__hash { color: var(--sp-brand); font-weight: 800; }
 .ps-tags__in { flex: 1 1 120px; min-width: 100px; border: 0; outline: 0; background: transparent; color: var(--sp-text); font: 600 14px var(--sp-font); padding: 6px 2px; }
 .ps-chip {
@@ -37,16 +35,13 @@
 }
 .ps-chip:hover { background: color-mix(in srgb, var(--sp-brand) 14%, transparent); }
 
-.ps-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; align-items: stretch; }
+.ps-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .ps-act {
-    position: relative; display: grid; justify-items: center; align-content: center; gap: 2px; padding: 8px 4px; min-height: 58px;
-    border-radius: 18px; border: 1px solid transparent; background: transparent; color: var(--sp-text);
-    font: 700 11.5px var(--sp-font); cursor: pointer; transition: background .2s, opacity .2s;
+    position: relative; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 10px 6px; min-height: 46px;
+    border-radius: 16px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text);
+    font: 700 13px var(--sp-font); cursor: pointer; transition: background .2s;
 }
 .ps-act:hover { background: var(--sp-panel-hi); }
-.ps-act__state { color: var(--sp-ok); font: 600 10px var(--sp-mono); letter-spacing: .06em; text-transform: uppercase; }
-.ps-act.is-off { opacity: .6; }
-.ps-act.is-off .ps-act__state { color: var(--sp-muted); }
 /* Share looks like the nav: the bright pill with the halo */
 .ps-act--share {
     background: var(--nav-selector-fluid-hold-bg, linear-gradient(145deg, #ffffff, #d5dae2));
@@ -56,9 +51,13 @@
 }
 .ps-act--share:hover { color: var(--nav-selector-fluid-hold-link-hover, #000); background: var(--nav-selector-fluid-hold-bg, linear-gradient(145deg, #ffffff, #d5dae2)); }
 .ps-badge {
-    position: absolute; top: 4px; right: 10px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
     display: grid; place-items: center; background: var(--sp-brand); color: var(--sp-brand-ink); font: 800 11px var(--sp-font);
 }
+.ps-sum { margin: 4px 0 0; color: var(--sp-muted); font: 500 12px var(--sp-mono); }
+.ps-send { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; }
+.ps-send svg { width: 20px; height: 20px; }
+#nav { --nav-link-padding: 9px 14px; --nav-font-size: 14px; }
 
 /* ---- share: a tall nav that opens over the page and takes the focus ---- */
 .ps-share {

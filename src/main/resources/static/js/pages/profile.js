@@ -113,7 +113,6 @@ function identity() {
                 profile.self && h('button', { class: 'pf-btn pf-btn--brand', type: 'button', text: 'Edit profile', onclick: openEdit }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'My applications', onclick: openMine }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Drafts', onclick: openDrafts }),
-                profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Settings', onclick: openProfileSettings }),
                 !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow }),
                 !profile.self && f.canFollow && h('button', { class: 'pf-btn', type: 'button', text: 'Message', onclick: openMessage })),
             h('span', { class: 'pf-joined', text: `Joined ${day(profile.joined)}` })));
@@ -316,8 +315,10 @@ async function boot() {
         const me = await currentUser();
         if (!me) return toLogin();
         viewer = me.username;
-        mountMainNav(viewer, 'Profile');
-        await load(usernameInUrl() || me.username);
+        const who = usernameInUrl() || me.username;
+        if (who === viewer) mountMainNav(viewer, 'Settings', { onSettings: openProfileSettings });
+        else mountMainNav(viewer, 'Profile');
+        await load(who);
     } catch (err) { fail(err); }
 }
 
@@ -329,7 +330,4 @@ async function openProfileSettings() {
 }
 
 mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
-document.getElementById('header-back').addEventListener('click', (e) => {
-    if (history.length > 1) { e.preventDefault(); history.back(); }
-});
 boot();

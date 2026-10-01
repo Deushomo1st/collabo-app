@@ -7,6 +7,9 @@ import { milestonesSection } from '/js/components/space/milestones.js';
 import { paymentsSection } from '/js/components/space/payments.js';
 import { removalsSection, openFlag } from '/js/components/space/removals.js';
 import { openSettings } from '/js/components/space/settings.js';
+import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+import { fanActions } from '/js/services/fan-actions.js';
+import { GEAR, CHAT, PERSON, PEOPLE, BRIEFCASE, svg } from '/js/services/icons.js';
 import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers, spaceMemberUpdate, spaceMemberRemove } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
@@ -87,7 +90,7 @@ function draw() {
             h('p', { class: 'pc-hint' }, 'The idea, by ', h('a', { class: 'pc-who', href: profileHref(space.owner.username), text: space.owner.username })),
             h('p', { class: 'spc-idea', text: space.postBody }),
             h('p', { class: 'pc-hint', text: `Response clock: ${space.responseClockHours} hours · Pleas ${space.pleasEnabled ? 'allowed' : 'off'}` }),
-            h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn', type: 'button', text: 'Settings', onclick: () => can('EDIT_SETTINGS') ? openSettings(space, refresh) : openThemeSettings() }))),
+            ),
         space.threadId && h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/yarnspaces.html#t/${space.threadId}`, text: 'Open the room' }),
         h('section', { class: 'spc-card sp-glass' },
             h('h2', { text: `The team · ${members.length}` }),
@@ -99,9 +102,27 @@ function draw() {
         inRoom && removalsSection(space, { me })].filter(Boolean));
 }
 
+const YARNS = '/HTML-pages/yarnspaces.html';
+
+/** The same bar as Yarns, with this space's settings in place of the Yarns ones. */
+function mountBar() {
+    const mayEdit = () => !!members?.find((m) => m.person.username === me.username)?.permissions.includes('EDIT_SETTINGS');
+    return mountNavSelector('#nav', {
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(), activeIndex: 4,
+        links: ['All yarns', 'MySpaces', 'WeSpaces', 'WorkSpaces', 'Settings'],
+        hrefs: [YARNS, `${YARNS}#myspace`, `${YARNS}#wespace`, `${YARNS}#workspace`, '#'],
+        icons: [CHAT, PERSON, PEOPLE, BRIEFCASE, GEAR].map(svg),
+        onChange: (label, href) => {
+            if (label !== 'Settings') { location.href = href.slice(href.indexOf('/HTML-pages')); return; }
+            if (space) { if (mayEdit()) openSettings(space, refresh); else openThemeSettings(); }
+        },
+    });
+}
+
 async function boot() {
     me = await currentUser().catch(() => null);
     if (!me) return toLogin();
+    mountBar();
     try { await refresh(); }
     catch (err) {
         if (err.status === 401) return toLogin();

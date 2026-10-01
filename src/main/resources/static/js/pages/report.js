@@ -2,6 +2,9 @@
 // Files go up first (POST /api/media, the same as post pictures), then the report names them. Text goes in through textContent only.
 import { h, toast } from '/js/services/dom.js';
 import { currentUser, mediaUpload, mediaDiscard, mediaUrl, reportSend } from '/js/services/api.js';
+import { mountComposeNav } from '/js/services/main-nav.js';
+import { reportSet, reportWork } from '/js/services/stash.js';
+import { SEND } from '/js/services/icons.js';
 
 const MAX_FILES = 3, MAX_IMAGE = 5 << 20, MAX_VIDEO = 30 << 20, MIN_TEXT = 10;
 const $ = (id) => document.getElementById(id);
@@ -51,7 +54,8 @@ async function submit(e) {
     if (text.value.trim().length < MIN_TEXT) return showError('Tell us a little more: say what went wrong in a sentence or two.');
     busy = true; send.disabled = true; showError('');
     try {
-        await reportSend({ summary: text.value, pageUrl: from, mediaIds: files.map((f) => f.id) });
+        await reportSend({ summary: text.value, pageUrl: from, mediaIds: files.map((f) => f.id), anonymous: !!reportSet.read()?.anonymous });
+        reportSet.clear(); reportWork.clear();
         $('rp-main').replaceChildren(h('section', { class: 'rp-done sp-glass' },
             h('h2', { text: 'Thank you. We have it.' }),
             h('p', { text: 'Your report is with the admin now. Nothing else for you to do.' }),
@@ -65,11 +69,16 @@ function goBack() { if (from) location.href = from; else if (history.length > 1)
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
+    send.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
+    mountComposeNav('/HTML-pages/report-settings.html', {
+        beforeSettings: () => reportWork.write({ text: text.value, files }),
+        beforeLeave: (href) => { reportSet.clear(); reportWork.clear(); location.href = href; } });
+    const work = reportWork.take();
+    if (work) { text.value = work.text; files = work.files; $('rp-count').textContent = `${text.value.length} / 2000`; } else reportSet.clear();
     $('rp-from').textContent = from ? `From ${from}` : '';
     text.addEventListener('input', () => { $('rp-count').textContent = `${text.value.length} / 2000`; showError(''); });
     picker.addEventListener('change', () => { addFiles([...picker.files]); picker.value = ''; });
     $('rp-form').addEventListener('submit', submit);
-    $('back').addEventListener('click', goBack);
     drawShots();
 }
 boot();

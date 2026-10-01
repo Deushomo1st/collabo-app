@@ -27,6 +27,10 @@ public class ProblemReport {
     @Column(nullable = false)
     private boolean resolved;
 
+    /** The admin console shows "Anonymous" instead of the reporter's name. */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean anonymous;
+
     @Column(name = "resolved_at")
     private Instant resolvedAt;
 
@@ -40,6 +44,8 @@ public class ProblemReport {
     public UUID getReporterId() { return reporterId; }
     public String getSummary() { return summary; }
     public String getPageUrl() { return pageUrl; }
+    public boolean isAnonymous() { return anonymous; }
+    public void setAnonymous(boolean anonymous) { this.anonymous = anonymous; }
     public boolean isResolved() { return resolved; }
     public Instant getResolvedAt() { return resolvedAt; }
     public Instant getCreatedAt() { return createdAt; }

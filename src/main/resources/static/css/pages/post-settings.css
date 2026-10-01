@@ -1,0 +1,37 @@
+/* The post and report settings pages. Loaded after workspace.css and gaze.css (palette, glass). */
+.sp-top { margin-bottom: 12px; }
+.sp-sub { display: block; color: var(--sp-muted); font-size: 12px; }
+.pst-main { display: grid; gap: 14px; padding-bottom: 110px; }
+.pst-card { display: grid; gap: 10px; padding: 16px 18px; border-radius: 22px; }
+.pst-card h2 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+
+.pst-opt {
+    display: grid; gap: 2px; text-align: left; padding: 11px 14px; border-radius: 16px; cursor: pointer;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text); font: 600 14px var(--sp-font);
+}
+.pst-opt small { color: var(--sp-muted); font-weight: 500; }
+.pst-opt:hover { background: var(--sp-panel-hi); }
+.pst-opt.is-on { border-color: var(--sp-brand); box-shadow: 0 0 0 1px var(--sp-brand) inset; }
+
+.pst-choose { display: grid; gap: 10px; padding-top: 4px; }
+.pst-choose .sp-input { width: 100%; box-sizing: border-box; }
+.pst-seg { display: grid; grid-template-columns: 1fr 1fr; border-radius: 999px; border: 1px solid var(--sp-line); overflow: hidden; }
+.pst-seg button { border: 0; padding: 9px; background: transparent; color: var(--sp-muted); font: 700 13px var(--sp-font); cursor: pointer; }
+.pst-seg button.is-on { background: var(--sp-brand); color: var(--sp-brand-ink); }
+.pst-list { display: grid; gap: 6px; max-height: 320px; overflow-y: auto; }
+.pst-person {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 14px; cursor: pointer; text-align: left;
+    border: 1px solid var(--sp-line); background: var(--sp-panel); color: var(--sp-text); font: 600 14px var(--sp-font);
+}
+.pst-person.is-on { border-color: var(--sp-brand); }
+.pst-person__n { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pst-tick { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--sp-line); font-size: 13px; }
+.pst-person.is-on .pst-tick { background: var(--sp-brand); color: var(--sp-brand-ink); border-color: var(--sp-brand); }
+.pst-empty, .pst-note { margin: 0; color: var(--sp-muted); font-size: 13px; }
+
+.pst-switch { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+.pst-switch input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--sp-brand); flex: none; }
+.pst-switch span { display: grid; gap: 2px; }
+.pst-switch small { color: var(--sp-muted); font-size: 12.5px; }
+
+#nav { --nav-link-padding: 9px 14px; --nav-font-size: 14px; }

@@ -18,6 +18,6 @@ public class ReportController {
 
     @PostMapping
     public Submitted submit(@RequestBody SubmitRequest req) {
-        return new Submitted(reports.submit(current.require(), req.summary(), req.pageUrl(), req.mediaIds()).getId());
+        return new Submitted(reports.submit(current.require(), req.summary(), req.pageUrl(), req.mediaIds(), Boolean.TRUE.equals(req.anonymous())).getId());
     }
 }

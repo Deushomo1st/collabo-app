@@ -93,7 +93,8 @@ export function postCard(initial, { onGone } = {}) {
         root.replaceChildren(...[
             p.shoutedBy && h('p', { class: 'pc-shouted' }, person(p.shoutedBy), ' shouted this out'),
             h('div', { class: 'pc-top' },
-                person(p.author),
+                p.anonymous && !p.mine ? h('span', { class: 'pc-who', text: 'Anonymous' }) : person(p.author),
+                p.anonymous && p.mine && h('span', { class: 'sp-tag sp-tag--muted', text: 'Anonymous to others' }),
                 p.author.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: p.author.preferredTitle }),
                 h('span', { class: `sp-tag ${closed ? 'sp-tag--muted' : 'sp-tag--ok'}`, text: closed ? 'Closed' : formed ? 'Space formed' : 'Pending' }),
                 h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) }),
