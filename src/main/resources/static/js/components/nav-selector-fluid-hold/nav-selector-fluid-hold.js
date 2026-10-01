@@ -141,7 +141,23 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     });
 
     // ---------- horizontal menu logic ----------
+    // More links than options.visible (default 3): show only that many, the pill fits them,
+    // and the arrows (outside the pill) slide the window one link at a time.
+    const V = options.visible ?? 3;
+    let start = 0;
+    const windowed = () => getLinks().length > V;
+    function showWindow() {
+        const links = getLinks();
+        start = Math.max(0, Math.min(links.length - V, start));
+        links.forEach((l, i) => { l.hidden = i < start || i >= start + V; });
+        root.classList.toggle('active-hidden', !!root.querySelector('.nav-selector-fluid-hold__link.is-active[hidden]'));
+        arrowL.classList.toggle('on', start > 0);
+        arrowR.classList.toggle('on', start < links.length - V);
+    }
+    const reveal = (i) => { if (i < start) start = i; else if (i >= start + V) start = i - V + 1; showWindow(); };
+
     function update() {
+        if (windowed()) return showWindow();
         const canL = view.scrollLeft > 2;
         const canR = view.scrollLeft < view.scrollWidth - view.clientWidth - 2;
         arrowL.classList.toggle('on', canL);
@@ -169,7 +185,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         if (!link) return false;
         links.forEach(l => l.classList.remove('is-active'));
         link.classList.add('is-active');
-        link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
+        if (windowed()) reveal(i); else link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
         picked = false;
         syncIcon();
         setTimeout(update, 50);
@@ -188,7 +204,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             e.preventDefault();
             getLinks().forEach(l => l.classList.remove('is-active'));
             link.classList.add('is-active');
-            link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
+            if (!windowed()) link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
             picked = true;
             syncIcon();
             armIdle();
@@ -197,8 +213,9 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         });
     });
 
-    arrowL.addEventListener('click', () => goTo(centerIndex() - 1));
-    arrowR.addEventListener('click', () => goTo(centerIndex() + 1));
+    const step = (d) => { if (windowed()) { start += d; showWindow(); armIdle(); } else goTo(centerIndex() + d); };
+    arrowL.addEventListener('click', () => step(-1));
+    arrowR.addEventListener('click', () => step(1));
     view.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
 
@@ -207,7 +224,12 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     wrap.className = 'nav-selector-fluid-hold-wrap'
         + (options.placement === 'bottom' ? ' nav-selector-fluid-hold-wrap--bottom' : '')
         + (options.align === 'start' ? ' nav-selector-fluid-hold-wrap--start' : '');
-    wrap.appendChild(root);
+    if (windowed()) {   // the arrows sit either side of the pill, not inside it
+        wrap.classList.add('nav-selector-fluid-hold-wrap--arrows');
+        root.classList.add('is-windowed');
+        wrap.append(arrowL, root, arrowR);
+        start = Math.max(0, (options.activeIndex ?? 0) - 1);
+    } else wrap.appendChild(root);
     target.appendChild(wrap);
     void target.offsetHeight; // force reflow so anchor bubbles measure correctly
 
