@@ -120,7 +120,7 @@ async function doSyncNav() {
         if (navMode !== 'sections') {
             navMode = 'sections';
             await mountNav({ links: [...SECTIONS.map((s) => s.label), 'Settings'], hrefs: [...SECTIONS.map((s) => '#' + s.id), '/HTML-pages/yarn-settings.html'],
-                icons: [...SECTIONS.map((s) => svg(ICON[s.id])), svg(ICON.settings)], activeIndex: SECTIONS.indexOf(currentSection()) });
+                visible: 3, icons: [...SECTIONS.map((s) => svg(ICON[s.id])), svg(ICON.settings)], activeIndex: SECTIONS.indexOf(currentSection()) });
         }
         nav?.setActive(SECTIONS.indexOf(currentSection()));
         return;
