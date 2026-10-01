@@ -65,8 +65,18 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     const getLinks = () => [...root.querySelectorAll('.nav-selector-fluid-hold__link')];
 
     // ---------- icon sync ----------
+    // options.restIcon (an svg string): the page's own icon, shown on the collapsed button until a link is picked.
+    let picked = false;
     function syncIcon() {
         const active = root.querySelector('.nav-selector-fluid-hold__link.is-active');
+        if (options.restIcon && !picked) {
+            if (navIcon.dataset.for !== '(rest)') {
+                navIcon.innerHTML = options.restIcon;
+                navIcon.dataset.for = '(rest)';
+                navIcon.setAttribute('aria-label', 'Show navigation');
+            }
+            return;
+        }
         if (!active) return;
         const key = active.textContent.trim();
         if (navIcon.dataset.for !== key) {
@@ -160,6 +170,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         links.forEach(l => l.classList.remove('is-active'));
         link.classList.add('is-active');
         link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
+        picked = false;
         syncIcon();
         setTimeout(update, 50);
         return true;
@@ -178,6 +189,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
             getLinks().forEach(l => l.classList.remove('is-active'));
             link.classList.add('is-active');
             link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
+            picked = true;
             syncIcon();
             armIdle();
             setTimeout(update, 50);

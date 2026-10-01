@@ -108,7 +108,7 @@ const YARNS = '/HTML-pages/yarnspaces.html';
 function mountBar() {
     const mayEdit = () => !!members?.find((m) => m.person.username === me.username)?.permissions.includes('EDIT_SETTINGS');
     return mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(), activeIndex: 4,
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(), activeIndex: 4, restIcon: svg(PEOPLE),
         links: ['All yarns', 'MySpaces', 'WeSpaces', 'WorkSpaces', 'Settings'],
         hrefs: [YARNS, `${YARNS}#myspace`, `${YARNS}#wespace`, `${YARNS}#workspace`, '#'],
         icons: [CHAT, PERSON, PEOPLE, BRIEFCASE, GEAR].map(svg),

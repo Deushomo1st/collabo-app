@@ -71,6 +71,7 @@ async function boot() {
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
     send.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
     mountComposeNav('/HTML-pages/report-settings.html', {
+        restInner: '<path d="M4 22V4h12l-2 4 2 4H4"/>',
         beforeSettings: () => reportWork.write({ text: text.value, files }),
         beforeLeave: (href) => { reportSet.clear(); reportWork.clear(); location.href = href; } });
     const work = reportWork.take();
