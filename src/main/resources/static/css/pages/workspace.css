@@ -55,8 +55,12 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--sp-brand); outline-offset: 2px;
+button:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
+/* Text fields get a soft glow instead of a hard box. Fields that sit inside a pill leave the glow to the pill (:focus-within). */
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+.sp-input:focus-visible, .yn-search:focus-visible, select:focus-visible, textarea:focus-visible {
+    border-color: color-mix(in srgb, var(--sp-brand) 60%, var(--sp-line));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-brand) 20%, transparent);
 }
 [hidden] { display: none !important; }
 
@@ -344,3 +348,10 @@ button.sp-card { font: inherit; }
 .sp-shell.is-compact .sp-title .sp-tag { display: none; }
 .sp-shell.is-compact .sp-header .sp-avatar { --_size: 26px; }
 .sp-shell.is-compact .sp-back { width: 30px; height: 30px; }
+
+/* ---- Show/hide eye on password fields (js/components/password-toggle.js) ---- */
+.pw-wrap { position: relative; display: block; width: 100%; }
+.pw-wrap > input { width: 100%; box-sizing: border-box; padding-right: 42px; }
+.pw-eye { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--sp-muted); cursor: pointer; }
+.pw-eye:hover { color: var(--sp-text); }
+.pw-eye svg { width: 18px; height: 18px; }

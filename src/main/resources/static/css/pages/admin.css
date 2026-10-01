@@ -16,7 +16,7 @@ small { color: var(--ad-muted); font-weight: 500; }
 
 /* ---------- controls ---------- */
 .ad-input { background: var(--ad-panel); border: 1px solid var(--ad-line); border-radius: 10px; color: inherit; font: inherit; padding: 7px 10px; width: 100%; }
-.ad-input:focus { outline: 2px solid var(--ad-brand); outline-offset: -1px; }
+.ad-input:focus { outline: none; border-color: color-mix(in srgb, var(--ad-brand) 60%, var(--ad-line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ad-brand) 20%, transparent); }
 .ad-btn { background: var(--ad-panel-hi); border: 1px solid var(--ad-line); border-radius: 10px; color: inherit; cursor: pointer; font: inherit; font-weight: 600; padding: 7px 14px; }
 .ad-btn:hover:not(:disabled) { border-color: var(--ad-brand); }
 .ad-btn:focus-visible, .ad-link:focus-visible, .ad-chip:focus-visible, .ad-btn:disabled { opacity: .45; cursor: default; }

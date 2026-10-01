@@ -5,7 +5,7 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { currentUser, gazeFeed, gazeNewer, postGet, profileGet } from '/js/services/api.js';
+import { currentUser, gazeFeed, gazeNewer, gazeSearch, postGet, profileGet } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
 const EMPTY = {
@@ -46,18 +46,46 @@ window.addEventListener('scroll', () => { clearTimeout(saveTimer); saveTimer = s
 const card = (p) => { const c = postCard(p, { onGone: () => drop(p.id) }); c.dataset.id = p.id; return c; };
 const emptyNote = () => h('p', { class: 'gz-empty', text: old.length ? 'Nothing newer than what you have seen.' : EMPTY[feed] });
 
-// The feed choices live in a pill nav in the header (the TikTok-style switcher): The Gaze, Shared Gaze, or the Gaze narrowed to ideas still open to applications.
+// The feed choices are tabs in the header: The Gaze, Shared Gaze, or the Gaze narrowed to ideas still open to applications.
 const FEEDS = [
     { label: 'The Gaze', feed: 'gaze', open: false, icon: '<circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/>' },
     { label: 'Shared', feed: 'shared', open: false, icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
     { label: 'Open', feed: 'gaze', open: true, icon: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>' },
 ];
 const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
-const mountFeeds = () => mountNavSelector('#filter-nav', {
-    links: FEEDS.map((f) => f.label), hrefs: FEEDS.map((f, i) => '#' + i), icons: FEEDS.map((f) => svg(f.icon)),
-    activeIndex: FEEDS.findIndex((f) => f.feed === feed && f.open === pendingOnly),
-    onChange: (label) => { const f = FEEDS.find((x) => x.label === label); if (f.feed === feed && f.open === pendingOnly) return; save(); feed = f.feed; pendingOnly = f.open; show(); },
-});
+
+// TikTok-style: plain text tabs along the top, the live one bold with a short underline. The search icon swaps the tabs for a search box.
+const mountFeeds = () => {
+    const nav = document.getElementById('filter-nav');
+    const live = (f) => f.feed === feed && f.open === pendingOnly;
+    const draw = () => nav.replaceChildren(...FEEDS.map((f) => h('button', { class: 'tt-tab', type: 'button', role: 'tab', 'aria-selected': String(live(f)), text: f.label,
+        onclick: () => { if (live(f)) return; save(); feed = f.feed; pendingOnly = f.open; draw(); show(); } })));
+    draw();
+};
+
+let searching = false, searchTimer, searchGen = 0;
+function setSearching(on) {
+    searching = on;
+    document.getElementById('filter-nav').hidden = on;
+    document.getElementById('tt-end').hidden = on;
+    document.getElementById('tt-search').hidden = !on;
+    if (on) { const q = document.getElementById('tt-q'); q.value = ''; q.focus(); list().replaceChildren(h('p', { class: 'gz-empty', text: 'Search ideas by title, words or #hashtag.' })); }
+    else { searchGen++; show(); }
+}
+async function runSearch() {
+    const text = document.getElementById('tt-q').value.trim(), mine = ++searchGen;
+    if (text.length < 2) return void list().replaceChildren(h('p', { class: 'gz-empty', text: 'Type at least two characters.' }));
+    try {
+        const page = await gazeSearch(text);
+        if (mine !== searchGen) return;   // a newer search is already on its way
+        list().replaceChildren(...(page.items.length ? page.items.map(card) : [h('p', { class: 'gz-empty', text: `No ideas match "${text}".` })]));
+    } catch (e) { if (mine === searchGen) list().replaceChildren(h('p', { class: 'gz-empty', text: e.message })); }
+}
+document.getElementById('tt-find').addEventListener('click', () => setSearching(true));
+document.getElementById('tt-cancel').addEventListener('click', () => setSearching(false));
+document.getElementById('tt-search').addEventListener('submit', (e) => { e.preventDefault(); clearTimeout(searchTimer); runSearch(); });
+document.getElementById('tt-q').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 300); });
+document.getElementById('tt-q').addEventListener('keydown', (e) => { if (e.key === 'Escape') setSearching(false); });
 
 /** Builds the page from the state: the old block (hidden until unlocked), the fresh cards, and the sentinel that loads more. */
 function render() {
@@ -70,7 +98,7 @@ function render() {
 }
 
 // The header (title, bell, theme) folds away while you scroll down and returns the moment you scroll up; the feed pill stays.
-const placeBar = () => { document.getElementById('gz-bar').style.top = `${(document.querySelector('.sp-top')?.offsetHeight || 60) + 18}px`; };
+const placeBar = () => { const t = document.querySelector('.sp-top'); document.getElementById('gz-bar').style.top = `${t.classList.contains('is-hidden') ? 12 : (t.offsetHeight || 52) + 8}px`; };
 {
     const top = document.querySelector('.sp-top');
     let lastY = window.scrollY;
@@ -78,10 +106,9 @@ const placeBar = () => { document.getElementById('gz-bar').style.top = `${(docum
         const y = window.scrollY, dy = y - lastY;
         if (Math.abs(dy) < 6) return;   // ignore jitter
         lastY = y;
-        top.classList.toggle('is-hidden', dy > 0 && y > 80);
+        top.classList.toggle('is-hidden', !searching && dy > 0 && y > 80);
+        placeBar();
     }, { passive: true });
-    top.addEventListener('transitionend', placeBar, true);
-    top.addEventListener('transitionrun', () => { const t = setInterval(placeBar, 30); setTimeout(() => clearInterval(t), 350); }, true);
 }
 
 // "N new" and "See old" share one slot at the top of the screen.

@@ -75,6 +75,17 @@ public class GazeService {
         return page(entries, n, viewer);
     }
 
+    /** Ideas matching a search, newest first. Needs two characters so a stray letter cannot scan every post. */
+    public FeedPage search(User viewer, String q, Instant before, Integer limit) {
+        String text = q == null ? "" : q.trim().toLowerCase();
+        if (text.length() < 2) throw new InvalidProfileException("Type at least two characters to search.");
+        String pattern = "%" + text.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";   // ! is the LIKE escape character
+        int n = limit(limit);
+        Set<UUID> hidden = hiddenFor(viewer);
+        hidden.remove(viewer.getId());   // you can find your own ideas too
+        return page(ofPosts(posts.search(cursor(before), hidden, pattern, PageRequest.of(0, n + 1))), n, viewer);
+    }
+
     /**
      * How many entries the viewer's feed has above the newest thing they have seen. `tops` are the ids at the top of what they are
      * looking at (several, in case the first was deleted); the first match marks where "new" ends. Capped at one page, so 50 means "50 or more".

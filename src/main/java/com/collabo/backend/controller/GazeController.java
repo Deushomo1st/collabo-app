@@ -28,6 +28,11 @@ public class GazeController {
         return java.util.Map.of("count", gaze.newer(current.require(), feed, pending, tops));
     }
 
+    @GetMapping("/search")
+    public FeedPage search(@RequestParam String q, @RequestParam(required = false) Instant before, @RequestParam(required = false) Integer limit) {
+        return gaze.search(current.require(), q, before, limit);
+    }
+
     @GetMapping
     public FeedPage feed(@RequestParam(required = false) String feed,
                          @RequestParam(defaultValue = "false") boolean pending,

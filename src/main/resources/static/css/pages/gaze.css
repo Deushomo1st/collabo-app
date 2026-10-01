@@ -84,18 +84,30 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .gz-old::after { content: 'You were here'; justify-self: center; color: var(--sp-muted); font: 600 11px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
 .gz-sentinel { min-height: 1px; text-align: center; color: var(--sp-muted); font-size: 12.5px; padding: 6px 0 18px; }
 
-/* the header (title, bell, theme) folds away on scroll-down and only the feed pill stays on top; scroll up brings it back */
-.gz-hdr { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .3s ease, opacity .25s ease; }
-.gz-hdr > div { min-height: 0; overflow: hidden; padding-bottom: 8px; }
-.sp-top.is-hidden .gz-hdr { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
-.gz-filters { display: flex; justify-content: center; --nav-padding: 3px; }
-.gz-filters .nav-selector-fluid-hold-wrap { position: static; padding: 0; }
-.gz-filters .nav-selector-fluid-hold { height: 42px; }
-.gz-filters .nav-selector-fluid-hold.iconized { max-width: 42px; }
-.gz-filters .nav-selector-fluid-hold__nav { padding-inline: 0; }
-.gz-filters .nav-selector-fluid-hold__arrow { display: none; }   /* 3 links: no arrows or fades */
-.gz-filters .nav-selector-fluid-hold__clip::before, .gz-filters .nav-selector-fluid-hold__clip::after { display: none; }
-.gz-filters .nav-selector-fluid-hold__viewport { overflow: hidden; }
+/* TikTok-style header: text tabs, the live one bold with a short underline; search, bell and theme on the right.
+   It folds away on scroll-down and comes back on scroll-up. */
+.sp-top { position: sticky; top: 0; z-index: 20; transition: transform .3s ease, opacity .25s ease; }
+.sp-top.is-hidden { transform: translateY(-110%); opacity: 0; pointer-events: none; }
+.tt-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 0 4px;
+    background: linear-gradient(var(--sp-bg), color-mix(in srgb, var(--sp-bg) 0%, transparent)); }
+.tt-tabs { display: flex; align-items: center; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.tt-tabs::-webkit-scrollbar { display: none; }
+.tt-tab { position: relative; padding: 14px 10px; border: 0; background: none; color: var(--sp-muted); font: 700 16px var(--sp-font); white-space: nowrap; cursor: pointer; transition: color .2s; }
+.tt-tab:hover { color: var(--sp-text); }
+.tt-tab[aria-selected="true"] { color: var(--sp-text); }
+.tt-tab::after { content: ''; position: absolute; left: 50%; bottom: 6px; width: 22px; height: 3px; border-radius: 3px; background: var(--sp-text);
+    transform: translateX(-50%) scaleX(0); transition: transform .25s cubic-bezier(.16, 1, .3, 1); }
+.tt-tab[aria-selected="true"]::after { transform: translateX(-50%) scaleX(1); }
+.tt-end { display: flex; align-items: center; gap: 6px; flex: none; }
+.tt-end[hidden], .tt-tabs[hidden], .tt-search[hidden] { display: none; }
+.tt-icon { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--sp-text); cursor: pointer; }
+.tt-icon:hover { background: var(--sp-panel); }
+.tt-icon svg { width: 22px; height: 22px; }
+.tt-search { display: flex; flex: 1; align-items: center; gap: 10px; padding: 6px 0; }
+.tt-search input { flex: 1; min-width: 0; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); color: inherit; font: 500 15px var(--sp-font); }
+.tt-search input:focus { border-color: color-mix(in srgb, var(--sp-brand) 60%, var(--sp-line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-brand) 20%, transparent); }
+.tt-cancel { padding: 8px 4px; border: 0; background: none; color: var(--sp-text); font: 700 14px var(--sp-font); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .sp-top, .tt-tab::after { transition: none; } }
 .sp-header { flex-wrap: nowrap; }
 .sp-header .sp-title { flex: 1 1 0; }
 .gz-list { padding-bottom: 96px; }
