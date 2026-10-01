@@ -4,6 +4,7 @@ import com.collabo.backend.dto.ConnectionsDto;
 import com.collabo.backend.dto.FollowState;
 import com.collabo.backend.dto.PersonDto;
 import com.collabo.backend.entity.Follow;
+import com.collabo.backend.entity.Notification;
 import com.collabo.backend.entity.User;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
@@ -15,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,16 +36,20 @@ public class FollowService {
     private final FollowRepository follows;
     private final UserBlockRepository blocks;
     private final UserRepository users;
+    private final NotificationService notifications;
 
-    public FollowService(FollowRepository follows, UserBlockRepository blocks, UserRepository users) {
-        this.follows = follows; this.blocks = blocks; this.users = users;
+    public FollowService(FollowRepository follows, UserBlockRepository blocks, UserRepository users, NotificationService notifications) {
+        this.notifications = notifications; this.follows = follows; this.blocks = blocks; this.users = users;
     }
 
     public void follow(User me, String username) {
         User target = find(username);
         if (target.getId().equals(me.getId())) throw new InvalidProfileException("You can't follow yourself.");
         if (blocked(me.getId(), target.getId())) throw new YarnException(HttpStatus.FORBIDDEN, CANT_FOLLOW);
-        if (!follows.existsByFollowerIdAndFollowedId(me.getId(), target.getId())) follows.save(new Follow(me.getId(), target.getId()));
+        if (follows.existsByFollowerIdAndFollowedId(me.getId(), target.getId())) return;
+        follows.save(new Follow(me.getId(), target.getId()));
+        notifications.notify(target.getId(), Notification.Bucket.PERSONAL, "New follower", me.getUsername() + " started following you.",
+                "/HTML-pages/profile.html?u=" + URLEncoder.encode(me.getUsername(), StandardCharsets.UTF_8));
     }
 
     /** Silent: unfollowing someone you don't follow is fine. */

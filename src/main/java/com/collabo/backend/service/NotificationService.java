@@ -33,6 +33,11 @@ public class NotificationService {
         signals.notification(userId);
     }
 
+    /** Like notify, but a person with an unread line for the same link is not told twice: a busy chat stays one "new messages" line until they look. */
+    public void notifyOnce(UUID userId, Bucket bucket, String title, String body, String link) {
+        if (!notifications.existsByUserIdAndLinkAndReadFalse(userId, link)) notify(userId, bucket, title, body, link);
+    }
+
     /** Pinned until resolve(refKey): a payment claim holding a room, a clock running down, a removal awaiting an answer. */
     public void require(UUID userId, String refKey, Bucket bucket, String title, String body, String link) {
         notifications.save(new Notification(userId, bucket, true, refKey, title, body, link));

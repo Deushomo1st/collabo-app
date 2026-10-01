@@ -14,6 +14,7 @@ import com.collabo.backend.repository.YarnThreadRepository;
 
 import com.collabo.backend.dto.YarnDtos.*;
 import com.collabo.backend.entity.User;
+import com.collabo.backend.entity.Notification;
 import com.collabo.backend.entity.YarnThread.Status;
 import com.collabo.backend.entity.YarnThread.Tier;
 import com.collabo.backend.repository.UserRepository;
@@ -43,11 +44,12 @@ public class YarnService {
     private final SpaceThreadService spaceThreads;
     private final LiveSignals signals;
     private final UserAvatarRepository avatars;
+    private final NotificationService notifications;
 
     public YarnService(YarnThreadRepository threads, ThreadMemberRepository members, YarnRepository yarns,
                        UserBlockRepository blocks, UserRepository users, FollowService follows,
-                       SpaceThreadService spaceThreads, LiveSignals signals, UserAvatarRepository avatars) {
-        this.spaceThreads = spaceThreads; this.follows = follows; this.signals = signals; this.avatars = avatars;
+                       SpaceThreadService spaceThreads, LiveSignals signals, UserAvatarRepository avatars, NotificationService notifications) {
+        this.notifications = notifications; this.spaceThreads = spaceThreads; this.follows = follows; this.signals = signals; this.avatars = avatars;
         this.threads = threads; this.members = members; this.yarns = yarns; this.blocks = blocks; this.users = users;
     }
 
@@ -205,6 +207,7 @@ public class YarnService {
                 .filter(m -> !m.getUserId().equals(me.getId()) && m.isArchived() && !m.isMuted() && t.getStatus() != Status.DECLINED)
                 .forEach(m -> m.setArchivedAt(null));
         announce(t, y, me.getId());
+        tellMembers(t, me, body);
         return yarnView(y, peopleFor(Set.of(me.getId())), "SENT");
     }
 
@@ -310,6 +313,15 @@ public class YarnService {
     }
 
     /** Tells everyone else in the thread a yarn arrived, once the transaction commits. */
+    /** Everyone else in the room who has not muted it gets one "new messages" line until they open the thread. A declined request tells no one. */
+    private void tellMembers(YarnThread t, User from, String body) {
+        if (t.getStatus() == Status.DECLINED) return;
+        String preview = from.getUsername() + ": " + (body.length() > 80 ? body.substring(0, 79) + "…" : body);
+        members.findByThreadId(t.getId()).stream().filter(m -> !m.getUserId().equals(from.getId()) && !m.isMuted())
+                .forEach(m -> notifications.notifyOnce(m.getUserId(), Notification.Bucket.PERSONAL, "You've got new messages", preview,
+                        "/HTML-pages/yarnspaces.html#t/" + t.getId()));
+    }
+
     private void announce(YarnThread t, Yarn y, UUID except) {
         signals.yarn(t.getId(), y.getId(), othersOf(t.getId(), except));
     }

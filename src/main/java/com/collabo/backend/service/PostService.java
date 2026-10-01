@@ -5,6 +5,8 @@ import com.collabo.backend.dto.PostDtos.PostRequest;
 import com.collabo.backend.dto.PostDtos.PostResponse;
 import com.collabo.backend.entity.Post;
 import com.collabo.backend.entity.User;
+import com.collabo.backend.entity.Notification;
+import com.collabo.backend.entity.Follow;
 import com.collabo.backend.exception.InvalidProfileException;
 import com.collabo.backend.exception.ResourceNotFoundException;
 import com.collabo.backend.entity.ApplicationState;
@@ -53,10 +55,11 @@ public class PostService {
     private final DraftService drafts;
     private final YarnService yarns;
     private final FollowRepository follows;
+    private final NotificationService notifications;
 
     public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts, PostLikeRepository likes, PostCommentLikeRepository commentLikes,
-                       ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns, FollowRepository follows) {
-        this.likes = likes; this.commentLikes = commentLikes; this.follows = follows; this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
+                       ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns, FollowRepository follows, NotificationService notifications) {
+        this.notifications = notifications; this.likes = likes; this.commentLikes = commentLikes; this.follows = follows; this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
         this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts; this.applications = applications;
     }
 
@@ -87,7 +90,19 @@ public class PostService {
             User to = users.findByUsername(name).orElse(null);
             if (to != null && yarns.tryShare(me, to, note)) delivered++;
         }
+        tellFollowers(me, saved);
         return view(saved, me).withShared(delivered);
+    }
+
+    /** People who follow the author hear of a new post, if the audience lets them see it. An anonymous post tells no one, so it cannot be traced back. */
+    private void tellFollowers(User me, Post p) {
+        if (p.isAnonymous()) return;
+        // ponytail: the 500 newest followers; a fan-out job if anyone ever has more
+        for (Follow f : follows.findTop500ByFollowedIdOrderByCreatedAtDesc(me.getId())) {
+            UUID to = f.getFollowerId();
+            if (blocked(to, me.getId()) || !seesId(to, p)) continue;
+            notifications.notify(to, Notification.Bucket.ACTIVITY, me.getUsername() + " posted", p.getTitle(), "/HTML-pages/post-view.html?id=" + p.getId());
+        }
     }
 
     @Transactional
@@ -141,11 +156,13 @@ public class PostService {
     }
 
     /** The author always; otherwise by the post's audience. A listed person who has been deleted simply matches nothing. */
-    boolean sees(User viewer, Post p) {
-        if (p.getAuthorId().equals(viewer.getId())) return true;
-        String id = viewer.getId().toString();
+    boolean sees(User viewer, Post p) { return seesId(viewer.getId(), p); }
+
+    private boolean seesId(UUID viewerId, Post p) {
+        if (p.getAuthorId().equals(viewerId)) return true;
+        String id = viewerId.toString();
         return switch (p.getAudience()) {
-            case "FOLLOWERS" -> follows.existsByFollowerIdAndFollowedId(viewer.getId(), p.getAuthorId());
+            case "FOLLOWERS" -> follows.existsByFollowerIdAndFollowedId(viewerId, p.getAuthorId());
             case "ONLY" -> p.audienceIds().contains(id);
             case "EXCEPT" -> !p.audienceIds().contains(id);
             default -> true;
