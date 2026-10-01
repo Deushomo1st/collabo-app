@@ -145,11 +145,11 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     });
 
     // ---------- horizontal menu logic ----------
-    // More links than options.visible (default 3): show only that many, the pill fits them,
-    // and the arrows (outside the pill) slide the window one link at a time.
-    const V = options.visible ?? 3;
+    // Opt-in "hybrid" (options.visible, e.g. 3): show only that many links, the pill fits them, the arrows
+    // (outside the pill) slide the window one link at a time and a swipe moves it a whole page of V.
+    const V = options.visible || 0;
     let start = 0;
-    const windowed = () => getLinks().length > V;
+    const windowed = () => V > 0 && getLinks().length > V;
     function showWindow() {
         const links = getLinks();
         start = Math.max(0, Math.min(links.length - V, start));
@@ -218,6 +218,16 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         });
     });
 
+    // swipe: locks onto the next (or previous) V links, never lands in between
+    let swipeX = null, swiped = false;
+    root.addEventListener('pointerdown', (e) => { swipeX = windowed() ? e.clientX : null; swiped = false; });
+    root.addEventListener('pointerup', (e) => {
+        if (swipeX === null) return;
+        const dx = e.clientX - swipeX; swipeX = null;
+        if (Math.abs(dx) < 30) return;
+        swiped = true; start += dx < 0 ? V : -V; showWindow(); armIdle();
+    });
+    root.addEventListener('click', (e) => { if (swiped) { e.preventDefault(); e.stopImmediatePropagation(); swiped = false; } }, true);
     const step = (d) => { if (windowed()) { start += d; showWindow(); armIdle(); } else goTo(centerIndex() + d); };
     arrowL.addEventListener('click', () => step(-1));
     arrowR.addEventListener('click', () => step(1));

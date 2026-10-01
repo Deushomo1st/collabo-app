@@ -19,7 +19,7 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
     ];
     const here = pages.findIndex((p) => p[0] === active);
     const nav = await mountNavSelector('#bottom-nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: onSettings ? -1 : here, holdActions: fanActions(),
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, visible: 3, activeIndex: onSettings ? -1 : here, holdActions: fanActions(),
         restIcon: onSettings ? svg(PERSON) : undefined,   // your own profile rests on the person, not the gear
         links: pages.map((p) => p[0]), hrefs: pages.map((p) => p[1]),
         icons: pages.map((p) => p[2]),
@@ -40,7 +40,7 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
 export async function mountComposeNav(settingsHref, { beforeLeave, beforeSettings, restInner = GEAR } = {}) {
     const to = { Gaze: GAZE, Yarns: '/HTML-pages/yarnspaces.html' };
     const nav = await mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: 2, holdActions: fanActions(), restIcon: svg(restInner),
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, visible: 3, activeIndex: 2, holdActions: fanActions(), restIcon: svg(restInner),
         links: ['Gaze', 'Yarns', 'Settings'], hrefs: [GAZE, to.Yarns, settingsHref],
         icons: [svg(HOME), svg(CHAT), svg(GEAR)],
         onChange: (label) => {

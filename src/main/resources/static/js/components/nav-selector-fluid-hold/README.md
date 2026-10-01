@@ -147,4 +147,4 @@ then add light values to `css/global/theme.css`.
 
 ## iplement hybrid (more than three links)
 
-With more than `visible` links (default 3) the pill shows three and hugs them. The arrows sit outside the pill and slide the window one link at a time. A dimmed arrow means nothing further that way; it still takes the click, so it never counts as a tap outside. If you slide away and pick nothing, the pill reopens on the lineup that holds the active link. Live demo: `/HTML-pages/components.html#iplement-hybrid`.
+Opt in with `visible: 3`. With more links than that the pill shows three and hugs them. The arrows sit outside the pill and slide the window one link at a time. A dimmed arrow means nothing further that way; it still takes the click, so it never counts as a tap outside. A swipe on the pill jumps to the next (or previous) three. If you slide away and pick nothing, the pill reopens on the lineup that holds the active link. Live demo: `/HTML-pages/components.html#iplement-hybrid`.
