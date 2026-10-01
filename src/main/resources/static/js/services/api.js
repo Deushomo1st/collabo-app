@@ -115,6 +115,9 @@ export const mediaUpload = (file) => call('/api/media', { method: 'POST', body: 
 export const mediaDiscard = (id) => call(`/api/media/${id}`, { method: 'DELETE' });
 export const mediaUrl = (id) => `/api/media/${id}`;
 
+// the Report page: { summary, pageUrl, mediaIds[] } goes to the admin console
+export const reportSend = (fields) => call('/api/reports', { method: 'POST', body: fields }, 'Could not send your report.');
+
 // drafts: your own unfinished posts. draftSave creates one, or replaces the one named by fields.id
 export const draftsOf = () => call('/api/drafts');
 export const draftGet = (id) => call(`/api/drafts/${id}`);
