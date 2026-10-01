@@ -101,8 +101,8 @@ Defaults are SchoolHub's dark "dusk" values. Because dialogs live on `<body>`, o
 ```
 
 Public variables: `--glass-blur-dialog-` + `ink`, `muted`, `line`, `brand`, `brand-ink`, `danger`,
-`bg`, `bg-frost`, `border`, `sheen`, `sheen-frost2`, `blur`, `blur-frost`, `blur-frost2`,
-`backdrop-bg`, `backdrop-bg-frost2`, `backdrop-blur`, `backdrop-blur-frost2`, `shadow`.
+`bg`, `bg-frost`, `blur-px` (the panel blur radius, default `18px`), `backdrop-bg`, `backdrop-bg-frost2`.
+The look is blur only: no sheen, shadow, border or saturate, and the dim layer behind the panel is not blurred.
 Variables starting `--_gbd-` are internal; don't set them.
 
 ## Behaviour and accessibility

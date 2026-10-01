@@ -31,17 +31,8 @@
     --glass-blur-dialog-danger: #dc2626;
     --glass-blur-dialog-bg: color-mix(in srgb, #ffffff 48%, transparent);
     --glass-blur-dialog-bg-frost: color-mix(in srgb, #ffffff 70%, transparent);
-    --glass-blur-dialog-border: rgba(255, 255, 255, .48);
-    --glass-blur-dialog-sheen: linear-gradient(135deg, rgba(255,255,255,.26), transparent 42%, transparent 72%, rgba(255,255,255,.10));
-    --glass-blur-dialog-sheen-frost2: linear-gradient(135deg, rgba(255,255,255,.18), transparent 42%, transparent 72%, rgba(255,255,255,.06));
-    --glass-blur-dialog-blur: blur(16px) saturate(160%);
-    --glass-blur-dialog-blur-frost: blur(28px) saturate(150%);
-    --glass-blur-dialog-blur-frost2: blur(36px) saturate(130%);
     --glass-blur-dialog-backdrop-bg: rgba(2, 18, 30, .40);
     --glass-blur-dialog-backdrop-bg-frost2: rgba(2, 18, 30, .55);
-    --glass-blur-dialog-backdrop-blur: blur(9px) saturate(115%);
-    --glass-blur-dialog-backdrop-blur-frost2: blur(12px) saturate(120%);
-    --glass-blur-dialog-shadow: 0 30px 70px rgba(2,48,71,.26), inset 0 1px 0 rgba(255,255,255,.6);
 
     /* ---- calendar ---- */
     --calendar-ink: #023047;
