@@ -220,7 +220,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     // swipe / sideways scroll: the links follow the finger (fluid), then lock onto the next or previous V and the pill morphs to fit them
     const navEl = root.querySelector('.nav-selector-fluid-hold__nav');
-    const PAD = 6;   // the nav's side padding
+    const PAD = parseFloat(getComputedStyle(navEl).paddingLeft) || 0;   // the nav's side padding
     const EASE = '.3s cubic-bezier(.2,.8,.2,1)';
     const offsetOf = (i) => getLinks()[i].offsetLeft - PAD;
     const spanOf = (i) => { const a = getLinks()[i], b = getLinks()[i + V - 1]; return b.offsetLeft + b.offsetWidth - a.offsetLeft + 2 * PAD; };
@@ -251,7 +251,9 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         }, 320);
     }
     root.addEventListener('pointerdown', (e) => { swipeX = windowed() && !settling ? e.clientX : null; swiped = false; });
-    const onSwipeMove = (e) => { if (swipeX !== null && (drag || Math.abs(e.clientX - swipeX) > 6)) dragMove(e.clientX - swipeX); };
+    const onSwipeMove = (e) => {
+        if (e.pointerType === 'mouse' && e.isTrusted && !e.buttons) return onSwipeEnd();   // the release was missed (off the window): let go
+        if (swipeX !== null && (drag || Math.abs(e.clientX - swipeX) > 6)) dragMove(e.clientX - swipeX); };
     const onSwipeEnd = () => { swipeX = null; dragEnd(); };   // on the document: a drag that ends off the pill still counts
     document.addEventListener('pointermove', onSwipeMove);
     document.addEventListener('pointerup', onSwipeEnd);

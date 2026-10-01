@@ -175,6 +175,7 @@
 /* while the links are being dragged or settling, the bubbles ride them rigidly (no lagging edge transitions) */
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble { transition: none; }
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble--hover { opacity: 0 !important; }
+.nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__nav { padding-inline: 1px; }   /* tight crescent at the pill's ends */
 .nav-selector-fluid-hold.active-hidden .nav-selector-fluid-hold__bubble--active { opacity: 0; }
 
 @media (max-width: 600px) {
