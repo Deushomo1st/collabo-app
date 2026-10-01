@@ -197,6 +197,7 @@ export async function openAvatarUpload(opts = {}) {
     panel.querySelector('[data-act="cancel"]').onclick = dlg.close;
 
     if (opts.current) {
+        panel.querySelector('[data-act="pick"]').textContent = 'Change picture';   // there is one already: this replaces it
         removeBtn.hidden = false;
         removeBtn.onclick = () => {
             if (typeof opts.onSave === 'function') opts.onSave(null, null);
