@@ -4,7 +4,7 @@ import '/js/services/live.js';
 import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
-import { currentUser, postGet, applicationStack, applicationDecide, spaceForm } from '/js/services/api.js';
+import { currentUser, postGet, applicationStack, applicationDecide, applicationReact, spaceForm } from '/js/services/api.js';
 import { face } from '/js/services/face.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
 import { drawTabs, openMenu, toLogin } from '/js/services/review-ui.js';
@@ -41,10 +41,17 @@ function draw() {
 function card(a) {
     const who = a.applicant;
     const decide = (d, label, cls = '') => h('button', { class: `pc-btn ${cls}`, type: 'button', text: label, onclick: async () => {
-        try { const next = await applicationDecide(a.id, d); rows = rows.map((r) => (r.id === a.id ? { ...r, state: next.state } : r)); draw(); }
+        try { const next = await applicationDecide(a.id, d); rows = rows.map((r) => (r.id === a.id ? next : r)); draw(); }
         catch (err) { toast(err.message); }
     } });
     const locked = post.status === 'formed' && a.state === 'ACCEPTED';
+    const closed = a.state === 'DECLINED' || locked;
+    // tapping your own reaction again takes it back; the server may also move the application (a lost majority puts it back on the shortlist)
+    const react = (kind, label) => h('button', { class: `pc-btn${a.myReaction === kind ? ' pc-btn--brand' : ''}`, type: 'button', text: label, onclick: async () => {
+        try { const next = await applicationReact(a.id, a.myReaction === kind ? 'NONE' : kind); rows = rows.map((r) => (r.id === a.id ? next : r)); draw(); }
+        catch (err) { toast(err.message); }
+    } });
+    const names = (list) => list.map((p) => p.username).join(', ');
     return h('div', { class: 'rv-card' },
         h('a', { class: 'rv-pic', href: profileHref(who.username), 'aria-label': `${who.username}'s profile` }, face(who.username, 'cn-face')),
         h('div', { class: 'rv-head' },
@@ -53,6 +60,9 @@ function card(a) {
             who.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: who.preferredTitle }),
             h('time', { class: 'rv-time', datetime: a.createdAt, text: day(a.createdAt) })),
         h('p', { class: 'rv-text', text: a.statement }),
+        (a.agree.length > 0 || a.disagree.length > 0) && h('p', { class: 'rv-votes pc-hint' },
+            a.agree.length > 0 && `Agree: ${names(a.agree)}`, a.agree.length > 0 && a.disagree.length > 0 && ' · ', a.disagree.length > 0 && `Disagree: ${names(a.disagree)}`),
+        !closed && h('div', { class: 'rv-acts' }, react('AGREE', 'Agree'), react('DISAGREE', 'Disagree')),
         !locked && h('div', { class: 'rv-acts' },
             a.state !== 'ACCEPTED' && decide('ACCEPT', 'Accept', 'pc-btn--brand'),
             a.state !== 'SHORTLISTED' && decide('SHORTLIST', 'Shortlist'),

@@ -13,6 +13,7 @@
 .rv-time { margin-left: auto; font-family: var(--sp-font-mono, ui-monospace, monospace); }
 .rv-text { grid-column: 2; margin: 2px 0 0; font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .rv-acts { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.rv-votes { grid-column: 2; margin: 4px 0 0; }
 .rv-acts .pc-btn { padding: 6px 12px; font-size: 12.5px; }
 .rv-empty { padding: 36px 8px; text-align: center; color: var(--sp-muted); font-size: 14px; }
 .rv-card--post { grid-template-columns: minmax(0, 1fr); }

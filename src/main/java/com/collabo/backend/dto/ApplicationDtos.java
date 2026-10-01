@@ -5,6 +5,7 @@ import com.collabo.backend.entity.Post;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public final class ApplicationDtos {
@@ -15,8 +16,12 @@ public final class ApplicationDtos {
     /** decision: ACCEPT, DECLINE or SHORTLIST. */
     public record DecisionRequest(String decision) {}
 
-    /** One card in the founder's review stack. */
-    public record ReviewResponse(UUID id, PersonDto applicant, String statement, String state, Instant createdAt) {}
+    /** reaction: AGREE, DISAGREE or NONE. */
+    public record ReactionRequest(String reaction) {}
+
+    /** One card in the review stack, with who agrees and disagrees and the caller's own reaction (null if none). */
+    public record ReviewResponse(UUID id, PersonDto applicant, String statement, String state, Instant createdAt,
+                                 List<PersonDto> agree, List<PersonDto> disagree, String myReaction) {}
 
     /** An application with the post it is for; postStatus is that post's own pending/closed. */
     @JsonInclude(JsonInclude.Include.NON_NULL)

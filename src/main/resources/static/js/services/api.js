@@ -145,6 +145,7 @@ export const applicationWithdraw = (id) => call(`/api/applications/${id}/withdra
 export const applicationsMine = () => call('/api/applications/mine');
 export const applicationStack = (id, sort, filter) => call(post(id, `/applications?sort=${sort}${filter ? `&filter=${filter}` : ''}`));
 export const applicationDecide = (id, decision) => call(`/api/applications/${id}`, { method: 'PATCH', body: { decision } });
+export const applicationReact = (id, reaction) => call(`/api/applications/${id}/reaction`, { method: 'PUT', body: { reaction } });
 export const founderCredentials = (id) => call(post(id, '/founder-credentials'));
 
 // spaces: form from a post, open, join/leave, members

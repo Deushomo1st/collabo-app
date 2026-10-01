@@ -4,6 +4,7 @@ import com.collabo.backend.config.CurrentUser;
 import com.collabo.backend.dto.ApplicationDtos.ApplicationResponse;
 import com.collabo.backend.dto.ApplicationDtos.ApplyRequest;
 import com.collabo.backend.dto.ApplicationDtos.DecisionRequest;
+import com.collabo.backend.dto.ApplicationDtos.ReactionRequest;
 import com.collabo.backend.dto.ApplicationDtos.ReviewResponse;
 import com.collabo.backend.dto.CredentialsResponse;
 import com.collabo.backend.service.ApplicationService;
@@ -43,6 +44,11 @@ public class ApplicationController {
     @PatchMapping("/applications/{id}")
     public ReviewResponse decide(@PathVariable UUID id, @RequestBody DecisionRequest req) {
         return applications.decide(current.require(), id, req.decision());
+    }
+
+    @PutMapping("/applications/{id}/reaction")
+    public ReviewResponse react(@PathVariable UUID id, @RequestBody ReactionRequest req) {
+        return applications.react(current.require(), id, req.reaction());
     }
 
     /** The founder's credentials, for someone who applied to this post. */
