@@ -19,7 +19,7 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
     ];
     const here = pages.findIndex((p) => p[0] === active);
     const nav = await mountNavSelector('#bottom-nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: here, holdActions: fanActions(),
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, activeIndex: onSettings ? -1 : here, holdActions: fanActions(),
         restIcon: onSettings ? svg(PERSON) : undefined,   // your own profile rests on the person, not the gear
         links: pages.map((p) => p[0]), hrefs: pages.map((p) => p[1]),
         icons: pages.map((p) => p[2]),
