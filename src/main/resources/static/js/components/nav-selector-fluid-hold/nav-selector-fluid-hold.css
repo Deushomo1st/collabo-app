@@ -162,10 +162,11 @@
 .nav-selector-fluid-hold__link[hidden] { display: none; }
 .nav-selector-fluid-hold-wrap--arrows { align-items: center; gap: 8px; }
 .nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow {
-    position: static; transform: none; flex: none; pointer-events: none; opacity: .35;
+    position: static; transform: none; flex: none; opacity: .35;   /* dimmed = nothing further that way; still takes the click so it doesn't count as a tap outside */
     background: var(--_nf-arrow-bg, rgba(255,255,255,.92)); border: 1px solid rgba(255,255,255,.75); color: #3a4150;
 }
-.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow.on { pointer-events: auto; opacity: 1; }
+.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow { pointer-events: auto; }
+.nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow.on { opacity: 1; }
 .nav-selector-fluid-hold-wrap--arrows:has(.iconized) > .nav-selector-fluid-hold__arrow { opacity: 0 !important; pointer-events: none; }
 .nav-selector-fluid-hold.is-windowed { max-width: calc(min(92vw, 560px) - 68px); }
 .nav-selector-fluid-hold.is-windowed.iconized { max-width: 46px; }

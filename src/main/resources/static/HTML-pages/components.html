@@ -300,6 +300,38 @@
         },
 
         {
+            id: 'iplement-hybrid',
+            dir: 'nav-selector-fluid-hold',   // a mode of the nav selector: it shows three links, the arrows sit outside the pill
+            title: 'iplement hybrid',
+            files: ['nav-selector-fluid-hold.html', 'nav-selector-fluid-hold.css', 'nav-selector-fluid-hold.js'],
+            stageClass: 'gallery__stage--transparent gallery__stage--full',
+            render: async (stage) => {
+                const box = document.createElement('div');
+                box.className = 'gallery__scrollbox';
+                stage.appendChild(box);
+                const ICO = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+                const nav = await mountNavSelector(box, {
+                    placement: 'bottom', collapseWhenIdle: true, idleMs: 4000,
+                    links: ['Gaze', 'Yarns', 'Post', 'Spaces', 'Inbox', 'Settings'],
+                    hrefs: ['#', '#', '#', '#', '#', '#'],
+                    icons: [
+                        '<path d="M3 10.5 12 3l9 7.5V21H3z"/>', '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+                        '<path d="M12 5v14M5 12h14"/>', '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>',
+                        '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.8 4H7.2a2 2 0 0 0-1.7 1.1z"/>',
+                        '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+                    ].map(ICO),
+                    activeIndex: 1,
+                    onChange: () => {},
+                });
+                box.insertAdjacentHTML('beforeend', '<div class="gallery__scrollbox-content"><p><strong>Three at a time.</strong> '
+                    + 'The pill hugs its three links; the arrows sit outside it. An arrow slides the window one link: the link behind '
+                    + 'drops off, the next one on that side comes in. A dimmed arrow means nothing further that way, and tapping it does nothing. '
+                    + 'Slide away from the black focus, pick nothing, let the pill collapse: it reopens on the lineup that holds the focus.</p></div>');
+                return nav.destroy;
+            },
+        },
+
+        {
             id: 'liquid-glass-modal',
             title: 'Liquid Glass Modal',
             files: ['liquid-glass-modal.html', 'liquid-glass-modal.css', 'liquid-glass-modal.js', 'README.md'],
@@ -722,6 +754,7 @@
     // One icon per page for the bottom nav (Lucide paths, ISC licence).
     const PAGE_ICONS = {
         'nav-selector-fluid-hold': svg('<rect x="2" y="9" width="20" height="6" rx="3"/><circle cx="7" cy="12" r="1"/>'),
+        'iplement-hybrid': svg('<path d="m15 18-6-6 6-6"/><rect x="8" y="9" width="8" height="6" rx="3"/>'),
         'liquid-glass-modal': svg('<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>'),
         'glass-blur-dialog': svg('<rect width="18" height="14" x="3" y="5" rx="2"/><path d="M3 9h18"/>'),
         'calendar': ICON.calendar,
@@ -752,7 +785,7 @@
 
         countEl.textContent = `Component ${index + 1} of ${catalog.length}`;
         titleEl.textContent = item.title;
-        filesEl.textContent = 'js/components/' + item.id + '/  ·  ' + item.files.join('  ·  ');
+        filesEl.textContent = 'js/components/' + (item.dir || item.id) + '/  ·  ' + item.files.join('  ·  ');
         history.replaceState(null, '', '#' + item.id);   // reload or share keeps this page
         if (pageNav) pageNav.setActive(index);
 

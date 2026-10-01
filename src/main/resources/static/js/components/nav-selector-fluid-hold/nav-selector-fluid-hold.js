@@ -100,7 +100,11 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     let lastY = getY();
 
     const isIconized = () => root.classList.contains('iconized');
-    const iconize = () => { clearTimeout(idleTimer); syncIcon(); root.classList.add('iconized'); };
+    const iconize = () => {
+        clearTimeout(idleTimer); syncIcon(); root.classList.add('iconized');
+        // scrolled away with the arrows and picked nothing: reopen on the lineup that holds the black focus
+        setTimeout(() => { if (isIconized() && windowed()) { start = homeStart(); showWindow(); } }, 250);
+    };
     const expand = () => root.classList.remove('iconized');
 
     // collapseWhenIdle: collapse after idleMs anywhere on the page, not only below `threshold`.
@@ -154,6 +158,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         arrowL.classList.toggle('on', start > 0);   // 'on' = there is more that way; the arrow itself always shows
         arrowR.classList.toggle('on', start < links.length - V);
     }
+    const homeStart = () => Math.max(0, getLinks().findIndex((l) => l.classList.contains('is-active')) - 1);
     const reveal = (i) => { if (i < start) start = i; else if (i >= start + V) start = i - V + 1; showWindow(); };
 
     function update() {
@@ -228,7 +233,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
         wrap.classList.add('nav-selector-fluid-hold-wrap--arrows');
         root.classList.add('is-windowed');
         wrap.append(arrowL, root, arrowR);
-        start = Math.max(0, (options.activeIndex ?? 0) - 1);
+        start = homeStart();
     } else wrap.appendChild(root);
     target.appendChild(wrap);
     void target.offsetHeight; // force reflow so anchor bubbles measure correctly

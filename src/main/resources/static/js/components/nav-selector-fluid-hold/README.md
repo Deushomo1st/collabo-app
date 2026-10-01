@@ -144,3 +144,7 @@ The colours are hard-coded (dark greys, white bubble), not variables. To theme i
 public variable the way the other components do, for example
 `background: linear-gradient(145deg, var(--nav-selector-bg-from, #2a2a2a), var(--nav-selector-bg-to, #111));`,
 then add light values to `css/global/theme.css`.
+
+## iplement hybrid (more than three links)
+
+With more than `visible` links (default 3) the pill shows three and hugs them. The arrows sit outside the pill and slide the window one link at a time. A dimmed arrow means nothing further that way; it still takes the click, so it never counts as a tap outside. If you slide away and pick nothing, the pill reopens on the lineup that holds the active link. Live demo: `/HTML-pages/components.html#iplement-hybrid`.
