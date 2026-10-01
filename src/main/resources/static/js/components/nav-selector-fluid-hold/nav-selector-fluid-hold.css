@@ -134,11 +134,14 @@
     background: var(--_nf-bubble-bg);
     box-shadow: var(--_nf-bubble-shadow);
     display: flex; align-items: center; justify-content: center; color: var(--_nf-link-active);
-    border: none; cursor: pointer; z-index: 9;
+    border: none; padding: 0; cursor: pointer; z-index: 9;   /* padding 0: a button has 1px 6px by default, which squeezed a profile picture into a tall oval */
     opacity: 0; pointer-events: none; transform: translate(-50%,-50%) scale(.4);
     transition: opacity .25s ease, transform .25s cubic-bezier(.25,1,.5,1);
 }
 .nav-selector-fluid-hold__icon svg { width: 17px; height: 17px; }
+/* A profile picture as the resting icon: it fills the pill (a 2px rim, not 5px), is a plain circle (no bubble highlight or drop shadow) and the pill's glow is tight */
+.nav-selector-fluid-hold__icon:has(.sp-face) { width: 42px; height: 42px; background: none; box-shadow: none; }
+.nav-selector-fluid-hold.iconized:has(.nav-selector-fluid-hold__icon .sp-face) { box-shadow: 0 4px 12px rgba(2, 20, 32, .35); }
 /* collapsedLabel: 'number' */
 .nav-selector-fluid-hold__number {
     font-size: 15px; font-weight: 700; line-height: 1;

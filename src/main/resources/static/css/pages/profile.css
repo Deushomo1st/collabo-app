@@ -36,6 +36,11 @@
 
 .pf-bar { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--sp-line); }
 /* one centred line; on a narrow screen it scrolls sideways instead of stacking (the auto margins centre it only while it fits) */
+/* the enlarged picture (someone else's, from their profile) */
+.pf-card button.avatar-card:not(.avatar-card--editable) { cursor: zoom-in; }
+.glass-blur-dialog__panel.pf-photo-panel { padding: 8px; border-radius: 50%; min-width: 0; overflow: hidden; }
+.pf-photo { display: block; width: min(78vw, 380px); aspect-ratio: 1; object-fit: cover; border-radius: 50%; }
+
 .pf-tabs { display: flex; gap: 4px; flex: 1 1 100%; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .pf-tabs::-webkit-scrollbar { display: none; }
 .pf-tabs > :first-child { margin-left: auto; }

@@ -73,18 +73,27 @@ function fail(err) {
 }
 
 // ---- identity card ---------------------------------------------------------
+/** Someone else's picture, bigger: tap their circle on their profile; tap outside or Escape closes it. */
+async function openPhoto(name, src) {
+    const { panel } = await openGlassBlurDialog({ label: `${name}'s profile picture`, className: 'pf-photo-panel', html: '<img class="pf-photo" alt="">' });
+    const img = panel.querySelector('.pf-photo');
+    img.alt = `${name}'s profile picture`;
+    img.src = src;
+}
+
 function picture() {
     const name = profile.username;
+    const src = profile.avatarVersion ? avatarUrl(name, profile.avatarVersion) : null;
     return createAvatarCard({
-        src: profile.avatarVersion ? avatarUrl(name, profile.avatarVersion) : null,
+        src,
         name, showName: false, editable: profile.self,
-        onClick: profile.self ? () => openAvatarUpload({
-            current: profile.avatarVersion ? avatarUrl(name, profile.avatarVersion) : null,
+        onClick: !profile.self ? (src ? () => openPhoto(name, src) : undefined) : () => openAvatarUpload({
+            current: src,
             onSave: async (_dataUrl, blob) => {
                 try { profile = blob ? await avatarSave(blob) : await avatarRemove(); render(); }
                 catch (err) { toast(err.message); }
             },
-        }) : undefined,
+        }),
     });
 }
 
