@@ -43,6 +43,10 @@ public class Post {
     @Column(name = "shouts_on", nullable = false, columnDefinition = "boolean default true")
     private boolean shoutsOn = true;
 
+    /** false = a regular post: nobody can apply to it. */
+    @Column(name = "applications_on", nullable = false, columnDefinition = "boolean default true")
+    private boolean applicationsOn = true;
+
     /** Who may see it: EVERYONE, FOLLOWERS (the author's followers), ONLY (the people in audienceList) or EXCEPT (everyone but them). The author always sees it. */
     @Column(nullable = false, length = 12, columnDefinition = "varchar(12) default 'EVERYONE'")
     private String audience = "EVERYONE";
@@ -76,6 +80,8 @@ public class Post {
     public void setTags(List<String> tags) { this.hashtags = tags.isEmpty() ? null : String.join(" ", tags); }
     public boolean isCommentsOn() { return commentsOn; }
     public void setCommentsOn(boolean commentsOn) { this.commentsOn = commentsOn; }
+    public boolean isApplicationsOn() { return applicationsOn; }
+    public void setApplicationsOn(boolean applicationsOn) { this.applicationsOn = applicationsOn; }
     public boolean isShoutsOn() { return shoutsOn; }
     public void setShoutsOn(boolean shoutsOn) { this.shoutsOn = shoutsOn; }
     public String getAudience() { return audience == null ? "EVERYONE" : audience; }

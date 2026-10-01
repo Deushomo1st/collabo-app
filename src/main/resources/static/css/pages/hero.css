@@ -31,7 +31,7 @@
 .hr-marquees { width: 100%; display: grid; gap: 12px; padding: 40px 0 28px; }
 .hr-marquee { overflow: hidden; }
 .hr-track { display: flex; gap: 12px; width: max-content; will-change: transform; }
-.hr-chip { flex: none; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); backdrop-filter: blur(8px); font: 700 14px var(--sp-font); white-space: nowrap; }
+.hr-chip { flex: none; padding: 12px 22px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); font: 700 14px var(--sp-font); white-space: nowrap; }
 .hr-chip b { color: var(--sp-brand); font-weight: 800; }
 
 .hr-next { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; text-align: center; padding: 0 var(--sp-gutter); }

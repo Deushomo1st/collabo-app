@@ -27,7 +27,17 @@ public class CommentController {
 
     @PostMapping
     public CommentResponse add(@PathVariable UUID postId, @RequestBody CommentRequest req) {
-        return comments.add(current.require(), postId, req.body());
+        return comments.add(current.require(), postId, req.body(), req.parentId());
+    }
+
+    @PutMapping("/{commentId}/like")
+    public CommentResponse like(@PathVariable UUID postId, @PathVariable UUID commentId) {
+        return comments.like(current.require(), postId, commentId);
+    }
+
+    @DeleteMapping("/{commentId}/like")
+    public CommentResponse unlike(@PathVariable UUID postId, @PathVariable UUID commentId) {
+        return comments.unlike(current.require(), postId, commentId);
     }
 
     @DeleteMapping("/{commentId}")

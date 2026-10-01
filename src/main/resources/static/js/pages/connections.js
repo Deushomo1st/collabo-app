@@ -6,6 +6,7 @@ import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, connections } from '/js/services/api.js';
 import { face } from '/js/services/face.js';
 import { h } from '/js/services/dom.js';
+import { skeletonRows } from '/js/services/skeleton.js';
 
 const TABS = [['following', 'Following'], ['followers', 'Followers'], ['myguy', 'MyGuy']];
 const params = new URLSearchParams(location.search);
@@ -38,6 +39,7 @@ function drawList() {
 const $tabs = document.getElementById('tabs'), $q = document.getElementById('q'), $list = document.getElementById('list');
 let who = params.get('u');
 (async () => {
+    $list.replaceChildren(...skeletonRows(5).map((r) => h('li', {}, r)));
     try {
         const me = await currentUser();
         if (!me) return toLogin();

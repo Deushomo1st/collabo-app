@@ -8,6 +8,18 @@ import { GEAR, HOME, CHAT, PERSON, svg } from '/js/services/icons.js';
 
 const GAZE = '/HTML-pages/gaze.html';
 
+/** Asks the browser to load the pages the bar leads to in the background (on hover or touch), so the tap opens them at once. */
+function speculate(hrefs) {
+    if (!HTMLScriptElement.supports?.('speculationrules')) return;
+    const here = location.pathname + location.search;
+    const urls = [...new Set(hrefs.filter((h) => h && h !== '#').map((h) => { const u = new URL(h, location.href); return u.pathname + u.search; }))].filter((u) => u !== here);
+    if (!urls.length) return;
+    const s = document.createElement('script');
+    s.type = 'speculationrules';
+    s.textContent = JSON.stringify({ prerender: [{ source: 'list', urls, eagerness: 'moderate' }] });
+    document.head.append(s);
+}
+
 /** onGaze: what tapping Gaze does when you are already on it (scroll up); elsewhere it goes to the Gaze. */
 export async function mountMainNav(username, active, { onGaze, onSettings } = {}) {
     const pages = [
@@ -19,6 +31,7 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
             : ['Profile', profileHref(username), svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')],
     ];
     const here = pages.findIndex((p) => p[0] === active);
+    speculate(pages.map((p) => p[1]));
     const nav = await mountNavSelector('#bottom-nav', {
         placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, visible: 3, activeIndex: onSettings ? -1 : here, holdActions: fanActions(),
         restIcon: onSettings ? () => face(username, 'ns-face') : undefined,   // your own profile rests on your picture (your initial if none), not the gear
@@ -40,6 +53,7 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
  */
 export async function mountComposeNav(settingsHref, { beforeLeave, beforeSettings, restInner = GEAR } = {}) {
     const to = { Gaze: GAZE, Yarns: '/HTML-pages/yarnspaces.html' };
+    speculate([GAZE, to.Yarns]);
     const nav = await mountNavSelector('#nav', {
         placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, visible: 3, activeIndex: 2, holdActions: fanActions(), restIcon: svg(restInner),
         links: ['Gaze', 'Yarns', 'Settings'], hrefs: [GAZE, to.Yarns, settingsHref],

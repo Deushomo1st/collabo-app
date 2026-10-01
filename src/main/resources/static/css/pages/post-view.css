@@ -1,0 +1,28 @@
+/* The post's own page. The card is the same one the feed uses; here it has room to breathe. */
+/* publication pages have a plain header that scrolls away with the page (nothing slides under it, so it needs no backing) */
+.sp-top { position: static; margin-bottom: 8px; }
+.pc--detail { padding: 20px 22px; gap: 12px; }
+.pc--detail .pc-title { font-size: 1.35rem; }
+.pc--detail .pc-body { font-size: 1.02rem; line-height: 1.55; }
+.pc--detail { cursor: auto; }
+/* the publisher's picture sits on the card's top corner like a stamp on a letter */
+.pc--detail { position: relative; margin-top: 40px; content-visibility: visible; }
+.pc--detail .pc-top { padding-left: 76px; }
+.pc--detail .pc-who .pc-pic { position: absolute; top: -30px; left: 18px; --_size: 68px; font-size: 26px; transform: rotate(-4deg); box-shadow: 0 0 0 4px var(--sp-bg, #fff), 0 8px 20px rgba(0, 0, 0, .28); }
+.pc--detail .pc-media img, .pc--detail .pc-media video { max-height: 70vh; }
+/* name above, @username beneath; the status sits at the bottom right of the card */
+.pc--detail .pc-who--named { align-items: flex-start; }
+.pc-names { display: grid; line-height: 1.25; }
+.pc-full { font-weight: 800; }
+.pc-at { font-weight: 600; color: var(--sp-muted); font-size: .9em; }
+.pc--detail .pc-status { margin-left: auto; }
+.pc--detail .pc-actions:not(.pc-actions--icons) { gap: 6px; flex-wrap: nowrap; } .pc--detail .pc-actions .pc-btn { padding-inline: 10px; font-size: 13px; white-space: nowrap; }
+/* the conversation scrolls on its own, under the box, so the post stays in view above it */
+.cs { padding: 14px 16px 6px; }
+.cs__list { max-height: min(58vh, 560px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 4px; }
+.cs__h { font-size: .95rem; margin-bottom: 8px; }
+.cs__body { font-size: .86rem; }
+.cs__who { font-size: 13px; }
+.cs__time { font-size: 10.5px; }
+.cs__toggle { font-size: 12px; }
+.cs__moretop { padding: 8px 0 10px; border-top: 1px solid var(--sp-line); list-style: none; }

@@ -8,11 +8,12 @@ import { postCard } from '/js/components/post-card/post-card.js';
 import { openMine } from '/js/components/applications/applications.js';
 import { openDrafts } from '/js/components/drafts/drafts.js';
 import { mountMainNav } from '/js/services/main-nav.js';
+import { skeletonCards } from '/js/services/skeleton.js';
 import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
-    follow, unfollow, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, postGet, mediaUrl, yarnStartMySpace,
+    follow, unfollow, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, postGet, mediaUrl,
 } from '/js/services/api.js';
 
 const MAX_LINKS = 12, MAX_SHIPPED = 5;
@@ -97,9 +98,13 @@ function picture() {
     });
 }
 
+/** Shows the new state at once; the server's answer replaces it, and a failure puts the old state back. */
 async function toggleFollow() {
-    try { profile = await (profile.follow.iFollow ? unfollow : follow)(profile.username); render(); }
-    catch (err) { toast(err.message); }
+    const before = profile, f = before.follow, now = !f.iFollow;
+    profile = { ...before, follow: { ...f, iFollow: now, followers: Math.max(0, f.followers + (now ? 1 : -1)) } };
+    render();
+    try { profile = await (now ? follow : unfollow)(before.username); render(); }
+    catch (err) { profile = before; render(); toast(err.message); }
 }
 
 function identity() {
@@ -123,7 +128,7 @@ function identity() {
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'My applications', onclick: openMine }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Drafts', onclick: openDrafts }),
                 !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow }),
-                !profile.self && f.canFollow && h('button', { class: 'pf-btn', type: 'button', text: 'Message', onclick: openMessage })),
+                !profile.self && f.canFollow && h('button', { class: 'pf-btn', type: 'button', text: 'Message', onclick: () => { location.href = `/HTML-pages/yarnspaces.html#to/${encodeURIComponent(profile.username)}`; } })),
             h('span', { class: 'pf-joined', text: `Joined ${day(profile.joined)}` })));
 }
 
@@ -181,7 +186,7 @@ async function loadFeed(id, more) {
 
 function postList(id) {
     const f = feeds[id];
-    if (!f) { loadFeed(id, false); return h('p', { class: 'pf-empty', text: 'Loading…' }); }
+    if (!f) { loadFeed(id, false); return h('div', { class: 'pf-grid' }, ...skeletonCards(4)); }
     if (f.error) return h('p', { class: 'pf-empty', text: f.error });
     if (f.items.length === 0) return h('p', { class: 'pf-empty', text: id === 'posts'
         ? (profile.self ? 'Ideas you post to The Gaze show up here.' : 'No posts yet.')
@@ -286,21 +291,6 @@ async function openEdit() {
             profile = await profileLinks(linksFromForm());
             close(); render(); toast('Profile saved.');
         } catch (ex) { err.textContent = ex.message; err.hidden = false; }
-    });
-}
-
-// ---- message: starts a MySpace yarn (the server refuses across a block) ------
-async function openMessage() {
-    const { panel } = await openGlassBlurDialog({ size: 'sm', label: 'Message', html: '<h3 class="glass-blur-dialog__title"></h3><form class="sp-form"></form>' });
-    panel.querySelector('h3').textContent = `Message ${profile.username}`;
-    const body = h('textarea', { class: 'sp-input', rows: 3, maxlength: 2000, placeholder: 'Your first yarn', required: true });
-    const err = h('p', { class: 'pf-error', hidden: true });
-    const form = panel.querySelector('form');
-    form.append(body, err, h('div', { class: 'glass-blur-dialog__actions' }, h('button', { class: 'glass-blur-dialog__btn', type: 'submit' }, 'Send')));
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        try { const t = await yarnStartMySpace(profile.username, body.value); location.href = `/HTML-pages/yarnspaces.html#t/${t.id}`; }
-        catch (ex) { err.textContent = ex.message; err.hidden = false; }
     });
 }
 

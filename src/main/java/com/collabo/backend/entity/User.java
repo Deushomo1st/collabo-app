@@ -51,6 +51,12 @@ public class User {
     @Column(name = "preferred_title", length = 40)
     private String preferredTitle;
 
+    @Column(name = "first_name", length = 40)
+    private String firstName;
+
+    @Column(name = "last_name", length = 40)
+    private String lastName;
+
     @Column(length = 600)
     private String bio;
 
@@ -81,6 +87,16 @@ public class User {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    /** "First Last", or null for accounts made before names were asked. */
+    public String fullName() {
+        String n = ((firstName == null ? "" : firstName) + " " + (lastName == null ? "" : lastName)).trim();
+        return n.isEmpty() ? null : n;
+    }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }

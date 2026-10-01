@@ -7,7 +7,7 @@ const FILTERS = [['all', 'All', () => true], ['unverified', 'Unverified', (u) =>
     ['admin', 'Admins', (u) => u.role === 'ADMIN'], ['test', 'Test', (u) => u.test]];
 
 export async function usersView() {
-    const state = { all: await api.users(), q: '', filter: 'all' };
+    const state = { all: await api.users(), q: '', filter: 'all', sel: new Set() };
     const body = h('tbody');
     const count = h('span', { class: 'ad-count' });
     const search = h('input', { class: 'ad-input ad-search', type: 'search', placeholder: 'Search email or username', 'aria-label': 'Search users',
@@ -33,6 +33,7 @@ export async function usersView() {
 
     function row(u) {
         return h('tr', {},
+            h('td', {}, h('input', { type: 'checkbox', 'aria-label': `Select ${u.username}`, checked: state.sel.has(u.id), onchange: (e) => { e.target.checked ? state.sel.add(u.id) : state.sel.delete(u.id); drawSel(); } })),
             h('td', {}, h('strong', { text: u.username }), h('div', { class: 'ad-sub', text: u.email })),
             h('td', {}, roleCell(u)),
             h('td', {}, h('span', { class: `ad-tag ${u.verified ? 'is-ok' : 'is-warn'}`, text: u.verified ? 'Verified' : 'Unverified' }), u.test && h('span', { class: 'ad-tag is-warn', text: 'Test' })),
@@ -49,10 +50,36 @@ export async function usersView() {
     function draw() {
         const test = FILTERS.find(([k]) => k === state.filter)[2];
         const shown = state.all.filter((u) => test(u) && (!state.q || u.email.toLowerCase().includes(state.q) || u.username.toLowerCase().includes(state.q)));
+        
         chips.querySelectorAll('button').forEach((b) => b.classList.toggle('is-on', b.dataset.key === state.filter));
         count.textContent = `${shown.length} of ${state.all.length}`;
-        body.replaceChildren(...(shown.length ? shown.map(row) : [h('tr', {}, h('td', { colspan: 6, class: 'ad-empty', text: 'No users match.' }))]));
+        state.sel = new Set([...state.sel].filter((id) => state.all.some((u) => u.id === id)));
+        state.shown = shown;
+        body.replaceChildren(...(shown.length ? shown.map(row) : [h('tr', {}, h('td', { colspan: 7, class: 'ad-empty', text: 'No users match.' }))]));
+        drawSel();
     }
+
+    const delSel = h('button', { class: 'ad-btn ad-btn--danger-quiet', type: 'button', hidden: true });
+    const allBox = h('input', { type: 'checkbox', 'aria-label': 'Select all shown', onchange: (e) => { (state.shown || []).forEach((u) => (e.target.checked ? state.sel.add(u.id) : state.sel.delete(u.id))); draw(); } });
+    function drawSel() {
+        const n = state.sel.size;
+        delSel.hidden = !n; delSel.textContent = `Delete selected (${n})`;
+        allBox.checked = !!state.shown?.length && state.shown.every((u) => state.sel.has(u.id));
+    }
+    /** Mass delete: one request per account, so a failure stops nothing else. The last ADMIN is always kept. */
+    async function deleteSelected() {
+        const picked = state.all.filter((u) => state.sel.has(u.id));
+        let keep = admins();
+        const doomed = picked.filter((u) => { if (u.role !== 'ADMIN') return true; if (keep <= 1) return false; keep--; return true; });
+        const spared = picked.length - doomed.length;
+        if (!doomed.length) return notify('Nothing to delete: the last ADMIN is kept.', true);
+        if (!(await confirmDialog({ title: `Delete ${doomed.length} user${doomed.length === 1 ? '' : 's'}?`, text: `Their posts, comments, memberships and credentials go with them. This cannot be undone.${spared ? ' The last ADMIN is kept.' : ''}`, confirm: 'Delete', danger: true }))) return;
+        let failed = 0;
+        for (const u of doomed) { try { await api.deleteUser(u.id); } catch (e) { if (e instanceof api.AdminAuthError) throw e; failed++; } }
+        state.sel.clear(); state.all = await api.users(); draw();
+        notify(failed ? `${doomed.length - failed} deleted, ${failed} failed.` : `${doomed.length} deleted.`, !!failed);
+    }
+    delSel.addEventListener('click', deleteSelected);
 
     async function create() {
         const f = { email: field('email', 'Email', { type: 'email' }), username: field('username', 'Username'), password: field('password', 'Password (8+ characters)', { type: 'password', autocomplete: 'new-password' }),
@@ -109,7 +136,7 @@ export async function usersView() {
     draw();
     return h('div', { class: 'ad-view' },
         h('div', { class: 'ad-head' }, h('h2', { text: 'Users' }), h('span', {}, h('button', { class: 'ad-btn', type: 'button', text: 'Bulk create', onclick: bulk }), ' ', h('button', { class: 'ad-btn ad-btn--primary', type: 'button', text: 'New user', onclick: create }))),
-        h('div', { class: 'ad-toolbar' }, search, chips, count),
+        h('div', { class: 'ad-toolbar' }, search, chips, count, delSel),
         h('div', { class: 'ad-scroll' }, h('table', { class: 'ad-table' },
-            h('thead', {}, h('tr', {}, ...['User', 'Role', 'Status', 'Premium', 'Joined', ''].map((t) => h('th', { text: t })))), body)));
+            h('thead', {}, h('tr', {}, h('th', {}, allBox), ...['User', 'Role', 'Status', 'Premium', 'Joined', ''].map((t) => h('th', { text: t })))), body)));
 }

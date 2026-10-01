@@ -21,6 +21,8 @@ public interface YarnRepository extends JpaRepository<Yarn, UUID> {
 
     long countByThreadId(UUID threadId);
 
+    List<Yarn> findByThreadIdAndPinnedTrueOrderByCreatedAtAsc(UUID threadId);
+
     List<Yarn> findByThreadIdAndCreatedAtBetweenOrderByCreatedAtAsc(UUID threadId, Instant from, Instant to);
 
     /** Messages I have not read: newer than my marker and written by someone else. System notes ("bob joined") are not messages. */

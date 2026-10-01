@@ -6,8 +6,10 @@ import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { face as faceOf } from '/js/services/face.js';
+import { mountIsland } from '/js/components/space/task-island.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import { live } from '/js/services/live.js';
+import { skeletonRows } from '/js/services/skeleton.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import { GEAR } from '/js/services/icons.js';
 import {
@@ -85,6 +87,11 @@ function setHeader(t) {
         sub.replaceChildren(...t.members.flatMap((m, i) => [i ? ', ' : '', h('a', { href: `/HTML-pages/profile.html?u=${encodeURIComponent(m.username)}`, text: m.username })]).filter(Boolean));
     } else sub.textContent = n ? `${n} unread ${n === 1 ? 'yarn' : 'yarns'}` : 'All caught up';
     document.getElementById('thread-wrench').hidden = !t;
+    // A Workspace's bar opens its space: the team, milestones and payments. (Member names inside it still go to their profiles.)
+    const bar = document.querySelector('.yn-header .sp-title');
+    bar.classList.toggle('is-link', !!t?.postId);
+    bar.title = t?.postId ? 'Open the space: team, milestones, payments' : '';
+    bar.onclick = t?.postId ? (e) => { if (!e.target.closest('a')) location.href = `/HTML-pages/space.html?post=${t.postId}`; } : null;
     sub.hidden = !!t && t.tier === 'MYSPACE';   // the picture already links to their profile; a room still lists its members
 }
 
@@ -139,10 +146,34 @@ async function loadAll() {
     [inbox, archived] = await Promise.all([yarnThreads('inbox'), yarnThreads('archived')]);
 }
 
-function stopThread() { threadView?.destroy(); threadView = null; openThread = null; }
+let island = null, offIsland = null;   // a Workspace chat's task pill
+function stopThread() { threadView?.destroy(); threadView = null; island?.destroy(); offIsland?.(); island = offIsland = null; openThread = null; }
+
+/** #to/<username>: the private chat with that person. Their existing MySpace opens; otherwise an empty chat whose first yarn starts it. */
+const inDraft = () => location.hash.startsWith('#to/');   // the empty chat is showing: background list refreshes must not replace it
+async function routeToPerson(name) {
+    try { await loadAll(); } catch (err) { return fatal(err); }
+    const known = [...inbox, ...archived].find((t) => t.tier === 'MYSPACE' && t.members.some((m) => m.id !== me.id && m.username.toLowerCase() === name.toLowerCase()));
+    if (known) { location.replace('#t/' + known.id); return; }
+    const draft = { tier: 'MYSPACE', name, members: [{ id: 'draft', username: name }] };
+    setHeader(draft);
+    document.getElementById('thread-wrench').hidden = true;
+    threadView = createYarnThread({
+        meId: me.id, showNames: false, disabledReason: '', avatar: (n) => faceOf(n, 'sp-avatar--sm'), avatarOn: 'latest',
+        load: async () => [], signals: () => () => {}, isLive: () => live.connected,
+        send: async (body) => {
+            const t = await yarnStartMySpace(name, body);   // the server refuses across a block, or when they take no new yarns
+            await loadAll();
+            location.replace('#t/' + t.id);
+            return { id: 'started', body, at: new Date().toISOString(), senderId: me.id };
+        },
+    });
+    fill(document.getElementById('section'), threadView.element);
+}
 
 async function route() {
     stopThread();
+    if (location.hash.startsWith('#to/')) return routeToPerson(decodeURIComponent(location.hash.slice(4)));
     const id = threadIdInHash();
     if (!id) { setHeader(null); syncNav(); renderSection(); return; }
     try {
@@ -238,7 +269,7 @@ function renderThread() {
     const t = openThread;
     const reason = t.status === 'DECLINED' ? 'This yarn request was declined.' : t.incomingRequest ? 'Accept the request to reply.' : '';
     threadView = createYarnThread({
-        meId: me.id, showNames: t.tier !== 'MYSPACE', disabledReason: reason,
+        meId: me.id, showNames: t.tier !== 'MYSPACE', disabledReason: reason, unread: t.unread,
         avatar: (name) => faceOf(name, 'sp-avatar--sm'), avatarOn: t.tier === 'MYSPACE' ? 'latest' : 'every',   // a one-to-one chat: only their newest yarn; a group: every yarn
         load: (before) => yarnHistory(t.id, before),
         send: (body) => yarnSend(t.id, body),
@@ -250,7 +281,14 @@ function renderThread() {
             return () => offs.forEach((off) => off());
         },
         isLive: () => live.connected,
+        onPin: t.postId ? (y) => island?.pin(y) : null, canPin: () => !!island?.canPin,
     });
+    if (t.postId) mountIsland(document.getElementById('island'), t.postId, me).then((i) => {   // tasks belong to Workspaces only
+        if (openThread !== t) return i.destroy();
+        island = i; threadView?.redraw();
+        offIsland = live.on('yarn', (s) => { if (s.thread === t.id) i.reload(); });
+    });
+    t.unread = 0;   // the thread took the count; reopening it later must not show a stale "New yarns" line
     fill(document.getElementById('section'),
         t.incomingRequest ? createActionBanner({
             title: `${t.name} wants to yarn you`, text: 'Accept to reply. Declining archives it and they cannot send more.',
@@ -362,6 +400,7 @@ async function start() {
 
 async function boot() {
     preloadGlassBlurDialog(); preloadYarnThread();
+    document.getElementById('section').replaceChildren(...skeletonRows(5));   // the list's shape while it loads
     await preloadActionBanner();
     await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     document.getElementById('find-btn').addEventListener('click', () => me && openFind({ me, threads: () => [...inbox, ...archived],
@@ -376,14 +415,14 @@ async function boot() {
         clearTimeout(listTimer);
         listTimer = setTimeout(() => {
             if (!me) return;
-            loadAll().then(() => { if (!openThread) { setHeader(null); renderSection(); } }).catch(() => {});
+            loadAll().then(() => { if (!openThread && !inDraft()) { setHeader(null); renderSection(); } }).catch(() => {});
         }, 250);   // a burst of signals becomes one refresh
     };
     live.on('yarn', refreshLists); live.on('receipt', refreshLists); live.onResync(refreshLists);
     let lastTick = 0;
     setInterval(() => {
         const every = live.connected ? 60_000 : 15_000;
-        if (me && !openThread && document.visibilityState === 'visible' && Date.now() - lastTick >= every) { lastTick = Date.now(); refreshLists(); }
+        if (me && !openThread && !inDraft() && document.visibilityState === 'visible' && Date.now() - lastTick >= every) { lastTick = Date.now(); refreshLists(); }
     }, 5000);
     start();
 }

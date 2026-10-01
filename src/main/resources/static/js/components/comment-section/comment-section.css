@@ -1,0 +1,44 @@
+/* comment-section: the conversation under a post. */
+.cs { margin-top: 14px; padding: 18px 20px 8px; border-radius: 22px; }
+.cs__h { margin: 0 0 12px; font-size: 1.05rem; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
+.cs__count { color: var(--sp-muted); font-size: .85rem; font-weight: 700; }
+.cs__form { display: flex; gap: 8px; margin-bottom: 8px; }
+.cs__form .sp-input { flex: 1; min-width: 0; }
+.cs__note { margin: 0 0 8px; color: var(--sp-muted); font-size: 13px; }
+
+.cs__list { list-style: none; margin: 0; padding: 0; }
+.cs__item { border-top: 1px solid var(--sp-line); content-visibility: auto; contain-intrinsic-size: auto 90px; }
+.cs__row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 0; }
+.cs__acts { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
+.cs__toggle { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: var(--sp-brand); font: 700 12.5px var(--sp-font); cursor: pointer; }
+.cs__more { margin: 2px 0 6px; }
+.cs__toggle:hover { text-decoration: underline; }
+.cs__chev { display: inline-flex; transition: transform .2s ease; }
+.cs__toggle.is-open .cs__chev { transform: rotate(180deg); }
+/* the opened thread: indented under its comment, tied to it by a line */
+.cs__thread { margin: 0 0 12px 18px; padding-left: 16px; border-left: 2px solid var(--sp-line); }
+.cs__replies { list-style: none; margin: 0; padding: 0; }
+.cs__row--reply { padding: 8px 0; gap: 10px; }
+.cs__row--reply .sp-avatar { --_size: max(22px, calc(32px - var(--lvl) * 3px)); font-size: max(9px, calc(12px - var(--lvl) * 1px)); }
+.cs__node { list-style: none; }
+.cs__node .cs__body { font-size: max(.74rem, calc(.9rem - var(--lvl) * .05rem)); }
+.cs__node .cs__thread { margin-left: 10px; padding-left: 12px; }
+.cs__form--reply { margin: 6px 0 0; }
+.cs__form--reply .sp-input { padding-block: 8px; font-size: 14px; }
+.cs__pic { display: block; border-radius: 50%; text-decoration: none; }
+.cs__top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cs__who { color: inherit; font-weight: 800; text-decoration: none; }
+.cs__who:hover { text-decoration: underline; }
+.cs__time { color: var(--sp-muted); font: 500 11.5px var(--sp-font-mono, ui-monospace, monospace); }
+.cs__body { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
+.cs__del { padding: 0; border: 0; background: none; color: var(--sp-muted); font: 700 12px var(--sp-font); cursor: pointer; }
+.cs__del:hover { color: var(--sp-danger); }
+.cs__empty { padding: 14px 0 16px; color: var(--sp-muted); font-size: 13px; border-top: 1px solid var(--sp-line); }
+
+/* the heart at the right edge of each comment */
+.cs__like { display: inline-flex; align-items: center; gap: 4px; min-width: 36px; height: 34px; padding: 0 8px; border: 0; border-radius: 999px; background: none; color: var(--sp-muted); cursor: pointer; font: 700 12.5px var(--sp-font); justify-content: center; }
+.cs__like:hover { background: var(--sp-panel-hi); color: var(--sp-text); }
+.cs__like.is-on { color: #e5484d; }
+.cs__like.is-on svg { fill: currentColor; }
+.cs__like:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
+.cs__n:empty { display: none; }

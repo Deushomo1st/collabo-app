@@ -45,11 +45,12 @@ public class SpaceService {
     private final CollaboratorRepository collaborators;
     private final SpaceThreadService spaceThreads;
     private final NotificationService notifications;
+    private final YarnService yarnService;
 
     public SpaceService(SpaceRepository spaces, PostRepository posts, ApplicationRepository applications, UserRepository users,
                         CredentialService credentials, SpaceMemberRepository members,
-                        CollaboratorRepository collaborators, SpaceThreadService spaceThreads, NotificationService notifications) {
-        this.notifications = notifications; this.spaceThreads = spaceThreads; this.collaborators = collaborators; this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
+                        CollaboratorRepository collaborators, SpaceThreadService spaceThreads, NotificationService notifications, YarnService yarnService) {
+        this.yarnService = yarnService; this.notifications = notifications; this.spaceThreads = spaceThreads; this.collaborators = collaborators; this.members = members; this.spaces = spaces; this.posts = posts; this.applications = applications; this.users = users; this.credentials = credentials;
     }
 
     /** The post's author forms the space, once, when at least one applicant has been accepted. */
@@ -81,6 +82,9 @@ public class SpaceService {
         post.setFormed(true);
         posts.save(post);
         credentials.record(me.getId(), CredentialKind.SPACE_FORMED, space.getName(), "", "space", space.getId().toString(), null);
+        applications.findByPostIdAndState(postId, ApplicationState.ACCEPTED)
+                .forEach(a -> { users.findById(a.getApplicantId()).ifPresent(u -> yarnService.notifyAccepted(me, u, post.getTitle())); notifications.notify(a.getApplicantId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "You were accepted to \"" + post.getTitle() + "\"",
+                        me.getUsername() + " formed the space. Joining is your call.", "/HTML-pages/space.html?id=" + space.getId()); });
         // the window closed for everyone who was not picked
         applications.findByPostIdAndStateNotOrderByCreatedAtAsc(postId, ApplicationState.ACCEPTED).stream()
                 .filter(a -> a.getState() != ApplicationState.WITHDRAWN)

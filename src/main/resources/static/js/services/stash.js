@@ -13,7 +13,7 @@ export const reportSet = stash('collaboReportSet');
 export const reportWork = stash('collaboReportWork');
 
 export const DEFAULT_POST_SET = {
-    commentsOn: true, shoutsOn: true, anonymous: false,
+    commentsOn: true, shoutsOn: true, anonymous: false, applicationsOn: true,   // applicationsOn false = a regular post
     audience: 'EVERYONE', audienceWith: [],   // what the server is sent
     ui: { kind: 'EVERYONE', mode: 'in', room: null, ticked: [] },   // what the settings page shows
 };

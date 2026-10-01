@@ -363,7 +363,7 @@ public class YarnService {
                 requester, t.getStatus() == Status.PENDING && !requester && t.getTier() == Tier.MYSPACE,
                 t.getLastBody(), last == null ? "System" : last.getUsername(), t.getLastYarnAt(),
                 yarns.countUnread(t.getId(), mine.getLastReadAt(), me.getId()),
-                mine.isPinned(), mine.isMuted(), mine.isArchived(), other, who);
+                mine.isPinned(), mine.isMuted(), mine.isArchived(), other, who, t.getTier() == Tier.WORKSPACE ? t.getPostId() : null);
     }
 
     private static boolean matches(ThreadView v, String needle) {
@@ -374,6 +374,6 @@ public class YarnService {
 
     private static YarnView yarnView(Yarn y, Map<UUID, User> people, String receipt) {
         User s = y.getSenderId() == null ? null : people.get(y.getSenderId());
-        return new YarnView(y.getId(), y.getSenderId(), s == null ? "System" : s.getUsername(), y.getKind().name(), y.getBody(), y.getCreatedAt(), receipt);
+        return new YarnView(y.getId(), y.getSenderId(), s == null ? "System" : s.getUsername(), y.getKind().name(), y.getBody(), y.getCreatedAt(), receipt, y.isPinned());
     }
 }

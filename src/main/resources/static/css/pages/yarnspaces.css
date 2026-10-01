@@ -13,10 +13,9 @@
 #section { display: grid; gap: 14px; padding-bottom: 96px; }   /* room for the bottom bar */
 .yn-group, .yn-list { display: grid; gap: 8px; }
 
-.yn-row {
+.yn-row { content-visibility: auto; contain-intrinsic-size: auto 72px;
     display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; padding: 12px 14px; text-align: left;
     border-radius: 18px; border: 1px solid var(--sp-line); background: var(--sp-panel);
-    backdrop-filter: blur(18px) saturate(150%); -webkit-backdrop-filter: blur(18px) saturate(150%);
     transition: transform .2s, background .2s;
 }
 .yn-row:hover { background: var(--sp-panel-hi); transform: translateY(-2px); }
@@ -114,3 +113,7 @@
 .yn-card { padding: 16px; border-radius: 22px; }
 .yn-signout { justify-self: start; padding: 10px 16px; }
 .yn-row { text-decoration: none; color: inherit; }
+
+/* a Workspace bar opens its space */
+.yn-header .sp-title.is-link { cursor: pointer; }
+.yn-header .sp-title.is-link h1::after { content: " \203A"; color: var(--sp-brand); }

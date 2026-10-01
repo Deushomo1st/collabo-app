@@ -8,6 +8,7 @@ import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, profileGet, following } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
+import { skeletonCards } from '/js/services/skeleton.js';
 
 const EMPTY = {
     gaze: 'Nothing here yet. Be the first to post an idea.',
@@ -127,6 +128,7 @@ const placeBar = () => { const t = document.querySelector('.sp-top'); document.g
         if (Math.abs(dy) < 6) return;   // ignore jitter
         lastY = y;
         top.classList.toggle('is-hidden', !searching && dy > 0 && y > 80);
+        top.classList.toggle('is-scrolled', y > 8);   // the backing behind the tabs shows once the feed is under them
         placeBar();
     }, { passive: true });
 }
@@ -183,7 +185,9 @@ async function more(first) {
     loading = true;
     const mine = gen;
     const sentinel = list().querySelector('.gz-sentinel');
-    if (sentinel) sentinel.textContent = 'Loading…';
+    if (sentinel && !first) sentinel.textContent = 'Loading…';
+    const holders = first && !fresh.length ? skeletonCards(3) : [];   // the first load shows the shape of the feed, not empty space
+    list().querySelector('.gz-fresh')?.append(...holders);
     try {
         const page = await gazeFeed(feed, { pending: pendingOnly, before: first ? undefined : next });
         if (mine !== gen) return;   // you moved to another tab while this loaded
@@ -206,7 +210,7 @@ async function more(first) {
         if (err.status === 401) return toLogin();
         list().querySelector('.gz-sentinel')?.replaceChildren(h('span', { text: err.message + ' ' }), h('button', { class: 'gz-btn', type: 'button', text: 'Try again', onclick: () => more(first) }));
         return;
-    } finally { if (mine === gen) loading = false; }
+    } finally { holders.forEach((e) => e.remove()); if (mine === gen) loading = false; }
     const end = list().querySelector('.gz-sentinel');
     if (end) end.textContent = next ? '' : fresh.length ? 'You are all caught up.' : '';
     watchEnd();
@@ -242,16 +246,10 @@ async function checkNewer() {
 let newerTimer;
 const soon = () => { clearTimeout(newerTimer); newerTimer = setTimeout(checkNewer, 500 + Math.random() * 2500); };   // the jitter spreads a crowd's questions out
 
-/** A shared link (gaze.html?post=ID) opens that one post over the feed. */
-async function openLinkedPost() {
+/** An older shared link (gaze.html?post=ID) goes to the post's own page. */
+function openLinkedPost() {
     const id = new URLSearchParams(location.search).get('post');
-    if (!id) return;
-    try {
-        const p = await postGet(id);
-        const { panel, close } = await openGlassBlurDialog({ size: 'lg', label: 'Post', html: '<div class="gz-linked"></div>' });
-        panel.querySelector('.gz-linked').append(postCard(p, { onGone: () => { close(); drop(id); } }));
-    } catch (err) { toast(err.message); }
-    history.replaceState(null, '', location.pathname);   // a refresh should not pop it open again
+    if (id) location.replace(`/HTML-pages/post-view.html?id=${encodeURIComponent(id)}`);
 }
 
 const mountBottom = (username) => mountMainNav(username, 'Gaze', { onGaze: () => window.scrollTo({ top: 0, behavior: 'smooth' }) });   // Gaze again goes back to the top

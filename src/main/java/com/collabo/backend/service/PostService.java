@@ -13,6 +13,12 @@ import com.collabo.backend.repository.FollowRepository;
 import com.collabo.backend.repository.PostCommentRepository;
 import com.collabo.backend.repository.PostRepository;
 import com.collabo.backend.repository.ShoutRepository;
+import com.collabo.backend.repository.PostLikeRepository;
+import com.collabo.backend.entity.PostLike;
+import com.collabo.backend.entity.PostComment;
+import com.collabo.backend.repository.PostCommentLikeRepository;
+import com.collabo.backend.dto.PostDtos.CommentSnippet;
+import org.springframework.data.domain.PageRequest;
 import com.collabo.backend.entity.Shout;
 import com.collabo.backend.repository.UserBlockRepository;
 import com.collabo.backend.repository.UserRepository;
@@ -39,6 +45,8 @@ public class PostService {
     private final UserBlockRepository blocks;
     private final PostCommentRepository comments;
     private final ShoutRepository shouts;
+    private final PostLikeRepository likes;
+    private final PostCommentLikeRepository commentLikes;
     private final ApplicationRepository applications;
     private final LiveSignals signals;
     private final MediaService media;
@@ -46,9 +54,9 @@ public class PostService {
     private final YarnService yarns;
     private final FollowRepository follows;
 
-    public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts,
+    public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts, PostLikeRepository likes, PostCommentLikeRepository commentLikes,
                        ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns, FollowRepository follows) {
-        this.follows = follows; this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
+        this.likes = likes; this.commentLikes = commentLikes; this.follows = follows; this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
         this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts; this.applications = applications;
     }
 
@@ -66,6 +74,7 @@ public class PostService {
         p.setTags(tags);
         p.setCommentsOn(!Boolean.FALSE.equals(req.commentsOn()));
         p.setShoutsOn(!Boolean.FALSE.equals(req.shoutsOn()));
+        p.setApplicationsOn(!Boolean.FALSE.equals(req.applicationsOn()));
         p.setAnonymous(Boolean.TRUE.equals(req.anonymous()));
         setAudience(p, req.audience(), req.audienceWith());
         Post saved = posts.save(p);
@@ -73,7 +82,7 @@ public class PostService {
         drafts.consume(me, req.draftId());
         signals.gaze();
         int delivered = 0;
-        String note = (p.isAnonymous() ? "Someone" : me.getUsername()) + " shared a post with you: \"" + title + "\"\n/HTML-pages/gaze.html?post=" + saved.getId();
+        String note = (p.isAnonymous() ? "Someone" : me.getUsername()) + " shared a post with you: \"" + title + "\"\n/HTML-pages/post-view.html?id=" + saved.getId();
         for (String name : recipients) {
             User to = users.findByUsername(name).orElse(null);
             if (to != null && yarns.tryShare(me, to, note)) delivered++;
@@ -91,8 +100,10 @@ public class PostService {
     public void delete(User me, UUID id) {
         Post p = mine(me, id);
         if (p.isFormed()) throw new InvalidProfileException("A space was formed from this post, so it stays.");
+        commentLikes.deleteByPostId(id);
         comments.deleteByPostId(id);
         shouts.deleteByPostId(id);
+        likes.deleteByPostId(id);
         applications.deleteByPostId(id);
         media.removeOfPost(id);
         posts.delete(p);
@@ -165,6 +176,12 @@ public class PostService {
         Map<UUID, Long> counts = new HashMap<>();
         for (Object[] row : shouts.counts(ids)) counts.put((UUID) row[0], (Long) row[1]);
         Set<UUID> mineShouted = new HashSet<>(shouts.shoutedAmong(viewer.getId(), ids));
+        Map<UUID, Long> likeCounts = new HashMap<>();
+        for (Object[] row : likes.counts(ids)) likeCounts.put((UUID) row[0], (Long) row[1]);
+        Set<UUID> mineLiked = new HashSet<>(likes.likedAmong(viewer.getId(), ids));
+        Map<UUID, Long> commentCounts = new HashMap<>();
+        for (Object[] row : comments.counts(ids)) commentCounts.put((UUID) row[0], (Long) row[1]);
+        Map<UUID, List<CommentSnippet>> samples = sampleComments(ids, viewer);
         Map<UUID, String> applied = new HashMap<>();
         for (Object[] row : applications.statesOf(viewer.getId(), ids, ApplicationState.WITHDRAWN)) applied.put((UUID) row[0], row[1].toString());
         Map<UUID, Long> applicants = new HashMap<>();
@@ -175,7 +192,9 @@ public class PostService {
             User author = authors.get(p.getAuthorId());
             if (author == null) throw new ResourceNotFoundException("That post is gone.");
             return PostResponse.of(p, author, viewer, counts.getOrDefault(p.getId(), 0L), mineShouted.contains(p.getId()), shouters.get(p.getId()),
-                    applied.get(p.getId()), mineIds.contains(p.getId()) ? applicants.getOrDefault(p.getId(), 0L) : null, files.getOrDefault(p.getId(), List.of()));
+                    applied.get(p.getId()), mineIds.contains(p.getId()) ? applicants.getOrDefault(p.getId(), 0L) : null, files.getOrDefault(p.getId(), List.of()),
+                    likeCounts.getOrDefault(p.getId(), 0L), mineLiked.contains(p.getId()),
+                    commentCounts.getOrDefault(p.getId(), 0L), p.isCommentsOn() ? samples.getOrDefault(p.getId(), List.of()) : List.of());
         }).toList();
     }
 
@@ -192,6 +211,59 @@ public class PostService {
         Post p = visible(me, id);
         shouts.deleteByPostIdAndUserId(id, me.getId());
         return view(p, me);
+    }
+
+    static final int SAMPLE = 8, SAMPLE_CHARS = 140;
+
+    /** The newest few comments per post (never from someone blocked either way), for the feed's fading preview. One query for the comments, one for who wrote them. */
+    private Map<UUID, List<CommentSnippet>> sampleComments(Set<UUID> postIds, User viewer) {
+        Set<UUID> hidden = new HashSet<>(blocks.counterpartsOf(viewer.getId()));
+        Map<UUID, List<PostComment>> picked = new HashMap<>();
+        for (PostComment c : comments.recent(postIds, PageRequest.of(0, Math.min(300, postIds.size() * 12)))) {
+            if (hidden.contains(c.getAuthorId())) continue;
+            List<PostComment> l = picked.computeIfAbsent(c.getPostId(), k -> new ArrayList<>());
+            if (l.size() < SAMPLE) l.add(c);
+        }
+        Map<UUID, User> who = users.findAllById(picked.values().stream().flatMap(List::stream).map(PostComment::getAuthorId).collect(Collectors.toSet()))
+                .stream().collect(Collectors.toMap(User::getId, Function.identity()));
+        Map<UUID, List<CommentSnippet>> out = new HashMap<>();
+        picked.forEach((postId, list) -> out.put(postId, list.stream().filter(c -> who.containsKey(c.getAuthorId()))
+                .map(c -> new CommentSnippet(who.get(c.getAuthorId()).getUsername(),
+                        c.getBody().length() > SAMPLE_CHARS ? c.getBody().substring(0, SAMPLE_CHARS) + "…" : c.getBody())).toList()));
+        return out;
+    }
+
+    /** Like a post: free, silent, idempotent. Your own post too. */
+    public PostResponse like(User me, UUID id) {
+        Post p = visible(me, id);
+        if (!likes.existsByPostIdAndUserId(id, me.getId())) likes.save(new PostLike(id, me.getId()));
+        return view(p, me);
+    }
+
+    public PostResponse unlike(User me, UUID id) {
+        Post p = visible(me, id);
+        likes.deleteByPostIdAndUserId(id, me.getId());
+        return view(p, me);
+    }
+
+    static final int MAX_SHARE = 20;
+
+    /** Yarns a post you can see to the people you pick; returns how many it reached. A post with a limited audience is only the author's to share. */
+    public int share(User me, UUID id, List<String> usernames) {
+        Post p = visible(me, id);
+        if (!"EVERYONE".equals(p.getAudience()) && !p.getAuthorId().equals(me.getId())) {
+            throw new InvalidProfileException("Only the author can share a post that has a limited audience.");
+        }
+        List<String> names = DraftService.names(usernames);
+        if (names.isEmpty()) throw new InvalidProfileException("Pick at least one person.");
+        if (names.size() > MAX_SHARE) throw new InvalidProfileException("Share with up to " + MAX_SHARE + " people at a time.");
+        String note = me.getUsername() + " shared a post with you: \"" + p.getTitle() + "\"\n/HTML-pages/post-view.html?id=" + p.getId();
+        int delivered = 0;
+        for (String name : names) {
+            User to = users.findByUsername(name).orElse(null);
+            if (to != null && !to.getId().equals(me.getId()) && yarns.tryShare(me, to, note)) delivered++;
+        }
+        return delivered;
     }
 
     private Post mine(User me, UUID id) {

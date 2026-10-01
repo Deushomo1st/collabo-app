@@ -2,7 +2,8 @@
 // milestonesSection(space, { canLog, me }) returns a self-refreshing element. Text goes in through textContent only.
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { milestonesOf, milestoneCreate, milestoneFulfil, milestoneDelete, milestoneOptOut } from '/js/services/api.js';
-import { h, toast, day, profileHref } from '/js/services/dom.js';
+import { face } from '/js/services/face.js';
+import { h, toast, day } from '/js/services/dom.js';
 
 const MAX_NOTE = 500;
 
@@ -20,41 +21,40 @@ async function askNote(title, onDone) {
 }
 
 export function milestonesSection(space, { canLog, me }) {
-    const root = h('section', { class: 'spc-card sp-glass' });
-    const list = h('div', { class: 'spc-members', 'aria-live': 'polite' });
+    const root = h('section', {});
+    const list = h('ol', { class: 'sp-timeline', 'aria-live': 'polite' });
     let rows = [];
 
     async function load() {
         try { rows = await milestonesOf(space.id); } catch (err) { list.replaceChildren(h('p', { class: 'pc-error', text: err.message })); return; }
         head.textContent = `Milestones · ${rows.length}`;
-        list.replaceChildren(...(rows.length ? rows.map(row) : [h('p', { class: 'pc-hint', text: 'No milestones yet.' })]));
+        list.replaceChildren(...(rows.length ? rows.map(row) : [h('li', { class: 'pc-hint', text: 'No milestones yet.' })]));
     }
     const act = (fn, done) => async () => { try { await fn(); if (done) toast(done); await load(); } catch (err) { toast(err.message); } };
 
     function row(m) {
         const mineCredit = m.fulfilled && m.credited.some((p) => p.username === me.username);
-        return h('div', { class: 'spc-member spc-ms' },
-            h('strong', { text: m.title }),
-            h('span', { class: `sp-tag ${m.fulfilled ? 'sp-tag--ok' : 'sp-tag--muted'}`, text: m.fulfilled ? `Fulfilled ${day(m.fulfilledAt)}` : 'Open' }),
-            m.note && h('p', { class: 'spc-idea', text: m.note }),
-            m.fulfilled && h('p', { class: 'pc-hint spc-credited' }, 'Credited: ',
-                ...m.credited.flatMap((p, i) => [i ? ', ' : '', h('a', { class: 'pc-who', href: profileHref(p.username), text: p.username })])),
-            h('div', { class: 'pc-actions' },
-                canLog && !m.fulfilled && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Fulfil',
+        return h('li', { class: 'sp-ms sp-glass' },
+            h('h3', { text: m.title }),
+            m.note && h('p', { text: m.note }),
+            h('div', { class: 'sp-ms__foot' },
+                m.fulfilled && h('div', { class: 'sp-stack' }, ...m.credited.map((p) => face(p.username, 'sp-avatar--sm'))),
+                h('time', { text: m.fulfilled ? `${day(m.fulfilledAt)} · ${m.credited.length} credited` : 'Open' }),
+                canLog && !m.fulfilled && h('button', { class: 'sp-btn sp-btn--brand', type: 'button', text: 'Fulfil', style: 'margin-left:auto',
                     onclick: () => askNote(m.title, async (n) => { await milestoneFulfil(space.id, m.id, n); toast('Milestone fulfilled.'); await load(); }) }),
-                canLog && !m.fulfilled && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Delete', onclick: act(() => milestoneDelete(space.id, m.id)) }),
-                mineCredit && h('button', { class: 'pc-link', type: 'button', text: 'Remove me from this',
+                canLog && !m.fulfilled && h('button', { class: 'sp-btn sp-btn--danger', type: 'button', text: 'Delete', onclick: act(() => milestoneDelete(space.id, m.id)) }),
+                mineCredit && h('button', { class: 'sp-btn', type: 'button', text: 'Remove me', style: 'margin-left:auto',
                     onclick: act(() => milestoneOptOut(space.id, m.id), 'You were taken off that milestone.') })));
     }
 
-    const head = h('h2', { text: 'Milestones' });
+    const head = h('h2', { class: 'sp-h2', text: 'Milestones' });
     const title = h('input', { class: 'sp-input', maxlength: 120, placeholder: 'A new objective', 'aria-label': 'Milestone title', required: true });
-    const form = h('form', { class: 'ap-tools' }, title, h('button', { class: 'pc-btn pc-btn--brand', type: 'submit', text: 'Add' }));
+    const form = h('form', { class: 'ap-tools' }, title, h('button', { class: 'sp-btn sp-btn--brand', type: 'submit', text: 'Add' }));
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         try { await milestoneCreate(space.id, title.value); title.value = ''; await load(); } catch (err) { toast(err.message); }
     });
-    root.append(...[head, canLog && form, list].filter(Boolean));
+    root.append(...[head, h('p', { class: 'sp-sub', text: 'The space\x27s record, closer to a commit history than a status. Everyone in the room is credited when one is fulfilled; you can only remove yourself.' }), canLog && form, list].filter(Boolean));
     load();
     return root;
 }

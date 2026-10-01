@@ -12,13 +12,27 @@
     --_yt-accent: var(--yarn-thread-accent, #FF9000);
 
     display: flex; flex-direction: column; gap: 10px; color: var(--_yt-ink);
+    min-height: 200px;   /* the script sets the height to the visible space; this is only the floor */
 }
-.yarn-thread__list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+/* The list is the only thing that scrolls; the composer below it is a plain flex child, so it cannot drift. */
+.yarn-thread__stage { position: relative; flex: 1; min-height: 0; }
+.yarn-thread__list {
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px;
+    overflow-y: auto; overscroll-behavior: contain; overflow-anchor: none;   /* anchoring is done by hand, so the browser must not double it */
+}
+.yarn-thread__list > :first-child { margin-top: auto; }   /* a short conversation sits against the composer, like a real chat */
+.yarn-thread__new { align-self: stretch; margin: 6px 0 0; text-align: center; font-size: 11.5px; color: var(--_yt-accent); }
+.yarn-thread__jump {
+    position: absolute; right: 10px; bottom: 10px; padding: 6px 12px; border-radius: 999px; border: 0; cursor: pointer;
+    font: inherit; font-size: 12.5px; background: var(--_yt-mine); color: var(--_yt-mine-ink); box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+}
+.yarn-thread__jump[hidden] { display: none; }
 
 .yarn-thread__msg {
     max-width: min(78%, 520px); padding: 9px 13px 6px; border-radius: 18px;
     display: flex; flex-direction: column; gap: 2px; overflow-wrap: anywhere;
 }
+.yarn-thread__msg--sending { opacity: .6; }
 .yarn-thread__msg--mine { align-self: flex-end; background: var(--_yt-mine); color: var(--_yt-mine-ink); border-bottom-right-radius: 6px; }
 .yarn-thread__msg--theirs {
     align-self: flex-start; background: var(--_yt-theirs); border: 1px solid var(--_yt-line); border-bottom-left-radius: 6px;
@@ -40,14 +54,14 @@
 .yarn-thread__more { align-self: center; padding: 6px 14px; border-radius: 999px; font: inherit; font-size: 12.5px; color: var(--_yt-muted); background: transparent; border: 1px solid var(--_yt-line); cursor: pointer; }
 
 .yarn-thread__composer {
-    position: sticky; bottom: calc(96px + env(safe-area-inset-bottom)); display: flex; align-items: flex-end; gap: 8px;
+    flex: none; display: flex; align-items: flex-end; gap: 8px;
     padding: 8px; border-radius: 22px; border: 1px solid var(--_yt-line); background: var(--_yt-theirs);
     backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
 }
 .yarn-thread__composer[hidden], .yarn-thread__notice[hidden], .yarn-thread__error[hidden] { display: none; }
 .yarn-thread__input {
     flex: 1; resize: none; max-height: 120px; padding: 9px 10px; border: 0; outline: 0; background: transparent;
-    font: inherit; color: inherit;
+    font: inherit; font-size: max(16px, 1em); color: inherit;   /* under 16px iOS zooms the page on focus, which shifts everything */
 }
 .yarn-thread__input::placeholder { color: var(--_yt-muted); }
 .yarn-thread__send {
@@ -62,3 +76,8 @@
 
 .yarn-thread__notice { margin: 0; text-align: center; color: var(--_yt-muted); font-size: 13px; }
 .yarn-thread__error { margin: 0; text-align: center; color: #f87171; font-size: 13px; }
+
+.yarn-thread__pinned { align-self: flex-start; font: 600 9.5px/1 var(--sp-mono, monospace); letter-spacing: .08em; padding: 2px 6px; border-radius: 999px; border: 1px solid currentColor; opacity: .75; }
+.yarn-thread__pin { background: none; border: 0; padding: 0 2px; font: inherit; font-size: 11px; color: inherit; opacity: 0; cursor: pointer; }
+.yarn-thread__msg:hover .yarn-thread__pin, .yarn-thread__pin:focus-visible { opacity: .7; }
+@media (hover: none) { .yarn-thread__pin { opacity: .5; } }

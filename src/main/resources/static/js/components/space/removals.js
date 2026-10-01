@@ -34,8 +34,8 @@ export async function openFlag(space, member, onDone) {
 }
 
 export function removalsSection(space, { me }) {
-    const root = h('section', { class: 'spc-card sp-glass' });
-    const head = h('h2', { text: 'Quiet members' });
+    const root = h('section', {});
+    const head = h('h2', { class: 'sp-h2', text: 'Quiet members' });
     const list = h('div', { class: 'spc-members', 'aria-live': 'polite' });
 
     async function load() {
@@ -59,7 +59,7 @@ export function removalsSection(space, { me }) {
         const mineTarget = r.target.username === me.username;
         const standing = r.plea != null;
         const canPlead = space.pleasEnabled && !standing && !mineTarget && r.initiator.username !== me.username;
-        return h('div', { class: 'spc-member spc-ms' },
+        return h('div', { class: 'spc-member spc-ms sp-glass' },
             h('div', { class: 'pc-top' },
                 h('a', { class: 'pc-who', href: profileHref(r.target.username), text: r.target.username }),
                 h('span', { class: `sp-tag ${tone}`, text: label }),
@@ -74,7 +74,7 @@ export function removalsSection(space, { me }) {
     }
 
     root.append(head,
-        h('p', { class: 'pc-hint', text: `A member who goes quiet can be flagged. They have ${space.responseClockHours} hours to answer${space.pleasEnabled ? '; anyone else can plead for 12 more' : ''}.` }),
+        h('p', { class: 'sp-sub', text: `A member who goes quiet can be flagged. They have ${space.responseClockHours} hours to answer${space.pleasEnabled ? '; anyone else can plead for 12 more' : ''}.` }),
         list);
     load();
     return root;

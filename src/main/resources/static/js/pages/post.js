@@ -1,4 +1,4 @@
-// The post page: write an idea, attach pictures and videos, tag it, pick who gets it by yarn, save a draft or publish.
+// The post page: write an idea, attach pictures and videos, tag it, save a draft or publish. (Sharing a post by yarn lives on the post itself, once it is up.)
 // A page of its own. The bar is Gaze, Yarns, Settings (audience, comments, shout-outs, anonymous live on the settings page); hold it to leave.
 import { h, toast } from '/js/services/dom.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
@@ -6,7 +6,7 @@ import { mountComposeNav } from '/js/services/main-nav.js';
 import { postSet, postWork, DEFAULT_POST_SET } from '/js/services/stash.js';
 import { SEND } from '/js/services/icons.js';
 import {
-    currentUser, postCreate, mediaUpload, mediaDiscard, mediaUrl, draftGet, draftSave, yarnThreads, yarnDirectory, following, avatarUrl,
+    currentUser, postCreate, mediaUpload, mediaDiscard, mediaUrl, draftGet, draftSave,
 } from '/js/services/api.js';
 
 const MAX_FILES = 6, MAX_IMAGE = 5 << 20, MAX_VIDEO = 30 << 20, MAX_TAGS = 10;
@@ -27,7 +27,6 @@ const ICON = {
 
 let me, draftId = null, files = [], uploading = 0, tags = [], set = { ...DEFAULT_POST_SET }, dirty = false, busy = false;
 let savedIds = new Set();   // files that belong to the saved draft: leaving without saving must not delete those
-const picked = new Set();   // usernames this post goes to, by yarn, once it is posted
 
 const title = $('ps-title'), body = $('ps-body'), by = $('ps-by'), form = $('post-form'), err = $('ps-error');
 const touch = () => { dirty = true; };
@@ -35,13 +34,13 @@ const showError = (text) => { err.textContent = text || ''; err.hidden = !text; 
 
 const fields = () => ({
     title: title.value, body: body.value, applyBy: by.value ? new Date(by.value).toISOString() : null,
-    hashtags: tags, mediaIds: files.map((f) => f.id), shareWith: [...picked],
-    commentsOn: set.commentsOn, shoutsOn: set.shoutsOn, anonymous: set.anonymous, audience: set.audience, audienceWith: set.audienceWith,
+    hashtags: tags, mediaIds: files.map((f) => f.id),
+    commentsOn: set.commentsOn, shoutsOn: set.shoutsOn, applicationsOn: set.applicationsOn, anonymous: set.anonymous, audience: set.audience, audienceWith: set.audienceWith,
 });
 
 const AUDIENCE = { EVERYONE: 'Everyone', FOLLOWERS: 'Followers only', COMMUNITY: 'A community', PEOPLE: 'Picked people' };
 const drawSummary = () => {
-    $('ps-sum').textContent = [AUDIENCE[set.ui.kind] || 'Everyone', set.anonymous && 'anonymous', !set.commentsOn && 'no comments', !set.shoutsOn && 'no shout-outs'].filter(Boolean).join(' · ');
+    $('ps-sum').textContent = [AUDIENCE[set.ui.kind] || 'Everyone', set.anonymous && 'anonymous', !set.applicationsOn && 'regular post', !set.commentsOn && 'no comments', !set.shoutsOn && 'no shout-outs'].filter(Boolean).join(' · ');
 };
 
 // ---- pictures and videos ---------------------------------------------------------------------------------------------------
@@ -98,11 +97,7 @@ function drawTags() {
         tagInput);
 }
 
-// ---- the action row: Save · Share ----------------------------------------------------------------------------
-const shareBadge = h('span', { class: 'ps-badge', hidden: true });
-const shareBtn = h('button', { class: 'ps-act ps-act--share', type: 'button', 'aria-haspopup': 'dialog', onclick: () => openShare() },
-    ico(ICON.share), h('span', { class: 'ps-act__l', text: 'Share' }), shareBadge);
-const drawShare = () => { shareBadge.textContent = String(picked.size); shareBadge.hidden = picked.size === 0; };
+// ---- the action row: Save draft ----------------------------------------------------------------------------
 
 async function saveDraft(quiet) {
     try {
@@ -114,85 +109,7 @@ async function saveDraft(quiet) {
 }
 
 const actions = () => [
-    h('button', { class: 'ps-act', type: 'button', onclick: () => saveDraft(false) }, ico(ICON.save), h('span', { class: 'ps-act__l', text: 'Save draft' })),
-    shareBtn];
-
-// ---- share: a tall nav of the people you talk to; tapping one ticks them for a yarn once the post is up -----------------------------------------
-let people = null;
-const hue = (name) => [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
-
-function face(p) {
-    const el = h('span', { class: 'sp-avatar ps-face', style: `--hue:${hue(p.username)}`, text: p.username[0].toUpperCase() });
-    const img = h('img', { src: avatarUrl(p.username, p.avatar), alt: '', loading: 'lazy' });
-    img.addEventListener('error', () => img.remove());
-    el.append(img);
-    return el;
-}
-
-async function loadPeople() {
-    if (people) return people;
-    const [threads, follows] = await Promise.all([yarnThreads('inbox', 'MYSPACE').catch(() => []), following(me.username).catch(() => [])]);
-    const seen = new Map();
-    for (const t of threads) {
-        if (t.status === 'DECLINED') continue;
-        for (const m of t.members) if (m.username !== me.username && !seen.has(m.username)) seen.set(m.username, { username: m.username, avatar: m.avatar });
-    }
-    for (const f of Array.isArray(follows) ? follows : []) if (!seen.has(f.username)) seen.set(f.username, { username: f.username, avatar: null });
-    return (people = [...seen.values()]);
-}
-
-async function openShare() {
-    const opener = document.activeElement;
-    const list = h('div', { class: 'ps-people' });
-    const note = h('p', { class: 'ps-share__note' });
-    const search = h('input', { class: 'ps-search__in', placeholder: 'Search people', 'aria-label': 'Search people', autocomplete: 'off' });
-    const searchBtn = h('button', { class: 'ps-circle', type: 'button', 'aria-label': 'Search people' }, ico(ICON.search));
-    const searchBox = h('div', { class: 'ps-search' }, searchBtn, search);
-    const linkBtn = h('button', { class: 'ps-circle', type: 'button', 'aria-label': 'Copy link', onclick: () => toast('The link exists once the post is up. Copy it from the post itself.') }, ico(ICON.link));
-    const done = h('button', { class: 'gz-nav gz-nav--brand', type: 'button', text: 'Done' });
-    const rail = h('div', { class: 'ps-rail' }, h('div', { class: 'ps-rail__head' }, searchBox, linkBtn), list);
-    const overlay = h('div', { class: 'ps-share', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Share with' }, rail, h('div', { class: 'ps-share__foot' }, note, done));
-    let extra = [];   // people found by search who you have not talked to yet
-
-    const close = () => {
-        overlay.classList.remove('is-on');
-        setTimeout(() => { overlay.remove(); document.removeEventListener('keydown', onKey); opener?.focus?.(); }, 220);
-        drawShare();
-    };
-    const onKey = (e) => { if (e.key === 'Escape') close(); };
-    const draw = () => {
-        const q = search.value.trim().toLowerCase();
-        const all = [...(people || []), ...extra.filter((x) => !(people || []).some((p) => p.username === x.username))];
-        const shown = all.filter((p) => !q || p.username.toLowerCase().includes(q));
-        list.replaceChildren(...(shown.length ? shown.map((p) => h('button', {
-            class: `ps-person${picked.has(p.username) ? ' is-on' : ''}`, type: 'button', 'aria-pressed': String(picked.has(p.username)), title: p.username,
-            onclick: () => {
-                if (picked.has(p.username)) picked.delete(p.username); else picked.add(p.username);
-                if (!(people || []).some((x) => x.username === p.username)) people.push(p);
-                touch(); draw();
-            } }, face(p), h('span', { class: 'ps-person__n', text: p.username }), h('span', { class: 'ps-person__tick' }, ico(ICON.check))))
-            : [h('p', { class: 'ps-share__empty', text: q ? 'No one by that name yet.' : 'No yarnmates yet. Search for someone.' })]));
-        note.textContent = picked.size ? `${picked.size} picked. They each get this post as a yarn once you publish.` : 'Tap people to send them this post by yarn once it is published.';
-    };
-
-    let timer;
-    search.addEventListener('input', () => {
-        draw(); clearTimeout(timer);
-        const q = search.value.trim();
-        if (q.length < 2) return;
-        timer = setTimeout(async () => { try { extra = await yarnDirectory(q); draw(); } catch { /* the local list still works */ } }, 250);
-    });
-    searchBtn.addEventListener('click', () => { rail.classList.add('is-wide'); searchBox.classList.add('is-open'); search.focus(); });
-    done.addEventListener('click', close);
-    overlay.addEventListener('pointerdown', (e) => { if (e.target === overlay) close(); });
-    document.addEventListener('keydown', onKey);
-    document.body.append(overlay);
-    requestAnimationFrame(() => overlay.classList.add('is-on'));
-    done.focus();
-    note.textContent = 'Loading…';
-    await loadPeople();
-    draw();
-}
+    h('button', { class: 'ps-act', type: 'button', onclick: () => saveDraft(false) }, ico(ICON.save), h('span', { class: 'ps-act__l', text: 'Save draft' }))];
 
 // ---- leaving, saving, publishing ------------------------------------------------------------------------------------------------------
 const guard = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
@@ -200,7 +117,7 @@ const guard = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
 /** The text and files wait in this tab while the settings page is open; the page takes them back when you return. */
 function toSettings() {
     postSet.write(set);
-    postWork.write({ draftId, title: title.value, body: body.value, by: by.value, tags, files, savedIds: [...savedIds], picked: [...picked], dirty });
+    postWork.write({ draftId, title: title.value, body: body.value, by: by.value, tags, files, savedIds: [...savedIds], dirty });
     window.removeEventListener('beforeunload', guard);
 }
 
@@ -230,9 +147,8 @@ form.addEventListener('submit', async (e) => {
     try {
         const p = await postCreate({ ...fields(), draftId });
         dirty = false; forget();
-        const sent = picked.size ? ` Sent to ${p.shared} of ${picked.size} by yarn.` : '';
-        try { sessionStorage.setItem('collaboToast', `Posted.${sent}`); } catch { /* the post is up either way */ }
-        location.replace(`${GAZE}?post=${p.id}`);
+        try { sessionStorage.setItem('collaboToast', 'Posted.'); } catch { /* the post is up either way */ }
+        location.replace(`/HTML-pages/post-view.html?id=${p.id}`);
     } catch (ex) {
         showError(ex.message); busy = false; $('publish').disabled = false;
     }
@@ -250,7 +166,7 @@ async function boot() {
     const work = postWork.take();
     if (work) {   // back from the settings page: the text and files are as you left them
         draftId = work.draftId; title.value = work.title; body.value = work.body; by.value = work.by;
-        tags = work.tags; files = work.files; savedIds = new Set(work.savedIds); work.picked.forEach((n) => picked.add(n));
+        tags = work.tags; files = work.files; savedIds = new Set(work.savedIds);
         set = { ...DEFAULT_POST_SET, ...(postSet.read() || {}) };
     } else if (id) {
         postSet.clear();
@@ -260,11 +176,10 @@ async function boot() {
             if (d.applyBy && new Date(d.applyBy) > new Date()) { const t = new Date(d.applyBy); t.setMinutes(t.getMinutes() - t.getTimezoneOffset()); by.value = t.toISOString().slice(0, 16); }
             tags = d.hashtags; files = d.media; savedIds = new Set(d.media.map((m) => m.id));
             set.commentsOn = d.commentsOn; set.shoutsOn = d.shoutsOn;
-            d.shareWith.forEach((n) => picked.add(n));
         } catch (ex) { toast(ex.message); }
     } else postSet.clear();
     $('ps-actions').replaceChildren(...actions());
-    drawMedia(); drawTags(); drawShare(); drawSummary();
+    drawMedia(); drawTags(); drawSummary();
     dirty = work ? work.dirty : false;
     title.focus();
 }

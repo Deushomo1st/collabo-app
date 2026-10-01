@@ -77,9 +77,19 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 .sp-glass {
     background: var(--sp-panel);
     border: 1px solid var(--sp-line);
-    backdrop-filter: blur(22px) saturate(160%);
-    -webkit-backdrop-filter: blur(22px) saturate(160%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), 0 18px 50px rgba(0, 0, 0, .18);
+}
+/* Blur only where one panel sits over the scrolling page (the header, the composer, the pop-ups, the sign-in cards).
+   Cards in a list stay flat: a blurred layer per card is what makes long lists stutter on a phone. */
+.sp-header.sp-glass, .sp-composer.sp-glass, .gz-nudge.sp-glass, .yn-find__bubble.sp-glass, .lg-card.sp-glass {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+@media (max-width: 600px) {
+    .sp-header.sp-glass, .sp-composer.sp-glass, .gz-nudge.sp-glass, .yn-find__bubble.sp-glass, .lg-card.sp-glass {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
 }
 
 /* ---- Header ---- */
@@ -363,3 +373,32 @@ button.sp-card { font: inherit; }
     background: var(--sp-panel-hi); color: var(--sp-text); font: 700 11.5px var(--sp-font); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s;
 }
 .gz-circle:hover::after, .gz-circle:focus-visible::after { opacity: 1; }
+
+/* ---- Loading placeholders (js/services/skeleton.js) ---- */
+.sk-card, .sk-row { animation: sk-pulse 1.1s ease-in-out infinite alternate; }
+.sk-card { display: grid; gap: 10px; padding: 18px; border-radius: 22px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
+.sk-row { display: flex; align-items: center; gap: 14px; padding: 8px 6px; }
+.sk-lines { flex: 1; display: grid; gap: 8px; }
+.sk-dot { flex: none; width: 54px; height: 54px; border-radius: 50%; background: var(--sp-panel-hi); }
+.sk-line { height: 12px; border-radius: 6px; background: var(--sp-panel-hi); }
+.sk-w40 { width: 40%; }
+.sk-w70 { width: 70%; }
+@keyframes sk-pulse { from { opacity: .45; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .sk-card, .sk-row { animation: none; } }
+
+/* a Workspace's tasks */
+.tk { display: grid; gap: 12px; }
+.tk-list { display: grid; gap: 8px; }
+.tk-row { display: grid; gap: 6px; justify-items: start; }
+.tk-title { overflow-wrap: anywhere; }
+
+/* Add-a-task row inside the island */
+.sp-island__add { display: flex; gap: 8px; padding: 4px 12px 12px; }
+.sp-island__add .sp-input { flex: 1; min-width: 0; }
+.sp-island__pins { padding: 4px 14px 8px; border-bottom: 1px solid rgba(255, 255, 255, .1); font-size: 12.5px; }
+.sp-island__pins small { color: #9aa2b1; font: 600 10px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
+.sp-island__pins p { margin: 4px 0; overflow-wrap: anywhere; }
+.sp-island__pins .pc-link { margin-left: 8px; }
+
+a.sp-btn { text-decoration: none; text-align: center; }
+.sp-island__pins .sp-btn, .sp-task .sp-btn { padding: 3px 9px; font-size: 12px; margin-left: 8px; }

@@ -32,6 +32,12 @@
             <label for="email">Email address
                 <input class="sp-input" type="email" id="email" required placeholder="you@example.com" autocomplete="email">
             </label>
+            <label for="firstName">First name
+                <input class="sp-input" type="text" id="firstName" required maxlength="40" placeholder="Anna" autocomplete="given-name">
+            </label>
+            <label for="lastName">Last name
+                <input class="sp-input" type="text" id="lastName" required maxlength="40" placeholder="Bartley" autocomplete="family-name">
+            </label>
             <label for="username">Username
                 <input class="sp-input" type="text" id="username" required placeholder="johndoe" autocomplete="username">
             </label>
@@ -186,6 +192,8 @@
 
         const email = document.getElementById('email').value;
         const username = document.getElementById('username').value;
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
         const password = document.getElementById('password').value;
         const confirm = document.getElementById('confirm').value;
 
@@ -206,7 +214,7 @@
             weakPasswordAccepted = true;
         }
 
-        pending = { email, username, password, weakPasswordAccepted };
+        pending = { email, firstName, lastName, username, password, weakPasswordAccepted };
         await attempt({ ...pending });
     });
 

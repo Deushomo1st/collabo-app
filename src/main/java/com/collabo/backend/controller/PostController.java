@@ -3,6 +3,8 @@ package com.collabo.backend.controller;
 import com.collabo.backend.config.CurrentUser;
 import com.collabo.backend.dto.PostDtos.PostRequest;
 import com.collabo.backend.dto.PostDtos.PostResponse;
+import com.collabo.backend.dto.PostDtos.ShareRequest;
+import com.collabo.backend.dto.PostDtos.ShareResponse;
 import com.collabo.backend.dto.PostDtos.WindowRequest;
 import com.collabo.backend.service.PostService;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +41,18 @@ public class PostController {
 
     @DeleteMapping("/{id}/shout")
     public PostResponse unshout(@PathVariable UUID id) { return posts.unshout(current.require(), id); }
+
+    @PutMapping("/{id}/like")
+    public PostResponse like(@PathVariable UUID id) { return posts.like(current.require(), id); }
+
+    @DeleteMapping("/{id}/like")
+    public PostResponse unlike(@PathVariable UUID id) { return posts.unlike(current.require(), id); }
+
+    /** Yarns the post to the people you pick (the same note the post page sends). */
+    @PostMapping("/{id}/share")
+    public ShareResponse share(@PathVariable UUID id, @RequestBody ShareRequest req) {
+        return new ShareResponse(posts.share(current.require(), id, req.usernames()));
+    }
 
     @PatchMapping("/{id}/window")
     public PostResponse window(@PathVariable UUID id, @RequestBody WindowRequest req) {

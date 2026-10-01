@@ -123,6 +123,8 @@ public class AuthService {
         User user = new User();
         user.setEmail(email);
         user.setUsername(username);
+        user.setFirstName(dto.getFirstName().trim());
+        user.setLastName(dto.getLastName().trim());
         user.setPassword(passwordEncoder.encode(password));
         // Registration always creates a USER account — the client cannot pick a
         // role here. ADMIN accounts are created only via the admin panel.

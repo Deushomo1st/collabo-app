@@ -28,11 +28,13 @@
 .gz-error, .pc-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
 
 /* post card */
-.pc { display: grid; gap: 8px; padding: 16px 18px; border-radius: 20px; }
+.pc { display: grid; gap: 8px; padding: 16px 18px; border-radius: 20px; content-visibility: auto; contain-intrinsic-size: auto 260px; }   /* off-screen cards are skipped until they near the screen */
 .pc-shouted { margin: 0; color: var(--sp-muted); font-size: 12.5px; }
 .pc-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pc-who { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; color: inherit; text-decoration: none; }
 .pc-who:hover { text-decoration: underline; }
+.pc-who { gap: 10px; font-size: 1.02rem; }
+.pc-who .pc-pic { --_size: 46px; font-size: 18px; }
 .pc-time { margin-left: auto; color: var(--sp-muted); font: 500 11px var(--sp-mono); }
 .pc-title { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .pc-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -49,6 +51,26 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .pc-shout__t { display: none; margin-left: 6px; }   /* the megaphone alone on a phone; the word joins it when there is room */
 @media (min-width: 720px) { .pc-shout__t { display: inline; } }
 .pc-btn--danger { color: var(--sp-danger); }
+
+/* the icon row: comment, like, shout, copy link, share. Left aligned, quiet until pressed. */
+.pc-actions--icons { gap: 2px; margin-left: -8px; align-items: center; }
+/* what people said, fading past beside the icons; on a narrow card it drops to its own line under them */
+.pc-flash { flex: 1 1 150px; min-width: 0; margin-left: 10px; color: var(--sp-muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .6s ease; }
+.pc-flash.is-on { opacity: 1; }
+.pc-flash strong { color: var(--sp-text); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .pc-flash { transition: none; } }
+.pc-ic { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 40px; height: 36px; padding: 0 10px; border-radius: 999px; border: 0; background: none; color: var(--sp-muted); cursor: pointer; font: 700 13px var(--sp-font); }
+.pc-ic:hover { background: var(--sp-panel-hi); color: var(--sp-text); }
+.pc-ic.is-on { color: var(--sp-brand); }
+.pc-ic--like.is-on { color: #e5484d; }
+.pc-ic--like.is-on .pc-ic__i svg { fill: currentColor; }
+.pc-ic--static { cursor: default; }
+.pc-ic--static:hover { background: none; color: var(--sp-muted); }
+.pc-ic__i { display: inline-flex; }
+.pc-ic:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
+.pc-title__a { color: inherit; text-decoration: none; }
+.pc-title__a:hover { text-decoration: underline; }
+.pc:not(.pc--detail) { cursor: pointer; }
 .pc-btn--brand { background: var(--sp-brand); border-color: var(--sp-brand); color: var(--sp-brand-ink); }
 .ap-list, .ap-body, .ap-form { display: grid; gap: 10px; }
 .ap-tools { display: flex; gap: 8px; }
@@ -78,7 +100,7 @@ a.pc-btn { text-decoration: none; justify-self: start; }
     border: 1px solid var(--sp-brand); background: var(--sp-brand); color: var(--sp-brand-ink); box-shadow: 0 6px 20px rgba(0,0,0,.28);
     animation: gz-drop .22s cubic-bezier(.25,1,.5,1);
 }
-.gz-pill--quiet { background: var(--sp-panel-hi); color: var(--sp-text); border-color: var(--sp-line); backdrop-filter: blur(16px); }
+.gz-pill--quiet { background: var(--sp-panel-hi); color: var(--sp-text); border-color: var(--sp-line); }
 @keyframes gz-drop { from { opacity: 0; transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .gz-pill { animation: none; } }
 .gz-old, .gz-fresh { display: grid; gap: 12px; }
@@ -91,8 +113,19 @@ a.pc-btn { text-decoration: none; justify-self: start; }
    It folds away on scroll-down and comes back on scroll-up. */
 .sp-top { position: sticky; top: 0; z-index: 20; transition: transform .3s ease, opacity .25s ease; }
 .sp-top.is-hidden { transform: translateY(-110%); opacity: 0; pointer-events: none; }
-.tt-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 0 4px;
-    background: linear-gradient(var(--sp-bg), color-mix(in srgb, var(--sp-bg) 0%, transparent)); }
+.tt-bar { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 0 4px; }
+/* The Gaze's header is pinned over a scrolling feed, so once the feed has moved under it a backing appears behind it, reaching a little below:
+   blurred and a touch darker than the page, fading out at the bottom edge. (Pages that do not pin their header have none.) */
+.sp-top--feed .tt-bar::before {
+    content: ''; position: absolute; inset: -12px -16px -26px; z-index: -1; pointer-events: none;
+    opacity: 0; transition: opacity .25s ease;
+    /* a light tint with a breath of shade, see-through enough that the feed still reads as a soft shape behind it */
+    background: linear-gradient(color-mix(in srgb, color-mix(in srgb, var(--sp-bg) 92%, #000) 80%, transparent), color-mix(in srgb, var(--sp-bg) 50%, transparent) 70%, transparent);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    -webkit-mask-image: linear-gradient(#000 45%, transparent); mask-image: linear-gradient(#000 45%, transparent);
+}
+.sp-top--feed.is-scrolled .tt-bar::before { opacity: 1; }
+.tt-title { margin: 0; padding: 14px 10px; font: 800 16px var(--sp-font); color: var(--sp-text); }
 .tt-tabs { display: flex; align-items: center; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .tt-tabs::-webkit-scrollbar { display: none; }
 .tt-tab { position: relative; padding: 14px 10px; border: 0; background: none; color: var(--sp-muted); font: 700 16px var(--sp-font); white-space: nowrap; cursor: pointer; transition: color .2s; }
@@ -127,6 +160,7 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .pc-media--2 { grid-template-columns: 1fr 1fr; }
 .pc-media--3 { grid-template-columns: 1fr 1fr 1fr; }
 .pc-media img, .pc-media video { width: 100%; max-height: 420px; object-fit: cover; display: block; background: #000; border-radius: 12px; }
+.pc-media:not(.pc-media--2):not(.pc-media--3) img, .pc-media:not(.pc-media--2):not(.pc-media--3) video { aspect-ratio: 4 / 3; }   /* room is kept before the picture arrives, so the feed does not jump */
 .pc-media--2 img, .pc-media--2 video, .pc-media--3 img, .pc-media--3 video { aspect-ratio: 1; max-height: none; }
 .pc-tags { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--sp-brand); font-weight: 700; font-size: 13px; }
 .gz-linked { display: grid; }
@@ -142,10 +176,11 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 /* search: filters under the box, and a person in the results */
 .tt-filters { padding: 0 4px; }
 .tt-filters[hidden] { display: none; }
-.gz-person { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 18px; color: inherit; text-decoration: none; }
+.gz-person { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 18px; content-visibility: auto; contain-intrinsic-size: auto 64px; color: inherit; text-decoration: none; }
 .gz-person .sp-avatar { --_size: 42px; }
 .gz-person small { display: block; color: var(--sp-muted); font-size: 12px; }
 .pc-top .pc-time + .pc-time { margin-left: 0; }
 
 .pc-views { display: inline-flex; align-items: center; gap: 4px; }
 .pc-views > span { display: inline-flex; }
+.pc-btn--bin { display: inline-flex; align-items: center; padding-inline: 12px; }

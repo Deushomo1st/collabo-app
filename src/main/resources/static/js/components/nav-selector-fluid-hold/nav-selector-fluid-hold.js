@@ -8,7 +8,7 @@
 //        mountNavSelector(el, { placement: 'bottom', align: 'start' });           // docked bottom-left, grows rightwards
 //        mountNavSelector(el, { collapseWhenIdle: true, idleMs: 3000 });          // collapse after 3s idle, even at the top
 //        mountNavSelector(el, { collapsedLabel: 'number' });                      // collapsed pill shows "3" instead of the icon
-//        mountNavSelector(el, { holdActions: [{ label, icon, onSelect }] });       // hold the collapsed icon: up to 3 buttons fan out (hold-fan)
+//        mountNavSelector(el, { holdActions: [{ label, icon, onSelect }] });       // hold the collapsed icon: up to 5 buttons fan out (slide onto one and let go to pick it) (hold-fan)
 //        nav.setActive(2);                                                         // select a link from code (no onChange)
 //        nav.destroy();                                                            // remove listeners + DOM
 // Scrolling is watched on `scrollRoot` (default: the window). If nothing there scrolls, it never iconizes.

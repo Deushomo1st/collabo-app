@@ -2,7 +2,7 @@
    Public: --hold-fan-{bg,ink,border,shadow,z}
    Light-theme values live in css/global/theme.css. */
 
-.hold-fan-trigger { touch-action: manipulation; -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.hold-fan-trigger { touch-action: none;   /* a finger that holds and slides must not turn into a scroll */ -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 
 .hold-fan {
     position: fixed; width: 0; height: 0; z-index: var(--hold-fan-z, 90);   /* sits at the trigger's centre; each button measures from here */
@@ -21,6 +21,7 @@
 .hold-fan.is-open .hold-fan__btn { transform: translate(var(--x), var(--y)) scale(1); opacity: 1; pointer-events: auto; }
 .hold-fan__btn svg { width: 20px; height: 20px; }
 .hold-fan__btn:hover { filter: brightness(.96); }
+.hold-fan.is-open .hold-fan__btn.is-hot { transform: translate(var(--x), var(--y)) scale(1.18); filter: brightness(.94); box-shadow: 0 0 0 3px color-mix(in srgb, var(--_hf-ink) 25%, transparent), var(--_hf-shadow); }   /* the one under the sliding finger */
 .hold-fan.is-open .hold-fan__btn:active { transform: translate(var(--x), var(--y)) scale(.92); }
 .hold-fan__btn:focus-visible { outline: 2px solid #FF9000; outline-offset: 3px; }
 

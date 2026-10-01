@@ -58,6 +58,7 @@ public class ApplicationService {
         if (collaborators.existsByPostIdAndUserIdAndState(postId, me.getId(), Collaborator.State.ACTIVE)) {
             throw new InvalidProfileException("You are a collaborator on this idea.");
         }
+        if (!post.isApplicationsOn()) throw new InvalidProfileException("This post is not taking applications.");
         if (!"pending".equals(post.status())) throw new InvalidProfileException("Applications for this post are closed.");
         String statement = text == null ? "" : text.trim();
         if (statement.isEmpty()) throw new InvalidProfileException("Tell them why you.");
@@ -126,7 +127,7 @@ public class ApplicationService {
     /** ACCEPT, DECLINE or SHORTLIST, set explicitly by the post's author. Can be changed until a space exists. */
     public ReviewResponse decide(User me, UUID applicationId, String decision) {
         Application a = applications.findById(applicationId).orElseThrow(() -> new ResourceNotFoundException("No such application."));
-        Post post = ownPost(me, a.getPostId());
+        ownPost(me, a.getPostId());
         if (a.getState() == ApplicationState.WITHDRAWN) throw new InvalidProfileException("This application was withdrawn.");
         if (a.getState() == ApplicationState.ACCEPTED && spaces.existsByPostId(a.getPostId())) {
             throw new InvalidProfileException("This applicant is already part of a space.");
@@ -137,14 +138,8 @@ public class ApplicationService {
             case "SHORTLIST" -> ApplicationState.SHORTLISTED;
             default -> throw new InvalidProfileException("Choose accept, decline or shortlist.");
         };
-        boolean newlyAccepted = next == ApplicationState.ACCEPTED && a.getState() != ApplicationState.ACCEPTED;
-        a.setState(next);
+        a.setState(next);   // the applicant hears of an acceptance when the space forms, not before
         User applicant = users.findById(a.getApplicantId()).orElseThrow(() -> new ResourceNotFoundException("No such application."));
-        if (newlyAccepted) {
-            yarnService.notifyAccepted(me, applicant, post.getTitle());
-            notifications.notify(applicant.getId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "You were accepted to \"" + post.getTitle() + "\"",
-                    me.getUsername() + " accepted your application. Joining is your call.", "/HTML-pages/space.html?post=" + post.getId());
-        }
         return review(applications.save(a), applicant);
     }
 

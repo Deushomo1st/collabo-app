@@ -13,3 +13,12 @@
 .spc-ms { display: grid; gap: 6px; }
 .spc-credited { margin: 0; }
 .spc-ms > .sp-tag { justify-self: start; }
+
+#space { display: grid; gap: 26px; align-content: start; }
+
+/* TikTok-style section tabs: plain words, the open one bright with a short bar under it; swipe sideways when they overflow */
+.sp-tt { position: sticky; top: 0; z-index: 5; display: flex; gap: 26px; overflow-x: auto; scrollbar-width: none; padding: 0 4px; border-bottom: 1px solid rgba(128, 128, 128, .25); backdrop-filter: blur(14px); background: color-mix(in srgb, var(--sp-bg, #0b0d12) 70%, transparent); }
+.sp-tt::-webkit-scrollbar { display: none; }
+.sp-tt button { position: relative; flex: none; background: none; border: 0; padding: 12px 2px 14px; color: inherit; opacity: .55; font: 700 15px inherit; cursor: pointer; transition: opacity .2s; }
+.sp-tt button.is-on { opacity: 1; }
+.sp-tt button.is-on::after { content: ''; position: absolute; left: 50%; bottom: 0; width: 28px; height: 3px; margin-left: -14px; border-radius: 2px; background: currentColor; }

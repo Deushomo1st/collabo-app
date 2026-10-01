@@ -139,10 +139,9 @@ main { padding: 24px; max-width: 1100px; }
 .ad-dialog--wide { width: min(760px, calc(100vw - 32px)); }
 
 /* ---------- theme: glass surfaces, solid dialogs ---------- */
-.ad-strip, .ad-scroll, .ad-card, .ad-panel, .ad-tile, .ad-check, .ad-gate__card { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 .ad-scroll, .ad-card, .ad-panel, .ad-tile, .ad-check, .ad-gate__card { border-radius: 16px; }
 .ad-dialog, .ad-notice { background: linear-gradient(var(--ad-panel), var(--ad-panel)), var(--sp-bg); border-radius: 16px; }
-.ad-dialog::backdrop { background: rgba(0, 0, 0, .55); backdrop-filter: blur(4px); }
+.ad-dialog::backdrop { background: rgba(0, 0, 0, .55); }
 .ad-brand { font-weight: 800; letter-spacing: .14em; }
 
 /* the pill nav: when it folds to its icon it rises into the top bar's row, in the middle */

@@ -86,7 +86,8 @@ class AcceptanceYarnTest {
     }
 
     private ResultActions accept(Cookie by) throws Exception {
-        return send(patch("/api/applications/" + catApp), by, "{\"decision\":\"ACCEPT\"}");
+        send(patch("/api/applications/" + catApp), by, "{\"decision\":\"ACCEPT\"}").andExpect(status().isOk());
+        return send(post("/api/posts/" + postId + "/space"), annS, "{}");   // the acceptance is announced when the space forms
     }
 
     private ResultActions myspaces(Cookie who) throws Exception { return send(get("/api/yarns/threads?tier=MYSPACE"), who, null); }
@@ -94,7 +95,7 @@ class AcceptanceYarnTest {
     @Test
     void acceptingDropsASystemYarnIntoAMySpaceThreadBothSeeAndItIsNotARequest() throws Exception {
         myspaces(catS).andExpect(jsonPath("$", hasSize(0)));
-        accept(annS).andExpect(status().isOk());
+        accept(annS).andExpect(status().is2xxSuccessful());
         myspaces(catS).andExpect(jsonPath("$", hasSize(1))).andExpect(jsonPath("$[0].name").value(ann))
                 .andExpect(jsonPath("$[0].status").value("ACCEPTED")).andExpect(jsonPath("$[0].incomingRequest").value(false))
                 .andExpect(jsonPath("$[0].unread").value(0)).andExpect(jsonPath("$[0].lastBody", containsString("Idea")));   // a system note is shown, but it is not an unread message
@@ -108,19 +109,18 @@ class AcceptanceYarnTest {
     @Test
     void oneYarnPerAcceptanceAndAnExistingThreadIsReused() throws Exception {
         send(post("/api/yarns/threads/myspace"), catS, "{\"username\":\"" + ann + "\",\"body\":\"hi\"}").andExpect(status().isCreated());   // a pending request first
-        accept(annS).andExpect(status().isOk());
-        accept(annS).andExpect(status().isOk());   // no change, no second yarn
+        accept(annS).andExpect(status().is2xxSuccessful());
+        send(patch("/api/applications/" + catApp), annS, "{\"decision\":\"ACCEPT\"}").andExpect(status().isBadRequest());   // already in the space, so no second yarn
         myspaces(catS).andExpect(jsonPath("$", hasSize(1))).andExpect(jsonPath("$[0].status").value("ACCEPTED"));
         String thread = com.jayway.jsonpath.JsonPath.read(myspaces(catS).andReturn().getResponse().getContentAsString(), "$[0].id");
         send(get("/api/yarns/threads/" + thread + "/yarns"), catS, null).andExpect(jsonPath("$", hasSize(2)));   // hi + acceptance
     }
 
     @Test
-    void aCollaboratorWhoAcceptsIsTheOneWhoWrites() throws Exception {
+    void theFounderIsTheOneWhoWritesWhenTheSpaceForms() throws Exception {
         makeCollaborator(bobS, bob);
-        accept(bobS).andExpect(status().isOk());
-        myspaces(catS).andExpect(jsonPath("$[0].name").value(bob));
-        myspaces(annS).andExpect(jsonPath("$", hasSize(0)));
+        accept(bobS).andExpect(status().is2xxSuccessful());
+        myspaces(catS).andExpect(jsonPath("$[0].name").value(ann));
     }
 
     @Test

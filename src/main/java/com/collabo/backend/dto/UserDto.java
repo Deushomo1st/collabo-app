@@ -10,6 +10,14 @@ public class UserDto {
     @NotBlank(message = "Please set email")
     private String email;
 
+    @NotBlank(message = "Please enter your first name")
+    @Size(max = 40, message = "First name must be 40 characters or fewer")
+    private String firstName;
+
+    @NotBlank(message = "Please enter your last name")
+    @Size(max = 40, message = "Last name must be 40 characters or fewer")
+    private String lastName;
+
     @NotBlank(message = "Choose a username")
     @Size(min = 3, max = 30, message = "Username must be 3-30 characters")
     private String username;
@@ -29,6 +37,11 @@ public class UserDto {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }

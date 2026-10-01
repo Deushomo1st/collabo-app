@@ -32,6 +32,10 @@ public class Yarn {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
 
+    /** Pinned in a Workspace room by someone allowed to (the owner, or a member holding POST_IN_ROOM). */
+    @Column(nullable = false, columnDefinition = "boolean not null default false")
+    private boolean pinned;
+
     public Yarn() {}
     public Yarn(UUID threadId, UUID senderId, Kind kind, String body) {
         this.threadId = threadId; this.senderId = senderId; this.kind = kind; this.body = body;
@@ -43,4 +47,6 @@ public class Yarn {
     public Kind getKind() { return kind; }
     public String getBody() { return body; }
     public Instant getCreatedAt() { return createdAt; }
+    public boolean isPinned() { return pinned; }
+    public void setPinned(boolean pinned) { this.pinned = pinned; }
 }

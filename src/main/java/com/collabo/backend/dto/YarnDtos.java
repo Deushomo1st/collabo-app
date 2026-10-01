@@ -19,10 +19,10 @@ public final class YarnDtos {
                              boolean iAmRequester, boolean incomingRequest,
                              String lastBody, String lastSender, Instant lastAt, long unread,
                              boolean pinned, boolean muted, boolean archived,
-                             UUID otherUserId, List<PersonView> members) {}
+                             UUID otherUserId, List<PersonView> members, UUID postId) {}
 
     /** receipt is only set on the caller's own yarns: SENT (saved), DELIVERED (every other member's browser has it) or READ (every other member has opened it). */
-    public record YarnView(UUID id, UUID senderId, String sender, String kind, String body, Instant at, String receipt) {}
+    public record YarnView(UUID id, UUID senderId, String sender, String kind, String body, Instant at, String receipt, boolean pinned) {}
 
     /** A yarn found by keyword. The page already holds the thread and its members, so only ids come back. */
     public record YarnHit(UUID threadId, UUID senderId, String body, Instant at) {}

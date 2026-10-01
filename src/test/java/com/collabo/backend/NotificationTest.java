@@ -81,6 +81,11 @@ class NotificationTest {
         send(patch("/api/applications/" + bobApp), annS, "{\"decision\":\"ACCEPT\"}").andExpect(status().isOk());
     }
 
+    private void acceptAndForm() throws Exception {
+        accept();
+        send(post("/api/posts/" + postId + "/space"), annS, "{}").andExpect(status().is2xxSuccessful());   // the acceptance is announced when the space forms
+    }
+
     private void formAndJoin() throws Exception {
         accept();
         String body = send(post("/api/posts/" + postId + "/space"), annS, "{}").andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
@@ -104,10 +109,10 @@ class NotificationTest {
 
     @Test
     void anAcceptanceLandsInSpacesAndReadingClearsTheCount() throws Exception {
-        accept();
+        acceptAndForm();
         mine(bobS, "").andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1))).andExpect(jsonPath("$[0].bucket").value("SPACES"))
                 .andExpect(jsonPath("$[0].actionRequired").value(false)).andExpect(jsonPath("$[0].read").value(false))
-                .andExpect(jsonPath("$[0].link", containsString(postId)));
+                .andExpect(jsonPath("$[0].link", containsString("/space.html?id=")));
         send(get("/api/notifications/unread-count"), bobS, null).andExpect(jsonPath("$.count").value(1));
         String id = com.jayway.jsonpath.JsonPath.read(mine(bobS, "").andReturn().getResponse().getContentAsString(), "$[0].id");
         send(post("/api/notifications/" + id + "/read"), danS, null).andExpect(status().isNotFound());   // not theirs

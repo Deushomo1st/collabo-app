@@ -181,6 +181,7 @@
 .nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__clip { flex: 0 1 auto; }
 .nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__viewport { width: auto; max-width: 100%; overflow-x: hidden; touch-action: pan-y; user-select: none; scroll-snap-type: none; }
 /* while the links are being dragged or settling, the bubbles ride them rigidly (no lagging edge transitions) */
+.nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__nav { will-change: transform; }   /* only while a finger is on it */
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble { transition: none; }
 .nav-selector-fluid-hold.is-dragging .nav-selector-fluid-hold__bubble--hover { opacity: 0 !important; }
 .nav-selector-fluid-hold-wrap--arrows:not(:has(.has-more)) > .nav-selector-fluid-hold__arrow { display: none; }   /* everything already fits */

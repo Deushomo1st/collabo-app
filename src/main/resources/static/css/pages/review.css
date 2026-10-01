@@ -1,0 +1,33 @@
+/* Applicants, My applications and Notifications: pages of their own, with the Connections tabs and compact type so more fits on screen. */
+.rv-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--sp-muted); }
+.rv-summary:empty { display: none; }
+.rv-summary strong { color: var(--sp-text); }
+.rv-list { display: grid; gap: 10px; }
+.rv-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--sp-line); background: var(--sp-panel); content-visibility: auto; contain-intrinsic-size: auto 150px; }
+.rv-pic { grid-row: span 2; display: block; border-radius: 50%; text-decoration: none; }
+.rv-pic .sp-avatar, .rv-pic .cn-face { width: 48px; height: 48px; font-size: 19px; }
+.rv-head { display: flex; align-items: baseline; gap: 6px 8px; flex-wrap: wrap; min-width: 0; }
+.rv-name { font-weight: 800; font-size: 14.5px; color: inherit; text-decoration: none; }
+.rv-name:hover { text-decoration: underline; }
+.rv-at, .rv-time { color: var(--sp-muted); font-size: 12px; }
+.rv-time { margin-left: auto; font-family: var(--sp-font-mono, ui-monospace, monospace); }
+.rv-text { grid-column: 2; margin: 2px 0 0; font-size: 13.5px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rv-acts { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.rv-acts .pc-btn { padding: 6px 12px; font-size: 12.5px; }
+.rv-empty { padding: 36px 8px; text-align: center; color: var(--sp-muted); font-size: 14px; }
+.rv-card--post { grid-template-columns: minmax(0, 1fr); }
+.rv-card--post .rv-text, .rv-card--post .rv-acts { grid-column: 1; }
+.rv-title { font-weight: 800; font-size: 15px; color: inherit; text-decoration: none; }
+.rv-title:hover { text-decoration: underline; }
+/* the sort menu under the filter icon */
+.rv-menu { position: fixed; z-index: 30; display: grid; min-width: 190px; padding: 6px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-bg, #fff); box-shadow: 0 12px 32px rgba(0, 0, 0, .28); }
+.rv-menu button { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 0; border-radius: 9px; background: none; color: var(--sp-text); font: 600 13.5px var(--sp-font); text-align: left; cursor: pointer; }
+.rv-menu button:hover { background: var(--sp-panel-hi); }
+.rv-menu button[aria-checked="true"]::before { content: '✓'; color: var(--sp-brand); font-weight: 800; }
+.rv-menu button[aria-checked="false"]::before { content: ''; width: 1ch; }
+.rv-menu hr { border: 0; border-top: 1px solid var(--sp-line); margin: 4px 0; width: 100%; }
+/* notifications */
+.rv-note { display: grid; gap: 2px; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--sp-line); background: var(--sp-panel); color: inherit; text-align: left; font: inherit; cursor: pointer; width: 100%; }
+.rv-note.is-unread { border-color: var(--sp-brand); }
+.rv-note b { font-size: 14px; } .rv-note span { font-size: 13px; color: var(--sp-muted); } .rv-note time { font-size: 11.5px; color: var(--sp-muted); }
+.rv-search { width: 100%; box-sizing: border-box; border-radius: 999px; padding: 10px 16px; font-size: 14px; }

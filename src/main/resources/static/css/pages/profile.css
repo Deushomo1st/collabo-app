@@ -66,7 +66,7 @@
 .pf-more { margin: 12px auto 0; display: block; }
 
 .pf-list { display: grid; gap: 10px; min-width: 0; }
-.pf-entry { display: grid; gap: 8px; padding: 14px 16px; border-radius: 18px; }
+.pf-entry { display: grid; gap: 8px; padding: 14px 16px; border-radius: 18px; content-visibility: auto; contain-intrinsic-size: auto 110px; }
 .pf-entry__top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .pf-entry__top strong { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
 .pf-entry__top time { color: var(--sp-muted); font: 500 11px var(--sp-mono); }

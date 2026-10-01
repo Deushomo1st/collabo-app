@@ -9,7 +9,7 @@
 .pt strong { color: var(--sp-text); }
 
 .pt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 16px; margin-bottom: 32px; }
-.pt-card { padding: 20px; border-radius: 20px; border: 1px solid var(--sp-line); background: var(--sp-panel); backdrop-filter: blur(14px); }
+.pt-card { padding: 20px; border-radius: 20px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
 .pt-card h3 { margin: 0 0 6px; font: 800 18px var(--sp-font); }
 .pt-card p { margin: 0; }
 .pt-card--wide { grid-column: 1 / -1; }

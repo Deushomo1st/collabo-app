@@ -1,7 +1,7 @@
 /* The post page. Loaded after workspace.css and gaze.css (palette, glass, .gz-nav). The share rail borrows the nav's look
    through the nav's own public variables, so it follows the theme the same way. */
 
-.sp-top { margin-bottom: 12px; }
+.sp-top { position: static; margin-bottom: 8px; }   /* a plain header that scrolls away with the page */
 .ps-main { padding-bottom: 110px; }   /* room for the bar */
 .ps-form { display: grid; gap: 8px; padding: 16px 18px; border-radius: 22px; }
 .ps-form label { font: 700 12.5px var(--sp-font); color: var(--sp-muted); margin-top: 6px; }
@@ -35,7 +35,7 @@
 }
 .ps-chip:hover { background: color-mix(in srgb, var(--sp-brand) 14%, transparent); }
 
-.ps-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.ps-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
 .ps-act {
     position: relative; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 10px 6px; min-height: 46px;
     border-radius: 16px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text);
@@ -59,53 +59,3 @@
 .ps-send svg { width: 20px; height: 20px; }
 #nav { --nav-link-padding: 9px 14px; --nav-font-size: 14px; }
 
-/* ---- share: a tall nav that opens over the page and takes the focus ---- */
-.ps-share {
-    position: fixed; inset: 0; z-index: 200; display: grid; grid-template-rows: minmax(0, 1fr) auto; justify-items: center;
-    padding: 24px 16px calc(20px + env(safe-area-inset-bottom)); background: rgba(6, 8, 14, .72);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    opacity: 0; transition: opacity .22s ease;
-}
-.ps-share.is-on { opacity: 1; }
-.ps-rail {
-    --_ink: var(--nav-selector-fluid-hold-link, #5d6676);
-    align-self: center; max-height: 100%; width: 78px; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px; border-radius: 39px;
-    background: var(--nav-selector-fluid-hold-bg, linear-gradient(145deg, #ffffff, #d5dae2));
-    border: 1px solid var(--nav-selector-fluid-hold-border, rgba(255, 255, 255, .75));
-    box-shadow: var(--nav-selector-fluid-hold-shadow, inset 0 2px 5px rgba(255,255,255,.9), inset 0 -5px 14px rgba(60,70,90,.18), 0 10px 30px rgba(0,0,0,.5), 0 0 22px rgba(255,255,255,.55), 0 0 60px rgba(255,255,255,.28));
-    transform-origin: 50% 100%; transform: translateY(70px) scale(.45); opacity: 0;
-    transition: transform .4s cubic-bezier(.25, 1, .5, 1), opacity .25s ease, width .3s cubic-bezier(.25, 1, .5, 1);
-}
-.ps-share.is-on .ps-rail { transform: none; opacity: 1; }
-.ps-rail.is-wide { width: min(270px, calc(100vw - 32px)); }
-.ps-rail__head { display: grid; justify-items: center; gap: 10px; }
-.ps-circle, .ps-search {
-    width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; border: 0; cursor: pointer; flex: none;
-    background: var(--nav-selector-fluid-hold-bubble-bg, linear-gradient(145deg, #2b2f38, #0b0c0f));
-    box-shadow: var(--nav-selector-fluid-hold-bubble-shadow, inset 0 2px 4px rgba(255,255,255,.14), inset 0 -3px 6px rgba(0,0,0,.6), 0 6px 12px rgba(0,0,0,.35));
-    color: var(--nav-selector-fluid-hold-link-active, #fff);
-}
-.ps-search { display: flex; justify-content: flex-start; align-items: center; overflow: hidden; border-radius: 26px; transition: width .3s cubic-bezier(.25, 1, .5, 1); cursor: default; }
-.ps-search .ps-circle { box-shadow: none; background: transparent; }
-.ps-search__in { flex: 1; min-width: 0; width: 0; border: 0; outline: 0; background: transparent; color: inherit; font: 600 14px var(--sp-font); padding: 0; }
-.ps-search.is-open { width: 100%; }
-.ps-search.is-open .ps-search__in { width: auto; padding-right: 14px; }
-.ps-people { display: grid; gap: 8px; overflow-y: auto; min-height: 0; scrollbar-width: none; padding-top: 2px; }
-.ps-people::-webkit-scrollbar { display: none; }
-.ps-person { position: relative; display: grid; justify-items: center; gap: 3px; padding: 2px; border: 0; background: none; cursor: pointer; color: var(--_ink); width: 100%; }
-.ps-person__n { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 10.5px var(--sp-font); }
-.ps-face { --_size: 48px; position: relative; overflow: hidden; transition: box-shadow .2s, transform .2s; }
-.ps-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.ps-person:hover .ps-face { transform: scale(1.06); }
-.ps-person.is-on .ps-face { box-shadow: 0 0 0 3px var(--nav-selector-fluid-hold-bubble-bg-solid, #0b0c0f), 0 0 0 5px var(--sp-ok); }
-.ps-person__tick {
-    position: absolute; top: 0; right: 8px; width: 20px; height: 20px; border-radius: 50%; display: none; place-items: center;
-    background: var(--sp-ok); color: #fff;
-}
-.ps-person__tick svg { width: 12px; height: 12px; stroke-width: 3; }
-.ps-person.is-on .ps-person__tick { display: grid; }
-.ps-share__foot { display: grid; justify-items: center; gap: 10px; padding-top: 14px; max-width: 360px; text-align: center; }
-.ps-share__note, .ps-share__empty { margin: 0; color: #e8ebf2; font-size: 13px; }
-.ps-share__empty { color: var(--_ink); font-size: 11.5px; text-align: center; padding: 6px 2px; }
-
-@media (prefers-reduced-motion: reduce) { .ps-rail, .ps-share, .ps-search { transition: none; } }

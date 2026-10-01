@@ -2,6 +2,7 @@
 // paymentsSection(space, { canLog, me, members }) returns a self-refreshing element. Text goes in through textContent only.
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { paymentsOf, paymentClaim, paymentConfirm, paymentCancel } from '/js/services/api.js';
+import { face } from '/js/services/face.js';
 import { h, toast, day } from '/js/services/dom.js';
 
 const STATE = { CLAIMED: ['Claimed', 'sp-tag--brand'], CONFIRMED: ['Confirmed', 'sp-tag--ok'], CANCELLED: ['Cancelled', 'sp-tag--muted'] };
@@ -25,10 +26,10 @@ async function openClaim(space, members, me, onDone) {
 }
 
 export function paymentsSection(space, { canLog, me, members }) {
-    const root = h('section', { class: 'spc-card sp-glass' });
-    const head = h('h2', { text: 'Payment records' });
+    const root = h('section', {});
+    const head = h('h2', { class: 'sp-h2', text: 'Payment records' });
     const banner = h('p', { class: 'pc-error', hidden: true, text: 'A payment claim is open, so the room is held until it is confirmed or cancelled.' });
-    const list = h('div', { class: 'spc-members', 'aria-live': 'polite' });
+    const list = h('div', { 'aria-live': 'polite' });
 
     async function load() {
         let rows;
@@ -41,21 +42,20 @@ export function paymentsSection(space, { canLog, me, members }) {
 
     function row(p) {
         const [label, tone] = STATE[p.state] || [p.state, 'sp-tag--muted'];
-        return h('div', { class: 'spc-member spc-ms' },
-            h('strong', { text: `${p.amount.toFixed(2)} ${p.currency}` }),
+        return h('div', { class: 'sp-pay sp-glass' }, face(p.payer.username),
+            h('div', { class: 'sp-pay__main' }, h('strong', { text: `${p.amount.toFixed(2)} ${p.currency}` }),
+                h('div', { text: `${p.payer.username} → ${p.recipient.username} · ${day(p.createdAt)}${p.note ? ' · ' + p.note : ''}` })),
             h('span', { class: `sp-tag ${tone}`, text: label }),
-            h('span', { class: 'pc-hint', text: `${p.payer.username} → ${p.recipient.username} · ${day(p.createdAt)}` }),
-            p.note && h('p', { class: 'spc-idea', text: p.note }),
-            p.state === 'CLAIMED' && h('div', { class: 'pc-actions' },
-                p.recipient.username === me.username && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Confirm I received it', onclick: act(() => paymentConfirm(space.id, p.id)) }),
-                p.payer.username === me.username && h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Cancel claim', onclick: act(() => paymentCancel(space.id, p.id)) })));
+            p.state === 'CLAIMED' && p.recipient.username === me.username && h('button', { class: 'sp-btn sp-btn--ok', type: 'button', text: 'Confirm I received it', onclick: act(() => paymentConfirm(space.id, p.id)) }),
+            p.state === 'CLAIMED' && p.payer.username === me.username && h('button', { class: 'sp-btn sp-btn--danger', type: 'button', text: 'Cancel claim', onclick: act(() => paymentCancel(space.id, p.id)) }));
     }
 
     root.append(...[head,
-        h('p', { class: 'pc-hint', text: 'A record of what people say was paid. COLLABO never handles the money.' }),
+        h('p', { class: 'sp-sub', text: 'Documented here, settled elsewhere. COLLABO never moves the money.' }),
         banner,
-        canLog && h('div', { class: 'pc-actions' }, h('button', { class: 'pc-btn', type: 'button', text: 'Log a payment', onclick: () => openClaim(space, members, me, load) })),
-        list].filter(Boolean));
+        canLog && h('div', { class: 'pc-actions' }, h('button', { class: 'sp-btn sp-btn--brand', type: 'button', text: '+ Log a payment', onclick: () => openClaim(space, members, me, load) })),
+        list,
+        h('div', { class: 'sp-fine', text: 'A confirmed entry proves both people said money moved. It is not evidence that it did. Until the recipient confirms, an entry reads "claimed".' })].filter(Boolean));
     load();
     return root;
 }

@@ -79,6 +79,7 @@ function draw() {
                 onclick: () => setUi({ kind: k, ticked: [], room: k === 'COMMUNITY' ? s.ui.room : null }) }, h('strong', { text: t }), h('small', { text: d }))),
             chooser()),
         h('section', { class: 'pst-card sp-glass' }, h('h2', { text: 'On the post' }),
+            switchRow('Applications', 'People can apply to join the idea. Turn it off for a regular post: no Apply button, no deadline.', 'applicationsOn'),
             switchRow('Comments', 'People can comment on it.', 'commentsOn'),
             switchRow('Shout-outs', 'People can shout it out to their network.', 'shoutsOn'),
             switchRow('Stay anonymous', 'Others see "Anonymous" instead of your name. It stays off your profile. A space formed from it still lists you as its owner.', 'anonymous')));

@@ -1,7 +1,8 @@
 # hold-fan
 
-Press and hold a button and up to three round buttons fan out from behind it, one after another
-(80ms apart). A plain tap is untouched: the trigger's own click still fires.
+Press and hold a button and up to five round buttons fan out from behind it, all at once. Keep the finger down and slide onto one,
+then let go: that is the pick (the one under the finger grows). Let go anywhere else and the fan stays open to tap. A plain tap is
+untouched: the trigger's own click still fires. With five, one sits dead centre above the trigger.
 Made for the collapsed nav icon (`nav-selector-fluid-hold`'s `holdActions` option mounts it), but it works on any button.
 
 | File | Role |
@@ -26,7 +27,7 @@ fan.destroy();   // when the trigger goes away
 |---|---|---|
 | `actions` | `[]` | 1 to 3. Left, top, right (with 3). `icon` is static SVG markup, never user text. |
 | `holdMs` | `350` | How long to hold before the fan opens. Moving more than 10px cancels it (that is a drag). |
-| `stagger` | `80` | ms between each button leaving (and returning). |
+| `stagger` | `0` | ms between each button leaving (and returning); 0 = all at once. |
 | `idleMs` | `4000` | The fan tucks away by itself after this long untouched. |
 
 Handle: `open()`, `close()`, `destroy()`.

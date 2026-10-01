@@ -3,7 +3,6 @@
 import { mountNotificationBell } from '/js/components/notification-bell/notification-bell.js';
 import { currentUser, notificationsList, notificationRead } from '/js/services/api.js';
 import { collaborationsInto } from '/js/components/collaborators/collaborators.js';
-import { openMine } from '/js/components/applications/applications.js';
 import { live } from '/js/services/live.js';
 
 const pinned = (n) => n.actionRequired;
@@ -20,7 +19,7 @@ if (slot) {
         return mountNotificationBell(slot, {
             inline: true,
             filters: FILTERS,
-            footer: { label: 'Go to activity', onClick: openMine },   // what you have applied to
+            footer: { label: 'See all notifications', onClick: () => { location.href = '/HTML-pages/notifications.html'; } },
             // the server puts action-required first; the panel filters by bucket but never hides those
             loadItems: notificationsList,
             onRead: (n) => notificationRead(n.id).catch(() => {}),

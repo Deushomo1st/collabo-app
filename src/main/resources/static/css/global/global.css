@@ -1,1 +1,7 @@
 @import url("theme.css");
+
+/* Moving between pages cross-fades instead of flashing white (Chrome and Edge; other browsers just navigate). */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+    ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
+}
