@@ -15,6 +15,8 @@ const person = (u) => h('a', { class: 'pc-who', href: profileHref(u.username) },
 
 const eyeIcon = () => { const i = h('span', { 'aria-hidden': 'true' }); i.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'; return i; };   // fixed markup, no user text
 
+const megaphone = () => { const i = h('span', { class: 'pc-shout__i', 'aria-hidden': 'true' }); i.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 9a4 4 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>'; return i; };   // fixed markup, no user text
+
 export function postCard(initial, { onGone } = {}) {
     let p = initial;
     let open = false;          // comments expanded
@@ -105,7 +107,7 @@ export function postCard(initial, { onGone } = {}) {
             h('p', { class: 'pc-hint', text: formed ? 'A space was formed for this idea.' : p.applyBy ? `${closed ? 'Applications closed' : 'Applications close'} ${when(p.applyBy)}` : 'Open to applications, no deadline' }),
             h('div', { class: 'pc-actions' },
                 !p.mine && p.shoutsOn !== false && h('button', { class: `pc-btn ${p.shouted ? 'is-on' : ''}`, type: 'button', 'aria-pressed': String(p.shouted),
-                    text: `${p.shouted ? 'Shouted out' : 'Shout out'} · ${p.shouts}`, onclick: () => act(() => (p.shouted ? postUnshout : postShout)(p.id)) }),
+                    'aria-label': p.shouted ? 'Shouted out' : 'Shout out', title: 'Shout this out to your followers; it lands in your Shout-outs', onclick: () => act(() => (p.shouted ? postUnshout : postShout)(p.id)) }, megaphone(), h('span', { class: 'pc-shout__t', text: p.shouted ? 'Shouted' : 'Shout' }), ` ${p.shouts}`),
                 p.mine && p.shouts > 0 && h('span', { class: 'pc-hint', text: `${p.shouts} shout-out${p.shouts === 1 ? '' : 's'}` }),
                 h('button', { class: 'pc-btn', type: 'button', 'aria-expanded': String(open), text: open ? 'Hide comments' : 'Comments', onclick: toggleComments }),
                 h('button', { class: 'pc-btn', type: 'button', text: 'Copy link', onclick: copyLink }),

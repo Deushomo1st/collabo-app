@@ -10,7 +10,7 @@ import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/
 import { live } from '/js/services/live.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import {
-    logoutUser, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
+    logoutUser, following, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlocked, yarnBlock, yarnUnblock, yarnReport, avatarUrl,
 } from '/js/services/api.js';
 import { messagePrivacyRow } from '/js/services/message-privacy.js';
@@ -337,18 +337,18 @@ async function blockPerson(t) {
 // A new yarn is always one person: WeSpaces and Workspaces open by themselves from posts and spaces.
 async function openNew() {
     const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'New yarn', html: '<h3 class="glass-blur-dialog__title">New yarn</h3><form class="sp-form"></form>' });
-    const who = h('input', { class: 'sp-input', id: 'new-who', list: 'yn-people', autocomplete: 'off', placeholder: 'username', required: true });
-    const people = h('datalist', { id: 'yn-people' });
+    const who = h('input', { class: 'sp-input', id: 'new-who', autocomplete: 'off', placeholder: 'Search people or pick one', required: true });
+    const people = h('div', { class: 'gz-circles', 'aria-label': 'People to yarn' });   // the people you follow, or whoever the search finds
     const first = h('textarea', { class: 'sp-input', id: 'new-body', rows: '3', maxlength: '2000', placeholder: 'Your first yarn', required: true });
     const err = h('p', { class: 'yn-error', role: 'alert', hidden: true });
     let timer;
-    who.addEventListener('input', () => {   // suggest people as they type
+    const drawPeople = (list) => people.replaceChildren(...list.map((p) => h('button', { class: 'gz-circle', type: 'button', 'data-name': p.username, 'aria-label': p.username,
+        onclick: () => { who.value = p.username; first.focus(); } }, faceOf(p.username))));
+    following(me.username).then((list) => { if (!who.value) drawPeople(list); }).catch(() => {});
+    who.addEventListener('input', () => {   // search people as they type; empty goes back to the people you follow
         clearTimeout(timer);
         const q = who.value.trim();
-        timer = setTimeout(async () => {
-            const found = q.length >= 2 ? await yarnDirectory(q).catch(() => []) : [];
-            people.replaceChildren(...found.map((p) => h('option', { value: p.username })));
-        }, 250);
+        timer = setTimeout(async () => drawPeople(q.length >= 2 ? await yarnDirectory(q).catch(() => []) : await following(me.username).catch(() => [])), 250);
     });
     const form = panel.querySelector('.sp-form');
     form.append(h('label', { for: 'new-who' }, 'Who?', who, people), h('label', { for: 'new-body' }, 'First yarn', first), err,

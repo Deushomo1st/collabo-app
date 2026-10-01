@@ -45,6 +45,9 @@
 .pc-btn:hover { background: var(--sp-panel-hi); }
 a.pc-btn { text-decoration: none; justify-self: start; }
 .pc-btn.is-on { border-color: var(--sp-brand); color: var(--sp-brand); }
+.pc-shout__i { display: inline-flex; vertical-align: middle; }
+.pc-shout__t { display: none; margin-left: 6px; }   /* the megaphone alone on a phone; the word joins it when there is room */
+@media (min-width: 720px) { .pc-shout__t { display: inline; } }
 .pc-btn--danger { color: var(--sp-danger); }
 .pc-btn--brand { background: var(--sp-brand); border-color: var(--sp-brand); color: var(--sp-brand-ink); }
 .ap-list, .ap-body, .ap-form { display: grid; gap: 10px; }
@@ -141,14 +144,6 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .tt-filters[hidden] { display: none; }
 .gz-person { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 18px; color: inherit; text-decoration: none; }
 .gz-person .sp-avatar { --_size: 42px; }
-.gz-circles { display: flex; gap: 12px; overflow-x: auto; padding: 6px 4px 22px; scrollbar-width: none; }
-.gz-circle { position: relative; flex: none; text-decoration: none; }
-.gz-circle .sp-avatar { --_size: 58px; }
-.gz-circle::after {
-    content: attr(data-name); position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px; padding: 2px 8px; border-radius: 8px;
-    background: var(--sp-panel-hi); color: var(--sp-text); font: 700 11.5px var(--sp-font); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s;
-}
-.gz-circle:hover::after, .gz-circle:focus-visible::after { opacity: 1; }
 .gz-person small { display: block; color: var(--sp-muted); font-size: 12px; }
 .pc-top .pc-time + .pc-time { margin-left: 0; }
 

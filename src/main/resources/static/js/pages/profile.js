@@ -113,8 +113,8 @@ function identity() {
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'My applications', onclick: openMine }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Drafts', onclick: openDrafts }),
                 profile.self && h('button', { class: 'pf-btn', type: 'button', text: 'Settings', onclick: openProfileSettings }),
-                !profile.self && f.canFollow && h('button', { class: 'pf-btn', type: 'button', text: 'Message', onclick: openMessage }),
-                !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow })),
+                !profile.self && f.canFollow && h('button', { class: `pf-btn ${f.iFollow ? '' : 'pf-btn--brand'}`, type: 'button', text: f.iFollow ? 'Following' : 'Follow', onclick: toggleFollow }),
+                !profile.self && f.canFollow && h('button', { class: 'pf-btn', type: 'button', text: 'Message', onclick: openMessage })),
             h('span', { class: 'pf-joined', text: `Joined ${day(profile.joined)}` })));
 }
 
@@ -190,7 +190,7 @@ function postList(id) {
     if (f.error) return h('p', { class: 'pf-empty', text: f.error });
     if (f.items.length === 0) return h('p', { class: 'pf-empty', text: id === 'posts'
         ? (profile.self ? 'Ideas you post to The Gaze show up here.' : 'No posts yet.')
-        : (profile.self ? 'Ideas you shout out show up here.' : 'No reposts yet.') });
+        : (profile.self ? 'Ideas you shout out show up here.' : 'No shout-outs yet.') });
     return h('div', {}, h('div', { class: 'pf-grid' }, ...sorted(f.items).map((p) => tile(p, f))),
         f.next && h('button', { class: 'pf-btn pf-more', type: 'button', text: 'Show more', onclick: () => loadFeed(id, true) }));
 }
@@ -241,7 +241,7 @@ function renderTabs() {
     }
     box.replaceChildren(
         h('div', { class: 'pf-bar' },
-            h('div', { class: 'pf-tabs', role: 'tablist' }, tabBtn('posts', 'Posts'), tabBtn('reposts', 'Reposts'), tabBtn('removals', 'Removals'),
+            h('div', { class: 'pf-tabs', role: 'tablist' }, tabBtn('posts', 'Posts'), tabBtn('reposts', 'Shout-outs'), tabBtn('removals', 'Removals'),
                 tabBtn('credentials', `Credentials · ${credentials.visible ? all.length : 0}`), tabBtn('feats', `Feats · ${credentials.visible ? feats.length : 0}`)),
             postsTab && h('div', { class: 'pf-sort', role: 'group', 'aria-label': 'Sort' }, ...SORTS.map(([k, label]) =>
                 h('button', { class: 'pf-sort__btn', type: 'button', 'aria-pressed': String(sort === k), text: label, onclick: () => { sort = k; renderTabs(); } })))),
