@@ -77,7 +77,7 @@ async function unlock() {
 function signOut() { api.setKey(''); showGate(); }
 
 let nav;   // the pill nav; route() keeps its bubble on the current view
-mountNavSelector('#nav', { visible: 3, links: [...Object.values(VIEWS).map((v) => v.label), 'Sign out'], hrefs: [...Object.keys(VIEWS).map((k) => `#${k}`), '#signout'], activeIndex: Object.keys(VIEWS).indexOf(current()),
+mountNavSelector('#nav', { links: [...Object.values(VIEWS).map((v) => v.label), 'Sign out'], hrefs: [...Object.keys(VIEWS).map((k) => `#${k}`), '#signout'], activeIndex: Object.keys(VIEWS).indexOf(current()),
     onChange: (_l, href) => { const to = href.slice(href.lastIndexOf('#')); if (to === '#signout') signOut(); else location.hash = to; } }).then((n) => { nav = n; nav?.setActive(Object.keys(VIEWS).indexOf(current())); });
 $('gate-form').addEventListener('submit', (e) => { e.preventDefault(); unlock(); });
 window.addEventListener('hashchange', () => { if (!$('app').hidden) route(); });

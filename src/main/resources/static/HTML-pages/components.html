@@ -287,8 +287,8 @@
         <h3>State (what it looks like)</h3>
         <ul>
             <li><b>Collapsed:</b> a 46px icon. Every nav starts like this on page open, and it is where the held fan lives.</li>
-            <li><b>Expanded:</b> the pill showing up to 3 links, with arrows to slide the lineup when there are more.</li>
-            <li><b>Windowed (hybrid):</b> the default pill, 3 links at a time, shrinking to 2 or 1 on narrow screens.</li>
+            <li><b>Expanded:</b> the pill showing as many links as the screen has room for, with arrows to slide the lineup when there are more.</li>
+            <li><b>Windowed (hybrid):</b> the default pill, showing as many links as fit (all on a wide screen, fewer as it narrows, down to 1).</li>
             <li><b>Scrolling pill:</b> the old style (<code>visible: 0</code>), where the whole row scrolls.</li>
             <li><b>Collapsed face:</b> the icon shows the current page's icon. <code>restIcon</code> replaces it until a link is picked (a gear, +, a flag, a profile picture). <code>collapsedLabel: 'number'</code> shows the position instead.</li>
         </ul>
@@ -299,7 +299,7 @@
             <tr><td>Hold the icon (350ms)</td><td>The fan opens.</td></tr>
             <tr><td>Hold, push toward a button, release</td><td>The pointer hides and snaps to the buttons' angles; the lit one is picked and the fan closes.</td></tr>
             <tr><td>Hold, release on the icon</td><td>Nothing is picked and the fan closes.</td></tr>
-            <tr><td>Arrows or dragging the pill</td><td>It slides the 3-link window along.</td></tr>
+            <tr><td>Arrows or dragging the pill</td><td>It slides the window along.</td></tr>
             <tr><td>Tap a link</td><td>It navigates, or goes through the page's leave check (post and report pages).</td></tr>
             <tr><td>Keyboard</td><td>Tab through the links. ArrowUp opens the fan. Escape closes it.</td></tr>
         </table>
@@ -349,7 +349,7 @@
                 stage.appendChild(box);
                 const ICO = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
                 const nav = await mountNavSelector(box, {
-                    collapseWhenIdle: true, idleMs: 0, visible: 3, scrollRoot: box,   // inside the stage box like the other demos, not docked to the screen
+                    collapseWhenIdle: true, idleMs: 0, scrollRoot: box,   // inside the stage box like the other demos, not docked to the screen
                     links: ['Gaze', 'Yarns', 'Post', 'Spaces', 'Inbox', 'Settings'],
                     hrefs: ['#', '#', '#', '#', '#', '#'],
                     icons: [

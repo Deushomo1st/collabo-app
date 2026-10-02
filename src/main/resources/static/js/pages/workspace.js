@@ -329,7 +329,7 @@ async function boot() {
     renderAll();
     await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     nav = await mountNavSelector('#nav', {
-        placement: 'bottom', visible: 3, links: SECTIONS.map((s) => s.title), hrefs: SECTIONS.map((s) => '#' + s.id), icons: SECTIONS.map((s) => s.icon),
+        placement: 'bottom', links: SECTIONS.map((s) => s.title), hrefs: SECTIONS.map((s) => '#' + s.id), icons: SECTIONS.map((s) => s.icon),
         activeIndex: SECTIONS.findIndex((s) => s.id === currentId()), collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(),
         onChange: (_l, href) => {   // href can arrive absolute
             const hash = href.slice(href.lastIndexOf('#'));

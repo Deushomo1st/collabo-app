@@ -60,8 +60,8 @@ const nav = await mountNavSelector('#nav', {
 
 **State (what it looks like)**
 - **Collapsed:** a 46px icon. Every nav starts like this on page open (`startIconized: false` opts out), and it is where the held fan lives.
-- **Expanded:** the pill showing up to 3 links, with arrows to slide the lineup when there are more.
-- **Windowed (hybrid):** the default pill, 3 links at a time, shrinking to 2 or 1 on narrow screens.
+- **Expanded:** the pill showing as many links as the screen has room for, with arrows to slide the lineup when there are more.
+- **Windowed (hybrid):** the default pill, showing as many links as fit (all of them on a wide screen, fewer as it narrows, down to 1).
 - **Scrolling pill:** the old style (`visible: 0`), where the whole row scrolls.
 - **Collapsed face:** the icon shows the current page's icon. `restIcon` replaces it until a link is picked (a gear, `+`, a flag, a profile picture). `collapsedLabel: 'number'` shows the position instead.
 
@@ -73,7 +73,7 @@ const nav = await mountNavSelector('#nav', {
 | Hold the icon (350ms) | The fan opens. |
 | Hold, push toward a button, release | The pointer hides and snaps to the buttons' angles; the lit one is picked and the fan closes. |
 | Hold, release on the icon | Nothing is picked and the fan closes. |
-| Arrows or dragging the pill | It slides the 3-link window along. |
+| Arrows or dragging the pill | It slides the window along. |
 | Tap a link | It navigates, or goes through the page's leave check (post and report pages). |
 | Keyboard | Tab through the links. ArrowUp opens the fan. Escape closes it. |
 
@@ -101,7 +101,7 @@ Set these on the mount target or any ancestor:
 
 | Variable | Default | Controls |
 |---|---|---|
-| `--nav-width` | `min(92vw, 560px)` | Max width when expanded |
+| `--nav-width` | `min(92vw, 960px)` | Max width when expanded |
 | `--nav-padding` | `6px` | Shell padding |
 | `--nav-link-padding` | `10px 20px` | Per-link padding |
 | `--nav-font-size` | `15px` | Link font size |
@@ -174,7 +174,7 @@ then add light values to `css/global/theme.css`.
 
 ## iplement hybrid (the standard nav)
 
-Hybrid is two things in one button: the windowed pill (below) and the [hold fan](../hold-fan/README.md) on its collapsed icon (`holdActions`). This is now the default for every nav. `visible` is the most links shown at once (default 3); the pill shows that many and hugs them (its width morphs to fit whichever are showing). On a narrow screen or container it shows 2, or 1, so a link is never half cut off; it refits on resize. With few links that already fit, the arrows are hidden. `visible: 0` brings back the old scrolling pill. `restIcon` may be an svg string or a function returning an element (the profile page passes the person's picture).
+Hybrid is two things in one button: the windowed pill (below) and the [hold fan](../hold-fan/README.md) on its collapsed icon (`holdActions`). This is now the default for every nav. `visible` is an optional cap on the links shown at once (default: no cap). The pill shows as many as fit and hugs them (its width morphs to fit whichever are showing). On a narrower screen or container it shows fewer, so a link is never half cut off; it refits on resize. With few links that already fit, the arrows are hidden. `visible: 0` brings back the old scrolling pill. `restIcon` may be an svg string or a function returning an element (the profile page passes the person's picture).
 
 - **Arrows** sit outside the pill and slide the window one link at a time. A dimmed arrow means nothing further that way; it still takes the tap, so it never counts as a tap outside. Each arrow has an invisible tap area about 12px bigger than the 26px circle (1px toward the pill, so the end links keep their taps).
 - **Swipe, drag or sideways scroll** (touch, mouse, trackpad or shift-wheel): the links follow your finger, then lock onto the window whose first link is nearest where you stopped, so 2-3-4 and 3-4-5 are reachable and a fourth link is never left half showing. A flick that would round back moves one link; a tiny twitch stays put.

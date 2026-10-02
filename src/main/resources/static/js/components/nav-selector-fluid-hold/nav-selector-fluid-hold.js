@@ -147,11 +147,11 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     });
 
     // ---------- horizontal menu logic ----------
-    // The "hybrid" (default; options.visible = the most links shown, 3 unless set; visible: 0 = the old scrolling pill):
-    // only V links show at once and the pill hugs them. V shrinks to 2 or 1 when the screen is too narrow.
+    // The "hybrid" (default; options.visible = the most links shown, as many as fit unless set; visible: 0 = the old scrolling pill):
+    // only V links show at once and the pill hugs them. V shrinks as the screen narrows.
     // The arrows (outside the pill) slide the window one link at a time; a drag locks onto the nearest window.
     const hybrid = options.visible !== 0;
-    let V = hybrid ? Math.min(options.visible || 3, getLinks().length) : 0;
+    let V = hybrid ? Math.min(options.visible || getLinks().length, getLinks().length) : 0;
     let start = 0;
     const windowed = () => hybrid;
     const movable = () => hybrid && getLinks().length > V;
@@ -169,9 +169,9 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     // How many links fit: the pill's room is the narrower of the screen rule and the container, less the two arrows and the pill's rim.
     function fitV() {
         if (!hybrid || drag || settling) return;
-        const links = getLinks(), top = Math.min(options.visible || 3, links.length);
+        const links = getLinks(), top = Math.min(options.visible || links.length, links.length);
         const nv = getComputedStyle(wrap).getPropertyValue('--nav-width').trim();
-        const screen = innerWidth <= 600 ? (nv.endsWith('px') ? parseFloat(nv) : (parseFloat(nv) || 94) * innerWidth / 100) : Math.min(.92 * innerWidth, 560);
+        const screen = innerWidth <= 600 ? (nv.endsWith('px') ? parseFloat(nv) : (parseFloat(nv) || 94) * innerWidth / 100) : Math.min(.92 * innerWidth, 960);
         const room = Math.min(screen, target.clientWidth || screen) - 68 - 12;
         const hid = links.map((l) => l.hidden); links.forEach((l) => { l.hidden = false; });
         const fits = (k) => links.every((_, i) => i + k > links.length || links[i + k - 1].offsetLeft + links[i + k - 1].offsetWidth - links[i].offsetLeft + 2 * pad() <= room);

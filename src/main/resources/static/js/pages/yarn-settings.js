@@ -87,7 +87,7 @@ async function boot() {
     mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     // the same bar as the Yarns page with Settings chosen; the others go back to that list
     await mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(), visible: 3, activeIndex: SECTIONS.length,
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(), activeIndex: SECTIONS.length,
         links: [...SECTIONS.map((s) => s.label), 'Settings'], hrefs: [...SECTIONS.map((s) => `/HTML-pages/yarnspaces.html#${s.id}`), '#'],
         icons: ICONS.map(svg),
         onChange: (_l, href) => { if (href.includes('yarnspaces.html')) location.href = href.slice(href.indexOf('/HTML-pages')); },

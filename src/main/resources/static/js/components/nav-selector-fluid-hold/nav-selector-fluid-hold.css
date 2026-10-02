@@ -4,7 +4,7 @@
    Several instances per page need 131+ (anchor-scope keeps each nav's anchors to itself).
 
    Settable size variables (apply on the mount target or root):
-   --nav-width        (default: min(92vw, 560px))  max-width of the expanded pill
+   --nav-width        (default: min(92vw, 960px))  max-width of the expanded pill
    --nav-padding      (default: 6px)               shell padding
    --nav-link-padding (default: 10px 20px)         per-link padding
    --nav-font-size    (default: 15px)              link font size */
@@ -46,7 +46,7 @@
     --_nf-icon-ink: var(--nav-selector-fluid-hold-icon-ink, #fff);
     position: relative;
     width: fit-content;
-    max-width: var(--nav-width, min(92vw, 560px));
+    max-width: var(--nav-width, min(92vw, 960px));
     height: 46px;
     padding: var(--nav-padding, 6px);
     border-radius: 999px;
@@ -176,7 +176,7 @@
 .nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow--right::after { left: -1px; }
 .nav-selector-fluid-hold-wrap--arrows > .nav-selector-fluid-hold__arrow.on { opacity: 1; }
 .nav-selector-fluid-hold-wrap--arrows:has(.iconized) > .nav-selector-fluid-hold__arrow { opacity: 0 !important; pointer-events: none; }
-.nav-selector-fluid-hold.is-windowed { max-width: calc(min(92vw, 560px) - 68px); }
+.nav-selector-fluid-hold.is-windowed { max-width: calc(min(92vw, 960px) - 68px); }
 .nav-selector-fluid-hold.is-windowed.iconized { max-width: 46px; }
 .nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__clip { flex: 0 1 auto; }
 .nav-selector-fluid-hold.is-windowed .nav-selector-fluid-hold__viewport { width: auto; max-width: 100%; overflow-x: hidden; touch-action: pan-y; user-select: none; scroll-snap-type: none; }
