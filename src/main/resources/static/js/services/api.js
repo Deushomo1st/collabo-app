@@ -55,6 +55,16 @@ export const resendOtp = (email) => call('/api/users/resend-otp', { method: 'POS
 // ---- Login session ---------------------------------------------------------
 export const loginUser = (identifier, password) => call('/api/auth/login', { method: 'POST', body: { identifier, password } }, 'Could not sign in. Please try again.');
 export const logoutUser = () => call('/api/auth/logout', { method: 'POST' });
+// Account security: forgot/reset (signed out), then change password, signed-in devices and delete account (signed in).
+export const forgotPassword = (email) => call('/api/auth/forgot', { method: 'POST', body: { email } }, 'Could not send the code. Please try again.');
+export const resetPassword = (email, code, password) => call('/api/auth/reset', { method: 'POST', body: { email, code, password } }, 'Could not reset the password. Please try again.');
+export const sendPasswordCode = () => call('/api/account/password/code', { method: 'POST' }, 'Could not send the code. Please try again.');
+export const verifyPasswordCode = (code) => call('/api/account/password/verify', { method: 'POST', body: { code } }, 'Could not check the code.');
+export const changePassword = (current, password) => call('/api/account/password', { method: 'POST', body: { current, password } }, 'Could not change the password.');
+export const mySessions = () => call('/api/account/sessions', undefined, 'Could not load your devices.');
+export const endSession = (id) => call(`/api/account/sessions/${encodeURIComponent(id)}`, { method: 'DELETE' }, 'Could not sign that device out.');
+export const endOtherSessions = () => call('/api/account/sessions/sign-out-others', { method: 'POST' }, 'Could not sign the other devices out.');
+export const deleteAccount = (password) => call('/api/account/delete', { method: 'POST', body: { password } }, 'Could not delete the account.');
 // The signed-in account, or null when signed out (not an error: the page decides what to show).
 export async function currentUser() {
     const { response, data } = await send('/api/auth/me');

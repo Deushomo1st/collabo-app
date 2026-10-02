@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#10162a">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>if('serviceWorker'in navigator)addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})</script>
-<title>COLLABO — Sign in</title>
+<title>COLLABO — Reset your password</title>
 <link rel="stylesheet" href="/css/global/global.css">
 <!-- Apply the saved theme before first paint (see theme-switcher README) -->
 <script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -27,23 +27,33 @@
 <div class="sp-shell">
     <div class="lg-theme" id="theme-slot"></div>
     <main class="lg-card sp-glass">
-        <h1 class="lg-title">Sign in</h1>
-        <p class="sp-sub">Welcome back to COLLABO.</p>
-        <form class="sp-form" id="login-form" novalidate>
-            <label for="identifier">Email or username
-                <input class="sp-input" id="identifier" name="identifier" autocomplete="username" required autofocus>
+        <h1 class="lg-title">Reset your password</h1>
+        <p class="sp-sub" id="intro">Enter your email and we will send you a 6-digit code.</p>
+
+        <form class="sp-form" id="ask-form" novalidate>
+            <label for="email">Email
+                <input class="sp-input" id="email" name="email" type="email" autocomplete="email" required autofocus>
             </label>
-            <label for="password">Password
-                <input class="sp-input" id="password" name="password" type="password" autocomplete="current-password" required>
-            </label>
-            <p class="lg-error" id="error" role="alert" hidden></p>
-            <button class="sp-btn sp-btn--brand" id="submit" type="submit">Sign in</button>
+            <p class="lg-error" id="ask-error" role="alert" hidden></p>
+            <button class="sp-btn sp-btn--brand" id="ask-submit" type="submit">Send the code</button>
         </form>
-        <p class="lg-foot"><a href="/HTML-pages/forgot.html">Forgot your password?</a></p>
-        <p class="lg-foot">New here? <a href="/HTML-pages/register.html">Create an account</a></p>
+
+        <form class="sp-form" id="reset-form" novalidate hidden>
+            <label for="code">The 6-digit code
+                <input class="sp-input" id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required>
+            </label>
+            <label for="password">New password
+                <input class="sp-input" id="password" name="password" type="password" autocomplete="new-password" required>
+            </label>
+            <p class="lg-error" id="reset-error" role="alert" hidden></p>
+            <button class="sp-btn sp-btn--brand" id="reset-submit" type="submit">Set the new password</button>
+            <button class="sp-btn" id="again" type="button">Send a new code</button>
+        </form>
+
+        <p class="lg-foot"><a href="/HTML-pages/login.html">Back to sign in</a></p>
     </main>
 </div>
 
-<script type="module" src="/js/pages/login.js"></script>
+<script type="module" src="/js/pages/forgot.js"></script>
 </body>
 </html>

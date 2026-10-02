@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface SpaceRepository extends JpaRepository<Space, UUID> {
     Optional<Space> findByPostId(UUID postId);
     boolean existsByPostId(UUID postId);
+    boolean existsByOwnerId(UUID ownerId);
 }

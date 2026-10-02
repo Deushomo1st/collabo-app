@@ -57,6 +57,7 @@ public class SessionController {
         SecurityContext context = new SecurityContextImpl(auth);
         SecurityContextHolder.setContext(context);
         contexts.saveContext(context, request, response);
+        request.getSession().setAttribute("device", com.collabo.backend.util.DeviceLabel.of(request.getHeader("User-Agent")));   // shown in Settings > signed-in devices
         return UserResponse.from(user);
     }
 

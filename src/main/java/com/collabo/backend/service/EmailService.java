@@ -39,6 +39,36 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendResetEmail(String toEmail, String username, String code) {
+        send(toEmail, "Reset your COLLABO password",
+                "Hi %s,\n\nSomeone asked to reset the password for this account. Your code is:\n\n    %s\n\n"
+                        + "It expires in 10 minutes. If this wasn't you, ignore this email: your password has not changed.\n\n"
+                        + "The COLLABO Team\nhttps://collaboapp.pro", username, code);
+    }
+
+    public void sendChangeCodeEmail(String toEmail, String username, String code) {
+        send(toEmail, "Confirm it's you: your COLLABO code",
+                "Hi %s,\n\nYou asked to change your password. Your code is:\n\n    %s\n\n"
+                        + "It expires in 10 minutes. If this wasn't you, someone may know your password: change it and sign out other devices.\n\n"
+                        + "The COLLABO Team\nhttps://collaboapp.pro", username, code);
+    }
+
+    public void sendPasswordChangedEmail(String toEmail, String username) {
+        send(toEmail, "Your COLLABO password was changed",
+                "Hi %s,\n\nThe password for your COLLABO account was just changed, and you were signed out of your other devices.\n\n"
+                        + "If this wasn't you, reset your password now at https://collaboapp.pro/HTML-pages/forgot.html\n\n"
+                        + "The COLLABO Team", username);
+    }
+
+    private void send(String to, String subject, String format, Object... args) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailConfig.getFromAddress());
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(String.format(format, args));
+        mailSender.send(message);
+    }
+
     public void sendVerificationEmail(String toEmail, String username, String code) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailConfig.getFromAddress());

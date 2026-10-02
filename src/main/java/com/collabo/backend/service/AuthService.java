@@ -228,7 +228,7 @@ public class AuthService {
     }
 
     /** Generate a 6-digit code, store its BCrypt hash + expiry on the user, return the plaintext. */
-    private String issueOtp(User user) {
+    String issueOtp(User user) {
         int code = 100000 + SECURE_RANDOM.nextInt(900000);
         String codeStr = String.valueOf(code);
         user.setOtpHash(passwordEncoder.encode(codeStr));

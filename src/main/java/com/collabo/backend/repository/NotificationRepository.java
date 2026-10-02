@@ -11,6 +11,7 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     List<Notification> findTop100ByUserIdOrderByCreatedAtDesc(UUID userId);
     Optional<Notification> findByIdAndUserId(UUID id, UUID userId);
     long countByUserIdAndReadFalse(UUID userId);
+    void deleteByUserId(UUID userId);
     boolean existsByUserIdAndLinkAndReadFalse(UUID userId, String link);
     List<Notification> findByUserIdAndReadFalse(UUID userId);
     List<Notification> findByRefKeyAndActionRequiredTrue(String refKey);

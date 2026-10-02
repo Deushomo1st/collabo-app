@@ -13,6 +13,8 @@ import java.util.UUID;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
 
+    List<Post> findByAuthorId(UUID authorId);
+
     /** The Gaze: everyone's posts, newest first, minus authors the viewer has a block with. */
     @Query("select p from Post p where p.createdAt < :before and p.authorId not in :hidden "
             + "and (:pendingOnly = false or (p.formed = false and (p.applyBy is null or p.applyBy > :now))) order by p.createdAt desc")

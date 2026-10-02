@@ -12,6 +12,7 @@ public interface FollowRepository extends JpaRepository<Follow, UUID> {
     boolean existsByFollowerIdAndFollowedId(UUID followerId, UUID followedId);
     long countByFollowedId(UUID followedId);
     long countByFollowerId(UUID followerId);
+    void deleteByFollowerIdOrFollowedId(UUID followerId, UUID followedId);
     void deleteByFollowerIdAndFollowedId(UUID followerId, UUID followedId);
     List<Follow> findTop50ByFollowedIdOrderByCreatedAtDesc(UUID followedId);
     List<Follow> findTop50ByFollowerIdOrderByCreatedAtDesc(UUID followerId);
