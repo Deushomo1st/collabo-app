@@ -183,7 +183,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 .sp-star[disabled] { cursor: default; opacity: .5; }
 
 /* ---- Sections ---- */
-.sp-section { margin-top: 18px; animation: sp-in .45s cubic-bezier(.2, .8, .2, 1) both; }
+.sp-section { margin-top: 18px; animation: sp-in .45s cubic-bezier(.2, .8, .2, 1) backwards; }   /* not "both": a held end state keeps the whole list (the Gaze feed) as one big layer, which some phones paint with a lighter box */
 @keyframes sp-in { from { opacity: 0; transform: translateY(14px); } }
 .sp-h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 800; }
 .sp-sub { margin: 0 0 14px; color: var(--sp-muted); font-size: 13px; }
