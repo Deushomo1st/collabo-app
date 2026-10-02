@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#10162a">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<script>if('serviceWorker'in navigator)addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})</script>
+<title>COLLABO — Settings</title>
+<link rel="stylesheet" href="/css/global/global.css">
+<!-- Apply the saved theme before first paint (see theme-switcher README) -->
+<script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/pages/workspace.css">
+<link rel="stylesheet" href="/css/pages/yarnspaces.css">   <!-- the settings cards share the Yarns settings look -->
+</head>
+<body>
+<div class="sp-aurora" aria-hidden="true">
+    <div class="sp-aurora__blob sp-aurora__blob--a"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--b"></div>
+    <div class="sp-aurora__blob sp-aurora__blob--c"></div>
+</div>
+
+<div class="sp-shell">
+    <div class="sp-top">
+        <header class="sp-header sp-glass">
+            <div class="sp-title"><h1>Settings</h1></div>
+            <div id="theme-slot"></div>
+        </header>
+    </div>
+
+    <main id="section" class="sp-section"></main>
+</div>
+
+<div id="nav"></div>
+<div class="sp-toast" id="toast" role="status"></div>
+<script type="module" src="/js/pages/profile-settings.js"></script>
+</body>
+</html>

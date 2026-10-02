@@ -6,7 +6,7 @@
 //        mountNavSelector('#nav-selector-fluid-hold', { links: ['A','B'], hrefs: ['#a','#b'], activeIndex: 0, idleMs: 1500, onChange: (label, href) => {} });
 //        mountNavSelector(el, { scrollRoot: document.querySelector('main') });   // content scrolls inside <main>
 //        mountNavSelector(el, { placement: 'bottom', align: 'start' });           // docked bottom-left, grows rightwards
-//        mountNavSelector(el, { collapseWhenIdle: true, idleMs: 3000 });          // collapse after 3s idle, even at the top
+//        mountNavSelector(el, { collapseWhenIdle: true, idleMs: 3000 });          // collapse after 3s idle, even at the top; it also starts collapsed (startIconized: false = start open)
 //        mountNavSelector(el, { collapsedLabel: 'number' });                      // collapsed pill shows "3" instead of the icon
 //        mountNavSelector(el, { holdActions: [{ label, icon, onSelect }] });       // hold the collapsed icon: up to 5 buttons fan out (slide onto one and let go to pick it) (hold-fan)
 //        nav.setActive(2);                                                         // select a link from code (no onChange)
@@ -319,7 +319,9 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     syncIcon();
     update();
     if (hybrid) { fitV(); ro?.observe(target); }
-    if (idleAnywhere) armIdle();               // start the countdown straight away
+    if (idleAnywhere && options.startIconized !== false) {   // a page that just opened shows the icon, not the open pill (startIconized: false to opt out)
+        root.style.transition = 'none'; root.classList.add('iconized'); void root.offsetWidth; root.style.transition = '';   // no shrink animation on load
+    } else if (idleAnywhere) armIdle();        // start the countdown straight away
 
     return {
         element: root,
