@@ -117,6 +117,7 @@ export function mountHoldFan(trigger, opts = {}) {
     trigger.addEventListener('pointerleave', cancel);
     trigger.addEventListener('click', onClick, true);   // capture: ahead of the trigger's own click handler
     trigger.addEventListener('contextmenu', noMenu);
+    trigger.addEventListener('dragstart', noMenu);   // a picture inside (the profile face) must not be lifted off by the hold
     trigger.addEventListener('keydown', onKeyTrigger);
 
     return {
@@ -133,6 +134,7 @@ export function mountHoldFan(trigger, opts = {}) {
             trigger.removeEventListener('pointerleave', cancel);
             trigger.removeEventListener('click', onClick, true);
             trigger.removeEventListener('contextmenu', noMenu);
+            trigger.removeEventListener('dragstart', noMenu);
             trigger.removeEventListener('keydown', onKeyTrigger);
         },
     };

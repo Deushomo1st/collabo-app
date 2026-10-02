@@ -3,6 +3,7 @@
    Light-theme values live in css/global/theme.css. */
 
 .hold-fan-trigger { touch-action: none;   /* a finger that holds and slides must not turn into a scroll */ -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
+.hold-fan-trigger img { -webkit-user-drag: none; user-select: none; pointer-events: none; }   /* a profile picture inside can't be dragged out by the hold */
 
 .hold-fan {
     position: fixed; width: 0; height: 0; z-index: var(--hold-fan-z, 90);   /* sits at the trigger's centre; each button measures from here */
