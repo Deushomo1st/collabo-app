@@ -49,13 +49,13 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
 
 /**
  * Gaze, Yarns, Settings: the bar on the post and report pages. Settings opens the page's own settings page.
- * beforeLeave(href) may take over leaving (to ask about unsaved work); beforeSettings() runs first on the way to the settings page.
+ * beforeLeave(href) may take over leaving (to ask about unsaved work); guard(go) does the same for the held-icon buttons; beforeSettings() runs first on the way to the settings page.
  */
-export async function mountComposeNav(settingsHref, { beforeLeave, beforeSettings, restInner = GEAR } = {}) {
+export async function mountComposeNav(settingsHref, { beforeLeave, beforeSettings, guard, restInner = GEAR } = {}) {
     const to = { Gaze: GAZE, Yarns: '/HTML-pages/yarnspaces.html' };
     speculate([GAZE, to.Yarns]);
     const nav = await mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, visible: 3, activeIndex: 2, holdActions: fanActions(), restIcon: svg(restInner),
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, visible: 3, activeIndex: 2, holdActions: fanActions(guard), restIcon: svg(restInner),
         links: ['Gaze', 'Yarns', 'Settings'], hrefs: [GAZE, to.Yarns, settingsHref],
         icons: [svg(HOME), svg(CHAT), svg(GEAR)],
         onChange: (label) => {

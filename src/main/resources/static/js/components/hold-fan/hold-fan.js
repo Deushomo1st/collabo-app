@@ -17,17 +17,16 @@ const SIZE = 46;                 // px, each round button
 const RADIUS = 84;               // px, trigger centre to button centre
 const ANGLES = { 1: [-90], 2: [-125, -55], 3: [-155, -90, -25], 4: [-160, -120, -60, -20], 5: [-160, -125, -90, -55, -20] };   // degrees from the x axis; negative = up. Left to right (5 has one dead centre).
 
-// opts: { actions: [{ label, icon (svg markup, static), onSelect() }], holdMs = 350, stagger = 0, idleMs = 4000 }
+// opts: { actions: [{ label, icon (svg markup, static), onSelect() }], holdMs = 350, stagger = 0 }. The fan stays open until you pick one or tap elsewhere (no idle timer).
 // Returns { open(), close(), destroy() }.
 export function mountHoldFan(trigger, opts = {}) {
     loadStylesOnce();
     const actions = (opts.actions || []).slice(0, 5);
-    const holdMs = opts.holdMs ?? 350, stagger = opts.stagger ?? 0, idleMs = opts.idleMs ?? 4000;
+    const holdMs = opts.holdMs ?? 350, stagger = opts.stagger ?? 0;
     const radius = actions.length > 3 ? 90 : RADIUS;
-    let timer = null, idle = null, layer = null, startX = 0, startY = 0, justHeld = false, hot = null;
+    let timer = null, layer = null, startX = 0, startY = 0, justHeld = false, hot = null;
 
     function close() {
-        clearTimeout(idle);
         if (!layer) return;
         const old = layer; layer = null;
         old.classList.remove('is-open');
@@ -68,8 +67,6 @@ export function mountHoldFan(trigger, opts = {}) {
         trigger.setAttribute('aria-expanded', 'true');
         document.addEventListener('pointerdown', onOutside, true);
         document.addEventListener('keydown', onKey, true);
-        idle = setTimeout(close, idleMs);
-        layer.addEventListener('pointerdown', () => clearTimeout(idle));
     }
 
     // Slide to pick: while the finger is still down after the hold opened the fan, the button under it lights up, and letting go on it picks it.

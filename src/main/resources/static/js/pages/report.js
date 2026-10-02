@@ -3,6 +3,7 @@
 import { h, toast } from '/js/services/dom.js';
 import { currentUser, mediaUpload, mediaDiscard, mediaUrl, reportSend } from '/js/services/api.js';
 import { mountComposeNav } from '/js/services/main-nav.js';
+import { glassBlurConfirm } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { reportSet, reportWork } from '/js/services/stash.js';
 import { SEND } from '/js/services/icons.js';
 
@@ -55,13 +56,20 @@ async function submit(e) {
     busy = true; send.disabled = true; showError('');
     try {
         await reportSend({ summary: text.value, pageUrl: from, mediaIds: files.map((f) => f.id), anonymous: !!reportSet.read()?.anonymous });
-        reportSet.clear(); reportWork.clear();
+        reportSet.clear(); reportWork.clear(); files = []; text.value = '';   // sent: nothing left to lose when you leave
         $('rp-main').replaceChildren(h('section', { class: 'rp-done sp-glass' },
             h('h2', { text: 'Thank you. We have it.' }),
             h('p', { text: 'Your report is with the admin now. Nothing else for you to do.' }),
             h('button', { class: 'gz-nav gz-nav--brand', type: 'button', text: 'Go back', onclick: goBack })));
         send.hidden = true;
     } catch (ex) { showError(ex.message); busy = false; send.disabled = false; }
+}
+
+/** Leave the page; a half-written report (words or files) gets asked about first. */
+async function leaveThen(next) {
+    if ((text.value.trim() || files.length) && !await glassBlurConfirm('Your report has not been sent.', { title: 'You have unsaved work', okText: 'Leave anyway', cancelText: 'Cancel' })) return;
+    files.forEach((f) => mediaDiscard(f.id).catch(() => {}));   // uploads nobody will send
+    reportSet.clear(); reportWork.clear(); next();
 }
 
 function goBack() { if (from) location.href = from; else if (history.length > 1) history.back(); else location.href = GAZE; }
@@ -73,7 +81,7 @@ async function boot() {
     mountComposeNav('/HTML-pages/report-settings.html', {
         restInner: '<path d="M4 22V4h12l-2 4 2 4H4"/>',
         beforeSettings: () => reportWork.write({ text: text.value, files }),
-        beforeLeave: (href) => { reportSet.clear(); reportWork.clear(); location.href = href; } });
+        beforeLeave: (href) => leaveThen(() => { location.href = href; }), guard: leaveThen });
     const work = reportWork.take();
     if (work) { text.value = work.text; files = work.files; $('rp-count').textContent = `${text.value.length} / 2000`; } else reportSet.clear();
     $('rp-from').textContent = from ? `From ${from}` : '';

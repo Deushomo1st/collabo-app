@@ -124,19 +124,20 @@ function toSettings() {
 const forget = () => { postSet.clear(); postWork.clear(); };
 
 /** Go somewhere else on the site; unsaved changes get the Save-a-draft question first. */
-async function leave(href) {
-    const go = () => { forget(); dirty = false; location.href = href; };
+async function leaveThen(next) {
+    const go = () => { forget(); dirty = false; next(); };
     if (!dirty) return go();
     const { panel, close } = await openGlassBlurDialog({ size: 'sm', label: 'Leave the post page', html:
         '<h3 class="glass-blur-dialog__title">Save this as a draft?</h3><p class="pc-hint">You have changes that are not posted.</p><div class="glass-blur-dialog__actions"></div>' });
     panel.querySelector('.glass-blur-dialog__actions').append(
-        h('button', { class: 'glass-blur-dialog__btn', type: 'button', text: 'Keep writing', onclick: close }),
-        h('button', { class: 'glass-blur-dialog__btn', type: 'button', text: 'Discard', onclick: () => {
+        h('button', { class: 'glass-blur-dialog__btn', type: 'button', text: 'Cancel', onclick: close }),
+        h('button', { class: 'glass-blur-dialog__btn', type: 'button', text: 'Discard post', onclick: () => {
             files.filter((f) => !savedIds.has(f.id)).forEach((f) => mediaDiscard(f.id).catch(() => {}));   // uploads that only this unsaved edit knew about
             close(); go();
         } }),
-        h('button', { class: 'glass-blur-dialog__btn', type: 'button', text: 'Save draft', onclick: async () => { if (await saveDraft(true)) { close(); go(); } } }));
+        h('button', { class: 'glass-blur-dialog__btn', type: 'button', text: 'Save to draft', onclick: async () => { if (await saveDraft(true)) { close(); go(); } } }));
 }
+const leave = (href) => leaveThen(() => { location.href = href; });
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -161,7 +162,7 @@ async function boot() {
     me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/index.html');
     $('publish').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
-    mountComposeNav('/HTML-pages/post-settings.html', { beforeLeave: leave, beforeSettings: toSettings, restInner: '<path d="M12 5v14M5 12h14"/>' });
+    mountComposeNav('/HTML-pages/post-settings.html', { beforeLeave: leave, guard: leaveThen, beforeSettings: toSettings, restInner: '<path d="M12 5v14M5 12h14"/>' });
     const id = new URLSearchParams(location.search).get('draft');
     const work = postWork.take();
     if (work) {   // back from the settings page: the text and files are as you left them
