@@ -6,7 +6,7 @@
 .hr-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; justify-content: space-between; align-items: center; padding: 18px var(--sp-gutter); }
 .hr-logo { font: 800 18px var(--sp-font); letter-spacing: .14em; color: var(--sp-text); text-decoration: none; }
 .hr-bar__nav a { color: var(--sp-text); font: 700 14px var(--sp-font); text-decoration: none; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); }
-.hr-bar__nav a:hover { background: var(--sp-panel-hi); }
+@media (hover: hover) and (pointer: fine) { .hr-bar__nav a:hover { background: var(--sp-panel-hi); } }   /* hover effects are for mouse and trackpad; a tap on a phone leaves them stuck on */
 
 .hr { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center; padding: 96px var(--sp-gutter) 0; overflow: hidden; }
 .hr-title, .hr-big { overflow-wrap: normal; word-break: keep-all; margin: 0; font: 800 clamp(40px, 9vw, 112px)/.98 var(--sp-font); text-transform: uppercase; letter-spacing: -.02em; }
@@ -16,14 +16,18 @@
     background: var(--sp-brand); color: var(--sp-brand-ink); font: 800 18px var(--sp-font);
     box-shadow: 0 10px 30px color-mix(in srgb, var(--sp-brand) 35%, transparent); transition: transform .3s cubic-bezier(.16, 1, .3, 1);
 }
-.hr-btn:hover { transform: translateY(-2px) scale(1.02); }
+@media (hover: hover) and (pointer: fine) { .hr-btn:hover { transform: translateY(-2px) scale(1.02); } }
 .hr-btn > span { display: grid; overflow: hidden; }
 /* both lines share one cell; the hover line waits below and rolls up as the label rolls out (delays are set in hero.js) */
 .hr-btn .ln { grid-area: 1 / 1; justify-self: center; display: inline-flex; white-space: pre; }
 .hr-btn .ch { display: inline-block; transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
 .hr-btn .ln--in .ch { transform: translateY(110%); }
-.hr-btn:hover .ln--out .ch, .hr-btn:focus-visible .ln--out .ch { transform: translateY(-110%); }
-.hr-btn:hover .ln--in .ch, .hr-btn:focus-visible .ln--in .ch { transform: none; }
+.hr-btn:focus-visible .ln--out .ch { transform: translateY(-110%); }
+.hr-btn:focus-visible .ln--in .ch { transform: none; }
+@media (hover: hover) and (pointer: fine) {
+    .hr-btn:hover .ln--out .ch { transform: translateY(-110%); }
+    .hr-btn:hover .ln--in .ch { transform: none; }
+}
 .hr-live { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--sp-muted); font: 500 12px var(--sp-mono); letter-spacing: .08em; text-transform: uppercase; }
 .hr-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sp-ok); box-shadow: 0 0 10px var(--sp-ok); animation: hr-pulse 1.6s ease-in-out infinite; }
 @keyframes hr-pulse { 50% { opacity: .35; } }
