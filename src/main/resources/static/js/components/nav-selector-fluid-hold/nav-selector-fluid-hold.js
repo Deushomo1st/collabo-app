@@ -1,6 +1,6 @@
 // Nav Selector component — "fluid hold" collapsible pill nav.
 // Collapses to a centered icon on scroll-down; expands only when you tap the icon
-// (or hold it, with holdActions), and re-iconizes after 1.5s idle (configurable).
+// (or hold it, with holdActions), and re-iconizes after 1.5s idle (configurable; idleMs: 0 turns the idle collapse off).
 // Usage: import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
 //        const nav = await mountNavSelector('#nav-selector-fluid-hold');
 //        mountNavSelector('#nav-selector-fluid-hold', { links: ['A','B'], hrefs: ['#a','#b'], activeIndex: 0, idleMs: 1500, onChange: (label, href) => {} });
@@ -116,6 +116,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     function armIdle() {
         clearTimeout(idleTimer);
+        if (options.idleMs === 0) return;   // 0 = never collapse on idle: only a scroll down or a tap outside tucks it away
         idleTimer = setTimeout(() => {
             if (!canIdleCollapse() || isIconized()) return;
             if (isBusy()) armIdle();           // still in use: check again later

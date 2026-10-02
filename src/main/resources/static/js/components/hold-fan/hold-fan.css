@@ -26,4 +26,7 @@
 .hold-fan.is-open .hold-fan__btn:active { transform: translate(var(--x), var(--y)) scale(.92); }
 .hold-fan__btn:focus-visible { outline: 2px solid #FF9000; outline-offset: 3px; }
 
+.hold-fan-grab, .hold-fan-grab * { cursor: none !important; }   /* while the hold is down the pointer is hidden; the lit button is the aim */
+.hold-fan-grab .hold-fan__btn:hover:not(.is-hot) { filter: none; }
+
 @media (prefers-reduced-motion: reduce) { .hold-fan__btn { transition: opacity .1s; } }

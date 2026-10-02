@@ -109,7 +109,7 @@ let navMode = '', navIds = '', navQueue = Promise.resolve();
 const mountNav = async (opts) => {
     nav?.destroy();
     nav = await mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(),
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(),
         onChange: (_l, href) => { if (href.includes('yarn-settings.html')) location.href = '/HTML-pages/yarn-settings.html'; else go(href.slice(href.lastIndexOf('#'))); },   // href can arrive absolute
         ...opts,
     });

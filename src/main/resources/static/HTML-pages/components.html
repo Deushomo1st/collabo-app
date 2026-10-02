@@ -107,6 +107,12 @@
     .gallery__stage--full { padding: 0; align-items: stretch; justify-content: stretch; overflow: hidden; }
     .gallery__stage--full > * { width: 100%; min-width: 0; }
 
+    .gallery__notes { margin: 0 0 1.5rem; font-size: 0.85rem; line-height: 1.5; }
+    .gallery__notes:empty { display: none; }
+    .gallery__notes h3 { margin: 1rem 0 0.35rem; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-muted); }
+    .gallery__notes ul { margin: 0; padding-left: 1.2rem; }
+    .gallery__notes table { border-collapse: collapse; width: 100%; }
+    .gallery__notes td, .gallery__notes th { border: 1px solid var(--g-line); padding: 6px 10px; text-align: left; vertical-align: top; }
     .gallery__keys { margin: 0; text-align: center; color: var(--g-muted); font-size: 0.75rem; }
     .gallery__keys kbd {
         padding: 0.05rem 0.35rem;
@@ -202,6 +208,8 @@
 
     <div class="gallery__stage" id="gallery-stage" style="--nav-padding: 4px; --nav-link-padding: 8px 16px; --nav-font-size: 12px;"></div>
 
+    <div class="gallery__notes" id="gallery-notes"></div>
+
     <p class="gallery__keys"><kbd>←</kbd> <kbd>→</kbd> switch components · the bar at the bottom is the nav-selector component</p>
 </div>
 
@@ -274,12 +282,40 @@
         return { wrap, result };
     }
 
+    // Static text written here, shown under a component's stage (a catalog entry's `notes`). Never user input.
+    const NAV_MODES = `
+        <h3>State (what it looks like)</h3>
+        <ul>
+            <li><b>Collapsed:</b> a 46px icon. Every nav starts like this on page open, and it is where the held fan lives.</li>
+            <li><b>Expanded:</b> the pill showing up to 3 links, with arrows to slide the lineup when there are more.</li>
+            <li><b>Windowed (hybrid):</b> the default pill, 3 links at a time, shrinking to 2 or 1 on narrow screens.</li>
+            <li><b>Scrolling pill:</b> the old style (<code>visible: 0</code>), where the whole row scrolls.</li>
+            <li><b>Collapsed face:</b> the icon shows the current page's icon. <code>restIcon</code> replaces it until a link is picked (a gear, +, a flag, a profile picture). <code>collapsedLabel: 'number'</code> shows the position instead.</li>
+        </ul>
+        <h3>How you operate it (the input)</h3>
+        <table>
+            <tr><th>Input</th><th>What happens</th></tr>
+            <tr><td>Tap the icon</td><td>It expands.</td></tr>
+            <tr><td>Hold the icon (350ms)</td><td>The fan opens.</td></tr>
+            <tr><td>Hold, push toward a button, release</td><td>The pointer hides and snaps to the buttons' angles; the lit one is picked and the fan closes.</td></tr>
+            <tr><td>Hold, release on the icon</td><td>Nothing is picked and the fan closes.</td></tr>
+            <tr><td>Arrows or dragging the pill</td><td>It slides the 3-link window along.</td></tr>
+            <tr><td>Tap a link</td><td>It navigates, or goes through the page's leave check (post and report pages).</td></tr>
+            <tr><td>Keyboard</td><td>Tab through the links. ArrowUp opens the fan. Escape closes it.</td></tr>
+        </table>
+        <h3>How it closes</h3>
+        <ul>
+            <li><b>Expanded pill:</b> it collapses when you scroll down or tap outside it. With <code>idleMs</code> set it also collapses after that long idle; with <code>idleMs: 0</code>, as the app uses, it never does.</li>
+            <li><b>Held fan:</b> it closes the moment you let go (picking the button you aimed at). Opened with ArrowUp it stays until you pick one, press Escape or tap outside. There is no timer.</li>
+        </ul>
+        <p>The fan's five buttons, left to right, are Home, Report a problem, Chat, Back and Profile. On the report page Report is left out, and the settings pages show only Home, Report and Return.</p>`;
+
     const catalog = [
 
         {
             id: 'nav-selector-fluid-hold',
             title: 'Nav Selector',
-            files: ['nav-selector-fluid-hold.html', 'nav-selector-fluid-hold.css', 'nav-selector-fluid-hold.js'],
+            files: ['nav-selector-fluid-hold.html', 'nav-selector-fluid-hold.css', 'nav-selector-fluid-hold.js', 'README.md'],
             stageClass: 'gallery__stage--transparent gallery__stage--full',
             render: async (stage) => {
                 // The nav iconizes when its scroll root scrolls down, so give it one.
@@ -302,9 +338,10 @@
 
         {
             id: 'iplement-hybrid',
+            notes: NAV_MODES,
             dir: 'nav-selector-fluid-hold',   // a mode of the nav selector: it shows three links, the arrows sit outside the pill
             title: 'iplement hybrid',
-            files: ['nav-selector-fluid-hold.html', 'nav-selector-fluid-hold.css', 'nav-selector-fluid-hold.js'],
+            files: ['nav-selector-fluid-hold.html', 'nav-selector-fluid-hold.css', 'nav-selector-fluid-hold.js', 'README.md'],
             stageClass: 'gallery__stage--transparent gallery__stage--full',
             render: async (stage) => {
                 const box = document.createElement('div');
@@ -312,7 +349,7 @@
                 stage.appendChild(box);
                 const ICO = (d) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
                 const nav = await mountNavSelector(box, {
-                    collapseWhenIdle: true, idleMs: 4000, visible: 3, scrollRoot: box,   // inside the stage box like the other demos, not docked to the screen
+                    collapseWhenIdle: true, idleMs: 0, visible: 3, scrollRoot: box,   // inside the stage box like the other demos, not docked to the screen
                     links: ['Gaze', 'Yarns', 'Post', 'Spaces', 'Inbox', 'Settings'],
                     hrefs: ['#', '#', '#', '#', '#', '#'],
                     icons: [
@@ -323,8 +360,15 @@
                     ].map(ICO),
                     activeIndex: 1,
                     onChange: () => {},
+                    // hybrid = the three-link window plus the hold fan: collapse it, then press and hold the icon
+                    holdActions: [['Home', '<path d="M3 10.5 12 3l9 7.5V21H3z"/>'], ['Report a problem', '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>'],
+                        ['Chat', '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'], ['Back', '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'],
+                        ['Profile', '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>']]
+                        .map(([label, d]) => ({ label, icon: ICO(d), onSelect: () => { const m = box.querySelector('.gallery__fan-said'); if (m) m.textContent = `Fan pick: ${label}`; } })),
                 });
-                box.insertAdjacentHTML('beforeend', '<div class="gallery__scrollbox-content"><p><strong>Three at a time.</strong> '
+                box.insertAdjacentHTML('beforeend', '<div class="gallery__scrollbox-content"><p><strong>Window plus fan.</strong> Hybrid is two things in one button: the three-link window and the hold fan. '
+                    + 'Collapse the pill, then press and hold its icon: five buttons fan out, and hold, push toward one and let go to pick it. <span class="gallery__fan-said">Nothing picked yet.</span></p>'
+                    + '<p><strong>Three at a time.</strong> '
                     + 'The pill hugs its three links; the arrows sit outside it. An arrow slides the window one link: the link behind '
                     + 'drops off, the next one on that side comes in. A dimmed arrow means nothing further that way, and tapping it does nothing. '
                     + 'Drag or swipe sideways (or scroll sideways): the links follow you, then lock onto the nearest three, so 2-3-4 works as well as 1-3 or 4-6. '
@@ -813,6 +857,7 @@
 
         stage.className = 'gallery__stage ' + (item.stageClass || '');
         stage.textContent = ''; // clear the previous component
+        document.getElementById('gallery-notes').innerHTML = item.notes || '';
 
         countEl.textContent = `Component ${index + 1} of ${catalog.length}`;
         titleEl.textContent = item.title;

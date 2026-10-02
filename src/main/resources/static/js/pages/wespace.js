@@ -60,7 +60,7 @@ async function boot() {
     me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
     mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 5000, holdActions: fanActions(), visible: 3, activeIndex: 2, restIcon: svg(PEOPLE),
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(), visible: 3, activeIndex: 2, restIcon: svg(PEOPLE),
         links: ['All yarns', 'MySpaces', 'WeSpaces', 'WorkSpaces'],
         hrefs: [YARNS, `${YARNS}#myspace`, `${YARNS}#wespace`, `${YARNS}#workspace`],
         icons: [CHAT, PERSON, PEOPLE, BRIEFCASE].map(svg),

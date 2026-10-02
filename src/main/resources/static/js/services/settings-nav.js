@@ -5,7 +5,7 @@ import { fanActions } from '/js/services/fan-actions.js';
 
 export function mountSettingsNav(fallback) {
     return mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 2500, activeIndex: 0,
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, activeIndex: 0,
         links: ['Settings'], hrefs: ['#'], icons: [svg(GEAR)],
         holdActions: [...fanActions().slice(0, 2), { label: 'Return', icon: svg(RETURN), onSelect: () => { if (history.length > 1) history.back(); else location.href = fallback; } }],
     });
