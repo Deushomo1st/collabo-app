@@ -27,6 +27,13 @@ public class PostController {
     @PostMapping
     public PostResponse create(@RequestBody PostRequest req) { return posts.create(current.require(), req); }
 
+    /** Posts that came into view in a feed (batched by the page): counts one view each, once per person. */
+    @PostMapping("/seen")
+    public ResponseEntity<Void> seen(@RequestBody com.collabo.backend.dto.PostDtos.SeenRequest req) {
+        posts.seen(current.require(), req.ids());
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public PostResponse get(@PathVariable UUID id) { return posts.get(current.require(), id); }
 

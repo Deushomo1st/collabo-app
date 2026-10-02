@@ -20,6 +20,8 @@ public final class PostDtos {
 
     /** Who to yarn an existing post to. */
     public record ShareRequest(java.util.List<String> usernames) {}
+    /** Posts that scrolled into view in a feed. */
+    public record SeenRequest(java.util.List<java.util.UUID> ids) {}
 
     public record ShareResponse(int shared) {}
 

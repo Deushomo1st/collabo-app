@@ -56,10 +56,12 @@ public class PostService {
     private final YarnService yarns;
     private final FollowRepository follows;
     private final NotificationService notifications;
+    private final com.collabo.backend.repository.PostViewRepository postViews;
 
     public PostService(PostRepository posts, UserRepository users, UserBlockRepository blocks, PostCommentRepository comments, ShoutRepository shouts, PostLikeRepository likes, PostCommentLikeRepository commentLikes,
-                       ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns, FollowRepository follows, NotificationService notifications) {
-        this.notifications = notifications; this.likes = likes; this.commentLikes = commentLikes; this.follows = follows; this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
+                       ApplicationRepository applications, LiveSignals signals, MediaService media, DraftService drafts, YarnService yarns, FollowRepository follows, NotificationService notifications,
+                       com.collabo.backend.repository.PostViewRepository postViews) {
+        this.postViews = postViews; this.notifications = notifications; this.likes = likes; this.commentLikes = commentLikes; this.follows = follows; this.signals = signals; this.media = media; this.drafts = drafts; this.yarns = yarns;
         this.posts = posts; this.users = users; this.blocks = blocks; this.comments = comments; this.shouts = shouts; this.applications = applications;
     }
 
@@ -108,8 +110,26 @@ public class PostService {
     @Transactional
     public PostResponse get(User viewer, UUID id) {
         Post p = visible(viewer, id);
-        if (!p.getAuthorId().equals(viewer.getId())) posts.addView(id);   // opening your own post is not a view
+        seen(viewer, List.of(id));
         return view(p, viewer);
+    }
+
+    static final int MAX_SEEN = 50;
+
+    /**
+     * Counts a view for each of these posts the person can see: once per person per post, never the author's own, from the feed or from opening it.
+     * Posts they cannot see, or that are gone, are skipped without a word.
+     */
+    @Transactional
+    public void seen(User me, List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        Set<UUID> want = ids.stream().filter(Objects::nonNull).limit(MAX_SEEN).collect(Collectors.toSet());
+        Set<UUID> done = new HashSet<>(postViews.seenAmong(me.getId(), want));
+        for (Post p : posts.findAllById(want)) {
+            if (done.contains(p.getId()) || p.getAuthorId().equals(me.getId()) || blocked(me.getId(), p.getAuthorId()) || !sees(me, p)) continue;
+            postViews.save(new com.collabo.backend.entity.PostView(p.getId(), me.getId()));
+            posts.addView(p.getId());
+        }
     }
 
     public void delete(User me, UUID id) {
@@ -119,6 +139,7 @@ public class PostService {
         comments.deleteByPostId(id);
         shouts.deleteByPostId(id);
         likes.deleteByPostId(id);
+        postViews.deleteByPostId(id);
         applications.deleteByPostId(id);
         media.removeOfPost(id);
         posts.delete(p);

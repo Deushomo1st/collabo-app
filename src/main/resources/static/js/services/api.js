@@ -21,7 +21,7 @@ const csrfCookie = () => {
 };
 
 // fetch + JSON + CSRF. Returns { response, data }. The token cookie is fetched before the first write.
-async function send(path, { method = 'GET', body } = {}) {
+async function send(path, { method = 'GET', body, keepalive = false } = {}) {
     const write = method !== 'GET';
     if (write && !csrfCookie()) await fetch('/api/auth/csrf');
     const headers = {};
@@ -30,7 +30,7 @@ async function send(path, { method = 'GET', body } = {}) {
     else if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (write) headers['X-XSRF-TOKEN'] = csrfCookie();
     let response;
-    try { response = await fetch(path, { method, headers, body: body === undefined ? undefined : raw ? body : JSON.stringify(body) }); }
+    try { response = await fetch(path, { method, headers, keepalive, body: body === undefined ? undefined : raw ? body : JSON.stringify(body) }); }
     catch {   // the browser only says "Failed to fetch": offline, or the server is restarting
         const err = new Error('Cannot reach the server. Check your connection; this page will keep trying.');
         err.status = 0;
@@ -112,6 +112,7 @@ export const userPosts = (name, tab, before) => call(user(name, '/posts') + q({ 
 // fields: title, body, applyBy, hashtags[], mediaIds[], commentsOn, shoutsOn, shareWith[] (usernames), draftId
 export const postCreate = (fields) => call('/api/posts', { method: 'POST', body: fields }, 'Could not post your idea.');
 export const postGet = (id) => call(post(id));
+export const postSeen = (ids) => call('/api/posts/seen', { method: 'POST', body: { ids }, keepalive: true });   // keepalive: still sent if the page is closed or left right after   // posts that came into view: one view each, once per person
 
 // pictures and videos: the raw file is the request body; nothing is on a post until it is posted
 export const mediaUpload = (file) => call('/api/media', { method: 'POST', body: file }, 'Could not upload that file.');

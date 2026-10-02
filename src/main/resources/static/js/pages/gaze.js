@@ -44,6 +44,7 @@ function recall() {
 }
 let saveTimer;
 window.addEventListener('scroll', () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }, { passive: true });
+window.addEventListener('pagehide', () => { clearTimeout(saveTimer); save(); });   // leaving mid-scroll (a quick tap on a post) still remembers the exact spot
 
 const card = (p) => { const c = postCard(p, { onGone: () => drop(p.id) }); c.dataset.id = p.id; return c; };
 const emptyNote = () => h('p', { class: 'gz-empty', text: old.length ? 'Nothing newer than what you have seen.' : EMPTY[feed] });

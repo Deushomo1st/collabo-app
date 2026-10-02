@@ -56,7 +56,7 @@ class SearchTest {
     @Test
     void peopleAreFoundByNameViewsCountOthersOnlyAndTopListsMostViewedFirst() throws Exception {
         String tag = UUID.randomUUID().toString().substring(0, 6);
-        Cookie ann = signIn("ann" + tag), bob = signIn("bob" + tag);
+        Cookie ann = signIn("ann" + tag), bob = signIn("bob" + tag), cat = signIn("cat" + tag);
 
         mvc.perform(get("/api/gaze/search/people").param("q", "bob" + tag).cookie(ann)).andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].username", contains("bob" + tag)));
@@ -66,7 +66,13 @@ class SearchTest {
         String quiet = idea(bob, "quiet" + tag), loud = idea(bob, "loud" + tag);
         mvc.perform(get("/api/posts/" + loud).cookie(bob)).andExpect(jsonPath("$.views").value(0));   // the author opening it is not a view
         mvc.perform(get("/api/posts/" + loud).cookie(ann));
-        mvc.perform(get("/api/posts/" + loud).cookie(ann)).andExpect(status().isOk());
+        mvc.perform(get("/api/posts/" + loud).cookie(ann)).andExpect(status().isOk());   // the same person again is still one view
+        mvc.perform(post("/api/posts/seen").cookie(XSRF, cat).header("X-XSRF-TOKEN", "t").contentType("application/json")
+                .content("{\"ids\":[\"" + loud + "\",\"" + UUID.randomUUID() + "\"]}")).andExpect(status().isNoContent());   // scrolled past in a feed (a stranger id is ignored)
+        mvc.perform(post("/api/posts/seen").cookie(XSRF, cat).header("X-XSRF-TOKEN", "t").contentType("application/json")
+                .content("{\"ids\":[\"" + loud + "\"]}")).andExpect(status().isNoContent());   // and again: no extra view
+        mvc.perform(post("/api/posts/seen").cookie(XSRF, bob).header("X-XSRF-TOKEN", "t").contentType("application/json")
+                .content("{\"ids\":[\"" + loud + "\"]}")).andExpect(status().isNoContent());   // the author's own post never counts
         mvc.perform(get("/api/posts/" + quiet).cookie(ann));
 
         mvc.perform(get("/api/gaze/search").param("q", tag).param("sort", "top").cookie(ann)).andExpect(status().isOk())

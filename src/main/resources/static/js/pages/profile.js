@@ -4,7 +4,6 @@ import '/js/services/live.js';   // keeps the live socket open, so yarns sent to
 import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
-import { postCard } from '/js/components/post-card/post-card.js';
 import { openMine } from '/js/components/applications/applications.js';
 import { openDrafts } from '/js/components/drafts/drafts.js';
 import { mountMainNav } from '/js/services/main-nav.js';
@@ -13,7 +12,7 @@ import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
-    follow, unfollow, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, postGet, mediaUrl,
+    follow, unfollow, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, mediaUrl,
 } from '/js/services/api.js';
 
 const MAX_LINKS = 12, MAX_SHIPPED = 5;
@@ -191,23 +190,15 @@ function postList(id) {
     if (f.items.length === 0) return h('p', { class: 'pf-empty', text: id === 'posts'
         ? (profile.self ? 'Ideas you post to The Gaze show up here.' : 'No posts yet.')
         : (profile.self ? 'Ideas you shout out show up here.' : 'No shout-outs yet.') });
-    return h('div', {}, h('div', { class: 'pf-grid' }, ...sorted(f.items).map((p) => tile(p, f))),
+    return h('div', {}, h('div', { class: 'pf-grid' }, ...sorted(f.items).map(tile)),
         f.next && h('button', { class: 'pf-btn pf-more', type: 'button', text: 'Show more', onclick: () => loadFeed(id, true) }));
 }
 
 const eye = () => { const i = h('span', { class: 'pf-eye', 'aria-hidden': 'true' }); i.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>'; return i; };   // fixed markup, no user text
 
-async function openPost(p, f) {   // opening it counts a view, the same as a shared link
-    try {
-        const full = await postGet(p.id);
-        const { panel, close } = await openGlassBlurDialog({ size: 'lg', label: 'Post', html: '<div class="gz-linked"></div>' });
-        panel.querySelector('.gz-linked').append(postCard(full, { onGone: () => { close(); f.items = f.items.filter((x) => x.id !== p.id); renderTabs(); } }));
-    } catch (err) { toast(err.message); }
-}
-
-function tile(p, f) {
+function tile(p) {   // opening the post page counts a view, the same as a shared link
     const pic = p.media?.find((m) => m.kind !== 'VIDEO');
-    return h('button', { class: 'pf-tile', type: 'button', onclick: () => openPost(p, f) },
+    return h('button', { class: 'pf-tile', type: 'button', onclick: () => { location.href = `/HTML-pages/post-view.html?id=${p.id}`; } },
         pic ? h('img', { src: mediaUrl(pic.id), alt: '', loading: 'lazy' }) : h('span', { class: 'pf-tile__text' }, h('strong', { text: p.title }), h('span', { text: p.body })),
         h('span', { class: 'pf-tile__views', title: 'Times someone else opened this', onclick: (e) => e.stopPropagation() }, eye(), String(p.views)));   // a statistic only: tapping it does nothing
 }

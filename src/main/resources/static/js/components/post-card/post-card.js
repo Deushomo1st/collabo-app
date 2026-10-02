@@ -9,6 +9,7 @@ import { openApply, openReview } from '/js/components/applications/applications.
 import { openCollaborators } from '/js/components/collaborators/collaborators.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
+import { watchSeen } from '/js/services/seen.js';
 
 const MAX_COMMENT = 500;
 const when = (iso) => new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
@@ -61,6 +62,7 @@ export function postCard(initial, { onGone, detail = false } = {}) {
     let open = false;          // comments expanded
     let comments = null;       // loaded on first open
     const root = h('article', { class: `pc sp-glass${detail ? ' pc--detail' : ''}` });
+    if (!detail && !initial.mine) watchSeen(root, initial.id);   // in a feed, a card that comes into view counts a view (opening the post counts too)
 
     // The fading preview of what people said (feed only): one comment at a time, in the space beside the icons.
     const flash = h('span', { class: 'pc-flash', 'aria-hidden': 'true' });
