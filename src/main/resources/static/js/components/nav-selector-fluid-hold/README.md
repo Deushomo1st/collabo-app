@@ -1,8 +1,8 @@
 # nav-selector-fluid-hold
 
-A pill-shaped nav with a sliding "active" bubble. It collapses to a single icon (the active
-section's) when you scroll down, and expands only when you tap the icon (or hover it). Scrolling never opens it.
-Long link lists scroll sideways with snap, edge fades, and arrow buttons.
+A pill-shaped nav with a sliding "active" bubble. The pill shows as many links as the screen has room for and hugs them; with more links than fit,
+arrows (and dragging or swiping) slide the lineup along. It collapses to a single icon (the active section's) when you scroll down or tap elsewhere,
+and expands only when you tap the icon. Press and hold that icon and a fan of up to five round buttons opens: push toward one and let go to pick it.
 
 | File | Role |
 |---|---|
