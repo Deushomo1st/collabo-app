@@ -5,7 +5,7 @@
 //
 //   import { mountCommentSection } from '/js/components/comment-section/comment-section.js';
 //   mountCommentSection(host, post);   // post: the PostResponse (id, mine, commentsOn)
-import { h, toast, profileHref } from '/js/services/dom.js';
+import { h, toast, ago, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { skeletonRows } from '/js/services/skeleton.js';
 import { commentsOf, commentAdd, commentDelete, commentLike, commentUnlike } from '/js/services/api.js';
@@ -18,7 +18,6 @@ if (!document.querySelector('link[data-component="comment-section"]')) {
 }
 
 const MAX = 500;
-const when = (iso) => new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 // Icons are fixed markup written here, never user text.
 const HEART = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
 const BIN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
@@ -112,7 +111,7 @@ export async function mountCommentSection(host, post) {
     function head(c) {
         return h('div', { class: 'cs__top' },
             h('a', { class: 'cs__who', href: profileHref(c.author.username), text: c.author.username }),
-            h('time', { class: 'cs__time', datetime: c.createdAt, text: when(c.createdAt) }));
+            h('time', { class: 'cs__time', datetime: c.createdAt, title: new Date(c.createdAt).toLocaleString(), text: ago(c.createdAt) }));
     }
 
     /** One comment at any depth. Its replies nest under it, each level a little smaller (the size is set in the css from --lvl). */

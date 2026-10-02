@@ -20,4 +20,20 @@ export function toast(text) {
 }
 
 export const day = (iso) => new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+/** Elapsed time for comments: "just now", "12m ago", "3h ago", then "2 days ago". */
+export function ago(iso) {
+    const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1440) return `${Math.floor(mins / 60)}h ago`;
+    const d = Math.floor(mins / 1440);
+    return `${d} day${d === 1 ? '' : 's'} ago`;
+}
+/** A post's age: minutes or hours on the same day, "N days ago" within the week, then the date. */
+export function since(iso) {
+    const start = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const days = Math.round((start(new Date()) - start(new Date(iso))) / 864e5);
+    if (days <= 0) return ago(iso);
+    return days < 7 ? `${days} day${days === 1 ? '' : 's'} ago` : day(iso);
+}
 export const profileHref = (name) => `/HTML-pages/profile.html?u=${encodeURIComponent(name)}`;

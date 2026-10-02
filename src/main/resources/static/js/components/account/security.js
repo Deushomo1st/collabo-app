@@ -1,4 +1,4 @@
-// Account security rows for the profile Settings dialog: change password, signed-in devices, delete account.
+// Account security rows for the Settings page (its "Account security" segment): change password, signed-in devices, delete account.
 // securityRows(toast) returns the elements to append; each button opens its own dialog. Network calls live in js/services/api.js.
 import { openGlassBlurDialog, glassBlurConfirm } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { sendPasswordCode, verifyPasswordCode, changePassword, mySessions, endSession, endOtherSessions, deleteAccount } from '/js/services/api.js';
@@ -107,5 +107,5 @@ async function openDelete(toast) {
 
 export function securityRows(toast) {
     const row = (text, open, danger) => h('button', { class: `sp-btn${danger ? ' sp-btn--danger' : ''}`, type: 'button', text, onclick: () => open(toast) });
-    return [h('strong', { text: 'Account security' }), row('Change password', openChangePassword), row('Signed-in devices', openDevices), row('Delete account', openDelete, true)];
+    return [row('Change password', openChangePassword), row('Signed-in devices', openDevices), row('Delete account', openDelete, true)];
 }

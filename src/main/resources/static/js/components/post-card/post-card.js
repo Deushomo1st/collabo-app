@@ -7,7 +7,7 @@ import { postShout, postUnshout, postLike, postUnlike, postShare, postDelete, po
 import { openPostShare } from '/js/components/post-share/post-share.js';
 import { openApply, openReview } from '/js/components/applications/applications.js';
 import { openCollaborators } from '/js/components/collaborators/collaborators.js';
-import { h, toast, day, profileHref } from '/js/services/dom.js';
+import { h, toast, day, ago, since, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { watchSeen } from '/js/services/seen.js';
 
@@ -149,7 +149,7 @@ export function postCard(initial, { onGone, detail = false } = {}) {
         return h('div', { class: 'pc-comments' },
             tops.length === 0 && h('p', { class: 'pc-hint', text: 'No comments yet.' }),
             ...tops.map((c) => h('div', { class: 'pc-comment' },
-                h('div', {}, person(c.author), ' ', h('time', { class: 'pc-time', datetime: c.createdAt, text: when(c.createdAt) })),
+                h('div', {}, person(c.author), ' ', h('time', { class: 'pc-time', datetime: c.createdAt, text: ago(c.createdAt) })),
                 h('p', { text: c.body }),
                 (c.mine || p.mine) && h('button', { class: 'pc-link', type: 'button', text: 'Delete', onclick: async () => {
                     try { await commentDelete(p.id, c.id); comments = comments.filter((x) => x.id !== c.id); draw(); }
@@ -189,6 +189,8 @@ export function postCard(initial, { onGone, detail = false } = {}) {
         const formed = p.status === 'formed';
         const statusTag = h('span', { class: `sp-tag ${closed ? 'sp-tag--muted' : 'sp-tag--ok'}${detail ? ' pc-status' : ''}`, text: closed ? 'Closed' : formed ? 'Space formed' : 'Pending' });
         const apps = p.applicationsOn !== false;   // false = a regular post: no applications, no status, no deadline
+        const views = h('span', { class: 'pc-time pc-views', title: 'Times someone else opened this idea', 'aria-label': `${p.views} views` }, eyeIcon(), String(p.views));
+        const title = h('h3', { class: 'pc-title' }, detail ? p.title : h('a', { class: 'pc-title__a', href: viewHref(p.id), text: p.title }));
         root.replaceChildren(...[
             p.shoutedBy && h('p', { class: 'pc-shouted' }, person(p.shoutedBy), ' shouted this out'),
             h('div', { class: 'pc-top' },
@@ -196,9 +198,9 @@ export function postCard(initial, { onGone, detail = false } = {}) {
                 p.anonymous && p.mine && h('span', { class: 'sp-tag sp-tag--muted', text: 'Anonymous to others' }),
                 p.author.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: p.author.preferredTitle }),
                 apps && !detail && statusTag,
-                h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) }),
-                h('span', { class: 'pc-time pc-views', title: 'Times someone else opened this idea', 'aria-label': `${p.views} views` }, eyeIcon(), String(p.views))),
-            h('h3', { class: 'pc-title' }, detail ? p.title : h('a', { class: 'pc-title__a', href: viewHref(p.id), text: p.title })),
+                !detail && h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) }),
+                !detail && views),
+            detail ? h('div', { class: 'pc-titlerow' }, title, views) : title,   // on the post's own page the views sit beside the title and the age ends the action row
             h('p', { class: 'pc-body', text: p.body }),
             p.media?.length > 0 && h('div', { class: `pc-media pc-media--${Math.min(p.media.length, 3)}` }, ...p.media.map((m) => m.kind === 'VIDEO'
                 ? h('video', { src: `/api/media/${m.id}`, controls: true, preload: 'metadata', playsinline: true })
@@ -216,7 +218,8 @@ export function postCard(initial, { onGone, detail = false } = {}) {
                 iconBtn(ICON.link, { label: 'Copy link', onclick: copyLink }),
                 iconBtn(ICON.share, { label: 'Share by yarn', onclick: share }),
                 detail && p.mine && (!apps || !formed) && binBtn(remove),
-                !detail && p.sample?.length > 0 && flash),
+                !detail && p.sample?.length > 0 && flash,
+                detail && h('time', { class: 'pc-time', datetime: p.createdAt, title: day(p.createdAt), text: since(p.createdAt) })),
             apps && h('div', { class: 'pc-actions' },
                 !p.mine && p.applied && p.applied !== 'WITHDRAWN' && h('span', { class: 'sp-tag sp-tag--ok', text: 'Applied' }),
                 !p.mine && !closed && !formed && (!p.applied || p.applied === 'WITHDRAWN') && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Apply',

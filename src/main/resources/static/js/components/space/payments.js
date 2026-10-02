@@ -28,7 +28,7 @@ async function openClaim(space, members, me, onDone) {
 export function paymentsSection(space, { canLog, me, members }) {
     const root = h('section', {});
     const head = h('h2', { class: 'sp-h2', text: 'Payment records' });
-    const banner = h('p', { class: 'pc-error', hidden: true, text: 'A payment claim is open, so the room is held until it is confirmed or cancelled.' });
+    const banner = h('p', { class: 'pc-error', style: 'margin-bottom:12px', hidden: true, text: 'A payment claim is open, so the room is held until it is confirmed or cancelled.' });
     const list = h('div', { 'aria-live': 'polite' });
 
     async function load() {
