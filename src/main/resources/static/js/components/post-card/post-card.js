@@ -1,4 +1,4 @@
-// One post on The Gaze: author, idea, deadline, and a row of icons (comment, like, shout-out, copy link, share), then the text buttons.
+// One post on The Gaze: author, idea, deadline, and a row of icons (like, comment, shout-out, copy link, share, then the views, with the age at the end), then the text buttons.
 // postCard(post, { onGone, detail }) returns an element that keeps itself up to date; onGone() runs after a delete.
 // detail: the post's own page; the title is not a link and the conversation is the comment section under the card. In a feed, tapping the card
 // opens that page, and a few of the comments fade past beside the icons.
@@ -197,9 +197,7 @@ export function postCard(initial, { onGone, detail = false } = {}) {
                 p.anonymous && !p.mine ? h('span', { class: 'pc-who', text: 'Anonymous' }) : (detail ? byline : person)(p.author),
                 p.anonymous && p.mine && h('span', { class: 'sp-tag sp-tag--muted', text: 'Anonymous to others' }),
                 p.author.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: p.author.preferredTitle }),
-                apps && !detail && statusTag,
-                !detail && h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) }),
-                !detail && views),
+                apps && !detail && statusTag),
             title,
             h('p', { class: 'pc-body', text: p.body }),
             p.media?.length > 0 && h('div', { class: `pc-media pc-media--${Math.min(p.media.length, 3)}` }, ...p.media.map((m) => m.kind === 'VIDEO'
@@ -217,10 +215,9 @@ export function postCard(initial, { onGone, detail = false } = {}) {
                 p.mine && p.shouts > 0 && h('span', { class: 'pc-ic pc-ic--static', title: `${p.shouts} shout-out${p.shouts === 1 ? '' : 's'}` }, svgIcon(ICON.shout), h('span', { class: 'pc-ic__n', text: String(p.shouts) })),
                 iconBtn(ICON.link, { label: 'Copy link', onclick: copyLink }),
                 iconBtn(ICON.share, { label: 'Share by yarn', onclick: share }),
-                detail && views,   // on the post's own page the views follow the share button and the age ends the row
-                detail && p.mine && (!apps || !formed) && binBtn(remove),
+                views,   // in the feed and on the post's own page alike, the views follow the share button and the age ends the row
                 !detail && p.sample?.length > 0 && flash,
-                detail && h('time', { class: 'pc-time', datetime: p.createdAt, title: day(p.createdAt), text: since(p.createdAt) })),
+                h('time', { class: 'pc-time', datetime: p.createdAt, title: day(p.createdAt), text: since(p.createdAt) })),
             apps && h('div', { class: 'pc-actions' },
                 !p.mine && p.applied && p.applied !== 'WITHDRAWN' && h('span', { class: 'sp-tag sp-tag--ok', text: 'Applied' }),
                 !p.mine && !closed && !formed && (!p.applied || p.applied === 'WITHDRAWN') && h('button', { class: 'pc-btn pc-btn--brand', type: 'button', text: 'Apply',
@@ -229,9 +226,9 @@ export function postCard(initial, { onGone, detail = false } = {}) {
                 p.mine && h('button', { class: 'pc-btn', type: 'button', text: 'Collaborators', onclick: () => openCollaborators(p) }),
                 p.mine && formed && h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/space.html?post=${p.id}`, text: 'Open space' }),
                 p.mine && !formed && h('button', { class: 'pc-btn', type: 'button', text: 'Deadline', onclick: editWindow }),
-                !detail && p.mine && !formed && binBtn(remove),
+                p.mine && !formed && binBtn(remove),
                 detail && statusTag),
-            !apps && !detail && p.mine && h('div', { class: 'pc-actions' }, binBtn(remove)),
+            !apps && p.mine && h('div', { class: 'pc-actions' }, binBtn(remove)),
             !detail && open && comments && commentBox()].filter(Boolean));
     }
 

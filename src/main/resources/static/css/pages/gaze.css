@@ -28,7 +28,7 @@
 .gz-error, .pc-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
 
 /* post card */
-.pc { display: grid; gap: 8px; padding: 16px 18px; border-radius: 20px; content-visibility: auto; contain-intrinsic-size: auto 260px; }   /* off-screen cards are skipped until they near the screen */
+.pc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 16px 18px; border-radius: 20px; content-visibility: auto; contain-intrinsic-size: auto 260px; }   /* off-screen cards are skipped until they near the screen */
 .pc-shouted { margin: 0; color: var(--sp-muted); font-size: 12.5px; }
 .pc-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pc-who { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; color: inherit; text-decoration: none; }
@@ -55,7 +55,8 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 /* the icon row: comment, like, shout, copy link, share. Left aligned, quiet until pressed. */
 .pc-actions--icons { gap: 2px; margin-left: -8px; align-items: center; }
 /* what people said, fading past beside the icons; on a narrow card it drops to its own line under them */
-.pc-flash { flex: 1 1 150px; min-width: 0; margin-left: 10px; color: var(--sp-muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .6s ease; }
+.pc-actions--icons .pc-views { margin-left: 4px; }   /* the views sit right after the icons; the age (.pc-time) is pushed to the far end */
+.pc-flash { flex: 1 1 80px; min-width: 0; margin-left: 10px; color: var(--sp-muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .6s ease; }
 .pc-flash.is-on { opacity: 1; }
 .pc-flash strong { color: var(--sp-text); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .pc-flash { transition: none; } }
@@ -184,3 +185,18 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .pc-views { display: inline-flex; align-items: center; gap: 4px; }
 .pc-views > span { display: inline-flex; }
 .pc-btn--bin { display: inline-flex; align-items: center; padding-inline: 12px; }
+
+/* The Gaze header: the feed tabs sit in the middle (left and right columns balance them), the search, menu and bell stay at the right. The live tab is bold
+   with the underline; the two at the edges are lighter and smaller. A new middle tab slides in from the side it was swiped from. */
+.sp-top--feed .tt-bar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(max-content, 1fr); }
+.sp-top--feed #filter-nav { grid-column: 2; justify-content: center; overflow: hidden; touch-action: pan-y; user-select: none; }
+.sp-top--feed .tt-end { grid-column: 3; justify-self: end; }
+.sp-top--feed .tt-search { grid-column: 1 / -1; }
+#filter-nav .tt-tab { padding-inline: 8px; font-size: 14px; font-weight: 500; }
+#filter-nav .tt-tab[aria-selected="true"] { font-size: 16px; font-weight: 800; }
+#filter-nav[data-dir="next"] .tt-tab { animation: tt-from-right .25s cubic-bezier(.16, 1, .3, 1); }
+#filter-nav[data-dir="prev"] .tt-tab { animation: tt-from-left .25s cubic-bezier(.16, 1, .3, 1); }
+@keyframes tt-from-right { from { transform: translateX(28px); opacity: .3; } }
+@keyframes tt-from-left { from { transform: translateX(-28px); opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { #filter-nav .tt-tab { animation: none !important; } }
+@media (max-width: 420px) { .sp-top--feed #filter-nav { -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); } }   /* too narrow for all three: the edge tabs fade out under the icons */

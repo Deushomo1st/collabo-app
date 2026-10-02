@@ -3,7 +3,6 @@
 .sp-top { position: static; margin-bottom: 8px; }
 .pc--detail { padding: 20px 22px; gap: 12px; }
 .pc--detail .pc-title { font-size: 1.35rem; }
-.pc--detail .pc-actions--icons .pc-views { margin-left: 0; }
 .pc--detail .pc-body { font-size: 1.02rem; line-height: 1.55; }
 .pc--detail { cursor: auto; }
 /* the publisher's picture sits on the card's top corner like a stamp on a letter */
@@ -17,7 +16,7 @@
 .pc-full { font-weight: 800; }
 .pc-at { font-weight: 600; color: var(--sp-muted); font-size: .9em; }
 .pc--detail .pc-status { margin-left: auto; }
-.pc--detail .pc-actions:not(.pc-actions--icons) { gap: 6px; flex-wrap: nowrap; } .pc--detail .pc-actions .pc-btn { padding-inline: 10px; font-size: 13px; white-space: nowrap; }
+.pc--detail .pc-actions .pc-btn { padding-inline: 10px; font-size: 13px; white-space: nowrap; }   /* the rows wrap on a narrow screen, as in the feed */
 /* the conversation scrolls on its own, under the box, so the post stays in view above it */
 .cs { padding: 14px 16px 6px; }
 .cs__list { max-height: min(58vh, 560px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 4px; }

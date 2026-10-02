@@ -1,7 +1,6 @@
 // The Gaze: everyone's ideas newest first, or Shared Gaze (your network only). Filter, endless scroll. Posting happens on post.html.
 // All network calls live in js/services/api.js; text goes in through textContent only.
 import { live } from '/js/services/live.js';   // keeps the live socket open (yarns are acknowledged from any page) and tells us when ideas are posted or deleted
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountMainNav } from '/js/services/main-nav.js';
@@ -57,12 +56,23 @@ const FEEDS = [
 ];
 const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 
-// TikTok-style: plain text tabs along the top, the live one bold with a short underline. The search icon swaps the tabs for a search box.
+// TikTok-style: plain text tabs in the middle of the header, the live one bold with a short underline. The three feeds go round: the live one is
+// always in the middle with the other two at the edges; a swipe sideways (or a tap on an edge one) brings its neighbour to the middle and the third rotates round.
+// The search icon swaps the tabs for a search box.
 const mountFeeds = () => {
     const nav = document.getElementById('filter-nav');
     const live = (f) => f.feed === feed && f.open === pendingOnly;
-    const draw = () => nav.replaceChildren(...FEEDS.map((f) => h('button', { class: 'tt-tab', type: 'button', role: 'tab', 'aria-selected': String(live(f)), text: f.label,
-        onclick: () => { if (live(f)) return; save(); feed = f.feed; pendingOnly = f.open; draw(); show(); } })));
+    const at = () => Math.max(0, FEEDS.findIndex(live));
+    const of = (d) => FEEDS[(at() + d + FEEDS.length) % FEEDS.length];
+    const pick = (f, dir) => { if (live(f)) return; save(); feed = f.feed; pendingOnly = f.open; draw(dir); show(); };
+    const draw = (dir = '') => {
+        nav.dataset.dir = dir;
+        nav.replaceChildren(...[-1, 0, 1].map((d) => { const f = of(d); return h('button', { class: 'tt-tab', type: 'button', role: 'tab', 'aria-selected': String(d === 0), text: f.label, onclick: () => pick(f, d > 0 ? 'next' : 'prev') }); }));
+    };
+    let x0 = 0, swiped = false;
+    nav.addEventListener('pointerdown', (e) => { x0 = e.clientX; swiped = false; });
+    nav.addEventListener('pointerup', (e) => { if (Math.abs(e.clientX - x0) < 30) return; swiped = true; const d = e.clientX < x0 ? 1 : -1; pick(of(d), d > 0 ? 'next' : 'prev'); });
+    nav.addEventListener('click', (e) => { if (swiped) { e.stopPropagation(); swiped = false; } }, true);   // a swipe that ends on a tab is not also a tap on it
     draw();
 };
 
@@ -287,5 +297,4 @@ async function boot() {
 }
 
 preloadGlassBlurDialog();
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
 boot();
