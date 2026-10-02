@@ -178,7 +178,7 @@ public class PostService {
     }
 
     PostResponse view(Post p, User viewer) {
-        return present(List.of(p), viewer, Map.of()).get(0);
+        return present(List.of(p), viewer, Map.of()).stream().findFirst().orElseThrow(() -> new ResourceNotFoundException("That post is gone."));
     }
 
     /**
@@ -205,9 +205,8 @@ public class PostService {
         Set<UUID> mineIds = ps.stream().filter(p -> p.getAuthorId().equals(viewer.getId())).map(Post::getId).collect(Collectors.toSet());
         if (!mineIds.isEmpty()) for (Object[] row : applications.counts(mineIds, ApplicationState.WITHDRAWN)) applicants.put((UUID) row[0], (Long) row[1]);
         Map<UUID, List<com.collabo.backend.entity.Media>> files = media.ofPosts(ids);
-        return ps.stream().map(p -> {
+        return ps.stream().filter(p -> authors.containsKey(p.getAuthorId())).map(p -> {   // a post whose author's account is gone is left out, not an error for the whole feed
             User author = authors.get(p.getAuthorId());
-            if (author == null) throw new ResourceNotFoundException("That post is gone.");
             return PostResponse.of(p, author, viewer, counts.getOrDefault(p.getId(), 0L), mineShouted.contains(p.getId()), shouters.get(p.getId()),
                     applied.get(p.getId()), mineIds.contains(p.getId()) ? applicants.getOrDefault(p.getId(), 0L) : null, files.getOrDefault(p.getId(), List.of()),
                     likeCounts.getOrDefault(p.getId(), 0L), mineLiked.contains(p.getId()),

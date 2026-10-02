@@ -48,7 +48,8 @@ class GazeFeedTest {
 
     @BeforeEach
     void accounts() throws Exception {
-        tag = UUID.randomUUID().toString().substring(0, 8);
+        posts.deleteAll();   // one shared database: posts left by another test would crowd the paging
+        tag =UUID.randomUUID().toString().substring(0, 8);
         ann = "ann" + tag; bob = "bob" + tag; cat = "cat" + tag; dan = "dan" + tag;
         annS = signIn(ann); bobS = signIn(bob); catS = signIn(cat); danS = signIn(dan);
         annU = users.findByUsername(ann).orElseThrow();
@@ -134,6 +135,15 @@ class GazeFeedTest {
     void yourOwnPostShowsInYourOwnGaze() throws Exception {
         newPost(annS, "Mine" + tag);
         feed(annS, "?limit=50").andExpect(jsonPath("$.items[?(@.title=='Mine" + tag + "')]", hasSize(1)));
+    }
+
+    @Test
+    void aPostWhoseAuthorIsGoneDoesNotBreakTheFeed() throws Exception {
+        posts.save(new Post(java.util.UUID.randomUUID(), "Orphan" + tag, "b", null));   // the author's account was deleted, the post stayed
+        newPost(annS, "Real" + tag);
+        feed(bobS, "?limit=50").andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.title=='Real" + tag + "')]", hasSize(1)))
+                .andExpect(jsonPath("$.items[?(@.title=='Orphan" + tag + "')]", hasSize(0)));
     }
 
     @Test
