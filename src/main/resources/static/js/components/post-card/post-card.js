@@ -200,7 +200,7 @@ export function postCard(initial, { onGone, detail = false } = {}) {
                 apps && !detail && statusTag,
                 !detail && h('time', { class: 'pc-time', datetime: p.createdAt, text: day(p.createdAt) }),
                 !detail && views),
-            detail ? h('div', { class: 'pc-titlerow' }, title, views) : title,   // on the post's own page the views sit beside the title and the age ends the action row
+            title,
             h('p', { class: 'pc-body', text: p.body }),
             p.media?.length > 0 && h('div', { class: `pc-media pc-media--${Math.min(p.media.length, 3)}` }, ...p.media.map((m) => m.kind === 'VIDEO'
                 ? h('video', { src: `/api/media/${m.id}`, controls: true, preload: 'metadata', playsinline: true })
@@ -217,6 +217,7 @@ export function postCard(initial, { onGone, detail = false } = {}) {
                 p.mine && p.shouts > 0 && h('span', { class: 'pc-ic pc-ic--static', title: `${p.shouts} shout-out${p.shouts === 1 ? '' : 's'}` }, svgIcon(ICON.shout), h('span', { class: 'pc-ic__n', text: String(p.shouts) })),
                 iconBtn(ICON.link, { label: 'Copy link', onclick: copyLink }),
                 iconBtn(ICON.share, { label: 'Share by yarn', onclick: share }),
+                detail && views,   // on the post's own page the views follow the share button and the age ends the row
                 detail && p.mine && (!apps || !formed) && binBtn(remove),
                 !detail && p.sample?.length > 0 && flash,
                 detail && h('time', { class: 'pc-time', datetime: p.createdAt, title: day(p.createdAt), text: since(p.createdAt) })),

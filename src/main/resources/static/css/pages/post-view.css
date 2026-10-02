@@ -3,8 +3,7 @@
 .sp-top { position: static; margin-bottom: 8px; }
 .pc--detail { padding: 20px 22px; gap: 12px; }
 .pc--detail .pc-title { font-size: 1.35rem; }
-.pc--detail .pc-titlerow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.pc--detail .pc-titlerow .pc-views { margin-left: 0; }
+.pc--detail .pc-actions--icons .pc-views { margin-left: 0; }
 .pc--detail .pc-body { font-size: 1.02rem; line-height: 1.55; }
 .pc--detail { cursor: auto; }
 /* the publisher's picture sits on the card's top corner like a stamp on a letter */
