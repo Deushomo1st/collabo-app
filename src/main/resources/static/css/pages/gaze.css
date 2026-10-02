@@ -28,7 +28,7 @@
 .gz-error, .pc-error { margin: 0; color: var(--sp-danger); font-size: 13px; }
 
 /* post card */
-.pc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 16px 18px; border-radius: 20px; content-visibility: auto; contain-intrinsic-size: auto 260px; }   /* off-screen cards are skipped until they near the screen */
+.pc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 16px 18px; border-radius: 20px; }   /* no content-visibility here: on some Android phones it left a lighter box over the lower part of the card */
 .pc-shouted { margin: 0; color: var(--sp-muted); font-size: 12.5px; }
 .pc-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pc-who { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; color: inherit; text-decoration: none; }
