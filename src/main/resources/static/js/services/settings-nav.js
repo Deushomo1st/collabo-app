@@ -1,5 +1,6 @@
 // The bar on a settings page: just the gear. Hold it and three buttons fan out: Home (left), Report a problem (centre), Return (right).
-import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+import '/js/services/nav-mode.js';
 import { GEAR, RETURN, svg } from '/js/services/icons.js';
 import { fanActions } from '/js/services/fan-actions.js';
 

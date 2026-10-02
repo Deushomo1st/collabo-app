@@ -24,7 +24,6 @@
 </div>
 
 <div class="sp-shell">
-    <div class="lg-theme" id="theme-slot"></div>
     <main class="lg-card sp-glass">
         <h1 class="lg-title">Create your account</h1>
         <p class="sp-sub">Your people are out there. Let's collabo.</p>
@@ -71,7 +70,6 @@
 </div>
 
 <script type="module">
-    import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
     import '/js/components/password-toggle.js';
     import { registerUser, verifyOtp, resendOtp } from '../js/services/api.js';
 
@@ -252,7 +250,6 @@
             resendOtpBtn.disabled = false;
         }
     });
-    mountThemeSwitcher('#theme-slot', { inline: true });
 </script>
 
 </body>

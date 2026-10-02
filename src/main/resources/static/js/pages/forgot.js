@@ -1,5 +1,4 @@
 // Forgot password: ask for a code by email, then set a new password with it. The network calls live in js/services/api.js.
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { forgotPassword, resetPassword } from '/js/services/api.js';
 import '/js/components/password-toggle.js';
 
@@ -48,4 +47,3 @@ reset.addEventListener('submit', async (e) => {
     }
 });
 
-mountThemeSwitcher('#theme-slot', { inline: true });

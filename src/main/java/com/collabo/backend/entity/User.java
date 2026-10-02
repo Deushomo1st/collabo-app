@@ -68,6 +68,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     private MessagePrivacy messagePrivacy;
 
+    // Which navigation the account uses (the id of a tile in Settings > Navigation preference); null = the default. Follows the account across devices.
+    @Column(name = "nav_preference", length = 30)
+    private String navPreference;
+
     // First-run flag. Nullable wrapper: legacy rows are null and never see the welcome flow;
     // new accounts are saved as FALSE and flipped to TRUE when they finish or skip it.
     @Column
@@ -139,6 +143,8 @@ public class User {
 
     public MessagePrivacy getMessagePrivacy() { return messagePrivacy == null ? MessagePrivacy.EVERYONE : messagePrivacy; }
     public void setMessagePrivacy(MessagePrivacy messagePrivacy) { this.messagePrivacy = messagePrivacy; }
+    public String getNavPreference() { return navPreference; }
+    public void setNavPreference(String navPreference) { this.navPreference = navPreference; }
     public CredentialsPrivacy getCredentialsPrivacy() { return credentialsPrivacy == null ? CredentialsPrivacy.EVERYONE : credentialsPrivacy; }
     public void setCredentialsPrivacy(CredentialsPrivacy credentialsPrivacy) { this.credentialsPrivacy = credentialsPrivacy; }
 }

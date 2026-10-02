@@ -1,7 +1,6 @@
 // Every notification, on a page of its own: tabs by kind, a search box, and the funnel for unread-only and read-all.
 import '/js/services/live.js';
 import { live } from '/js/services/live.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, notificationsList, notificationRead, notificationsReadAll } from '/js/services/api.js';
 import { h, toast } from '/js/services/dom.js';
@@ -55,4 +54,3 @@ document.getElementById('back').addEventListener('click', (e) => { if (history.l
         $list.replaceChildren(h('p', { class: 'rv-empty', text: err.message || 'Could not load notifications.' }));
     }
 })();
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });

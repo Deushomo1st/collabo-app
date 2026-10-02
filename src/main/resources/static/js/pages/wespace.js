@@ -2,8 +2,8 @@
 // Three tabs: About (the idea and the way in), Collaborators (the seats), Quiet (the response clock and flagged collaborators).
 // Each tab is built by its own module under components/wespace. Text goes in through textContent only.
 import '/js/services/live.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+import '/js/services/nav-mode.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import { CHAT, PERSON, PEOPLE, BRIEFCASE, svg } from '/js/services/icons.js';
 import { currentUser, wespaceAbout } from '/js/services/api.js';
@@ -70,5 +70,4 @@ async function boot() {
     catch (err) { main().replaceChildren(h('p', { class: 'gz-empty', text: err.status === 404 ? 'This group does not exist, or it is not open to you.' : err.message })); }
 }
 
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
 boot();

@@ -1,7 +1,6 @@
 // Connections page: a profile's followers, following and MyGuy (people who follow each other), TikTok style.
 // Reached as connections.html?u=<username>&tab=followers|following|myguy. Search matches letters in any order.
 import '/js/services/live.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, connections } from '/js/services/api.js';
 import { face } from '/js/services/face.js';
@@ -56,4 +55,3 @@ let who = params.get('u');
         $list.replaceChildren(h('li', { class: 'cn-empty', text: err.status === 404 ? 'No one has that username.' : (err.message || 'Could not load.') }));
     }
 })();
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });

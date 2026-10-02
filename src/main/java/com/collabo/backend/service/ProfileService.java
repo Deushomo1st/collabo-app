@@ -57,6 +57,7 @@ public class ProfileService {
         if (req.bio() != null) user.setBio(cleanBio(req.bio()));
         if (req.credentialsPrivacy() != null) user.setCredentialsPrivacy(req.credentialsPrivacy());
         if (req.messagePrivacy() != null) user.setMessagePrivacy(req.messagePrivacy());
+        if (req.navPreference() != null) user.setNavPreference(cleanNav(req.navPreference()));
         return ProfileResponse.of(users.save(user), true, linksOf(user), avatars.versionOf(user), follows.stateFor(user, user));
     }
 
@@ -129,5 +130,12 @@ public class ProfileService {
             throw new InvalidProfileException("Your bio can be at most " + MAX_BIO_WORDS + " words.");
         }
         return bio;
+    }
+
+    /** The id of a Navigation preference tile: short lowercase words joined by dashes. An empty string goes back to the default. */
+    static String cleanNav(String raw) {
+        String id = raw.trim();
+        if (!id.isEmpty() && !id.matches("[a-z0-9-]{1,30}")) throw new InvalidProfileException("That navigation preference isn't recognised.");
+        return id.isEmpty() ? null : id;
     }
 }

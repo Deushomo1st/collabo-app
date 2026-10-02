@@ -2,7 +2,7 @@
 // Reached through the "Yarns" label. All network calls live in js/services/api.js.
 // Text goes in through textContent only (h() never sets innerHTML for user text).
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
+import '/js/services/nav-mode.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { face as faceOf } from '/js/services/face.js';
@@ -403,7 +403,6 @@ async function boot() {
     preloadGlassBlurDialog(); preloadYarnThread();
     document.getElementById('section').replaceChildren(...skeletonRows(5));   // the list's shape while it loads
     await preloadActionBanner();
-    await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     document.getElementById('find-btn').addEventListener('click', () => me && openFind({ me, threads: () => [...inbox, ...archived],
         openThread: (id) => { location.hash = '#t/' + id; }, startWith: (name) => openNew(name) }));
     document.getElementById('thread-wrench').addEventListener('click', () => openThread && openThreadSettings(openThread));

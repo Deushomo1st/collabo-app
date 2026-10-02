@@ -1,7 +1,7 @@
 // Yarns settings, a page of its own: default chat, who can message you, theme, the Archive and Blocked lists, sign out.
 // Text goes in through textContent only (h() never sets innerHTML for user text).
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
+import '/js/services/nav-mode.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import { GEAR } from '/js/services/icons.js';
 import { h } from '/js/services/dom.js';
@@ -63,28 +63,24 @@ async function render(me) {
     pick.addEventListener('change', () => {
         try { localStorage.setItem(PREF_KEY, pick.value); toast('Default chat saved.'); } catch { toast('Could not save in this browser.'); }
     });
-    const theme = h('div', { class: 'yn-theme' });
     root().replaceChildren(
         h('section', { class: 'yn-group sp-glass yn-card sp-form' },
             h('label', { for: 'default-chat' }, 'Default chat', pick),
             h('p', { class: 'yn-hint', text: 'What opens first when you tap Yarns.' }),
             await messagePrivacyRow(me.username, toast),
-            h('p', { class: 'yn-hint', text: 'Only new conversations are limited. Chats you already have carry on.' }),
-            theme),
+            h('p', { class: 'yn-hint', text: 'Only new conversations are limited. Chats you already have carry on.' })),
         h('section', { class: 'yn-group' }, h('h2', { class: 'sp-h2', text: 'Archive' }), h('div', { class: 'yn-list', id: 'yn-archive' })),
         h('section', { class: 'yn-group' }, h('h2', { class: 'sp-h2', text: 'Blocked' }),
             h('p', { class: 'yn-hint', text: 'They are not told. Neither of you can send new MySpace yarns. Shared WeSpaces and WorkSpaces are unaffected.' }),
             h('div', { class: 'yn-list', id: 'yn-blocked' })),
         h('p', { class: 'yn-hint' }, `Signed in as ${me.username}. `, h('a', { href: '/HTML-pages/profile.html', text: 'My profile' })),
         h('button', { class: 'yn-quick yn-signout', type: 'button', text: 'Sign out', onclick: async () => { await logoutUser().catch(() => {}); toLogin(); } }));
-    await mountThemeRow(theme);
     drawLists();
 }
 
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return toLogin();
-    mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     // the same bar as the Yarns page with Settings chosen; the others go back to that list
     await mountNavSelector('#nav', {
         placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(), activeIndex: SECTIONS.length,

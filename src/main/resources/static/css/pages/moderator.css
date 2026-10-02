@@ -87,3 +87,7 @@ label { display: grid; gap: 4px; color: var(--md-muted); font-size: 13px; margin
     .md-case { padding: 16px 14px; }
     .md-yarn { grid-template-columns: 1fr; gap: 0; }
 }
+
+/* No scrollbars anywhere in the project (see css/global/global.css). */
+* { scrollbar-width: none !important; }
+*::-webkit-scrollbar { display: none !important; }

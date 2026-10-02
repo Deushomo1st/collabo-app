@@ -1,6 +1,7 @@
 // The main bottom bar: Gaze, Yarns, Post, Profile. It follows you between those pages; `active` says which one you are on.
 // Pages with their own bar (Yarns, the space page, post, report) keep it. On your own profile the last item is Settings (the gear).
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+import '/js/services/nav-mode.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import { profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';

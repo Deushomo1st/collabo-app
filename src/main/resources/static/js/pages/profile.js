@@ -1,12 +1,12 @@
 // Profile page: identity, links, follow, Credentials / Feats tabs, edit dialog. Reached as profile.html?u=<username>
 // (no ?u= shows your own). All network calls live in js/services/api.js; text goes in through textContent only.
 import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
 import { openMine } from '/js/components/applications/applications.js';
 import { openDrafts } from '/js/components/drafts/drafts.js';
 import { mountMainNav } from '/js/services/main-nav.js';
+import { GEAR, svg } from '/js/services/icons.js';
 import { skeletonCards } from '/js/services/skeleton.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
@@ -285,6 +285,14 @@ async function openEdit() {
 }
 
 // ---- boot ------------------------------------------------------------------
+// Without the bottom wheel (the default navigation) your settings are one tap away in the header.
+function addSettingsGear() {
+    const a = document.createElement('a');
+    a.className = 'nav-gear'; a.href = '/HTML-pages/profile-settings.html'; a.setAttribute('aria-label', 'Settings'); a.title = 'Settings';
+    a.innerHTML = svg(GEAR);   // fixed markup
+    document.getElementById('bell-slot')?.before(a);
+}
+
 async function boot() {
     try {
         const me = await currentUser();
@@ -292,11 +300,11 @@ async function boot() {
         viewer = me.username;
         const who = usernameInUrl() || me.username;
         if (who === viewer) mountMainNav(viewer, 'Settings', { onSettings: () => { location.href = '/HTML-pages/profile-settings.html'; } });
+        if (who === viewer) addSettingsGear();
         else mountMainNav(viewer, 'Profile');
         await load(who);
     } catch (err) { fail(err); }
 }
 
 preloadGlassBlurDialog(); preloadAvatar().catch(() => {});
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
 boot();

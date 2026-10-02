@@ -1,7 +1,6 @@
 // A post on a page of its own, with its comments open (like opening a tweet). Reached as post-view.html?id=<post id>:
 // from a card in the feed, from a copied link, or from a post yarned to you.
 import '/js/services/live.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, postGet } from '/js/services/api.js';
 import { postCard } from '/js/components/post-card/post-card.js';
@@ -37,4 +36,3 @@ document.getElementById('back').addEventListener('click', (e) => {
         say(err.status === 404 ? 'That post is gone.' : (err.message || 'Could not load the post.'));
     }
 })();
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });

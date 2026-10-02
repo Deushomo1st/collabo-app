@@ -3,6 +3,7 @@
 import { h, toast } from '/js/services/dom.js';
 import { currentUser, mediaUpload, mediaDiscard, mediaUrl, reportSend } from '/js/services/api.js';
 import { mountComposeNav } from '/js/services/main-nav.js';
+import { guardReturn } from '/js/services/nav-mode.js';
 import { glassBlurConfirm } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { reportSet, reportWork } from '/js/services/stash.js';
 import { SEND } from '/js/services/icons.js';
@@ -78,6 +79,7 @@ async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
     send.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
+    guardReturn(leaveThen);   // the header Return button asks about unsaved work like the bar does
     mountComposeNav('/HTML-pages/report-settings.html', {
         restInner: '<path d="M4 22V4h12l-2 4 2 4H4"/>',
         beforeSettings: () => reportWork.write({ text: text.value, files }),

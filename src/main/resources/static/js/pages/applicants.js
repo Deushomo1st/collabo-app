@@ -1,7 +1,6 @@
 // The founder's review of a post's applicants, on a page of its own. Reached as applicants.html?post=<post id>.
 // Tabs: Pending, Shortlisted, Accepted, Declined. The funnel icon sorts. Forming the space is a step of its own at the top.
 import '/js/services/live.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { currentUser, postGet, applicationStack, applicationDecide, applicationReact, spaceForm } from '/js/services/api.js';
@@ -110,4 +109,3 @@ document.getElementById('back').addEventListener('click', (e) => { if (history.l
         say(err.status === 404 ? 'That post is gone, or it is not yours to review.' : (err.message || 'Could not load the applicants.'));
     }
 })();
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });

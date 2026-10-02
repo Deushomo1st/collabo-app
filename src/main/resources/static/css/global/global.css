@@ -5,3 +5,21 @@
     @view-transition { navigation: auto; }
     ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
 }
+
+/* Navigation preference (nav-mode.js sets html[data-nav]): the bottom wheel only shows under "omni-wheel", the Return button and the four-square menu in each header only under the default ("return"). */
+html:not([data-nav="omni-wheel"]) .nav-selector-fluid-hold-wrap--bottom { display: none; }
+html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html[data-nav="omni-wheel"] .nav-gear { display: none; }
+.nav-return, .nav-gear { flex: none; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--sp-panel, rgba(255, 255, 255, .08)); color: var(--sp-text, currentColor); cursor: pointer; }
+.nav-return:hover, .nav-gear:hover { background: var(--sp-panel-hi, rgba(255, 255, 255, .14)); }
+.nav-return svg, .nav-gear svg { width: 22px; height: 22px; }
+
+/* The four-square menu (nav-menu.js): the main pages as a grid of links in a dialog. */
+.nm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
+.nm-link { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: var(--sp-panel, rgba(255, 255, 255, .08)); color: var(--sp-text, currentColor); text-decoration: none; font-weight: 700; font-size: 14px; }
+.nm-link:hover { background: var(--sp-panel-hi, rgba(255, 255, 255, .14)); }
+.nm-link[aria-current="page"] { outline: 2px solid #8fb4d9; }
+.nm-icon svg { display: block; width: 22px; height: 22px; }
+
+/* No scrollbars anywhere in the project: the page and every scrolling box still scroll, they just don't draw a bar. */
+* { scrollbar-width: none !important; }
+*::-webkit-scrollbar { display: none !important; }

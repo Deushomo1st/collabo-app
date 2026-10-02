@@ -1,7 +1,6 @@
 // A space: the idea it grew from, joining (for accepted applicants), and the people in it.
 // All network calls live in js/services/api.js; text goes in through textContent only.
 import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
-import { mountThemeSwitcher, openThemeSettings } from '/js/components/theme-switcher/theme-switcher.js';
 import { membersSection } from '/js/components/space/members.js';
 import { face } from '/js/services/face.js';
 import { tasksPanel } from '/js/components/space/tasks.js';
@@ -10,6 +9,7 @@ import { paymentsSection } from '/js/components/space/payments.js';
 import { removalsSection } from '/js/components/space/removals.js';
 import { openSettings } from '/js/components/space/settings.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
+import '/js/services/nav-mode.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import { GEAR, CHAT, PERSON, PEOPLE, BRIEFCASE, svg } from '/js/services/icons.js';
 import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers } from '/js/services/api.js';
@@ -94,7 +94,7 @@ function mountBar() {
         icons: [CHAT, PERSON, PEOPLE, BRIEFCASE, GEAR].map(svg),
         onChange: (label, href) => {
             if (label !== 'Settings') { location.href = href.slice(href.indexOf('/HTML-pages')); return; }
-            if (space) { if (mayEdit()) openSettings(space, refresh); else openThemeSettings(); }
+            if (space && mayEdit()) openSettings(space, refresh);
         },
     });
 }
@@ -110,5 +110,4 @@ async function boot() {
     }
 }
 
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
 boot();

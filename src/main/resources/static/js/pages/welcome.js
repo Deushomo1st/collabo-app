@@ -1,6 +1,5 @@
 // First-run welcome: welcome, photo, about you, links, pick a path. Every step saves as you leave it, so skipping midway loses nothing.
 // New accounts land here once (login sends them; the Gaze sends anyone who slipped past). Network calls live in js/services/api.js.
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
 import { currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove, markWelcomed } from '/js/services/api.js';
 import { h } from '/js/services/dom.js';
@@ -117,5 +116,4 @@ async function boot() {
 }
 
 preloadAvatar().catch(() => {});
-mountThemeSwitcher('#theme-slot', { inline: true });
 boot().catch((e) => showError(e.message || 'Could not load setup. Refresh to try again.'));

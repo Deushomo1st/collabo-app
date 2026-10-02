@@ -2,7 +2,7 @@
 // All text goes in through textContent (h() never sets innerHTML), so user text is safe.
 import { fanActions } from '/js/services/fan-actions.js';
 import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import { mountThemeSwitcher, mountThemeRow } from '/js/components/theme-switcher/theme-switcher.js';
+import '/js/services/nav-mode.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { createSwitch, preloadSwitch } from '/js/components/switch/switch.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
@@ -281,7 +281,6 @@ function renderSettings(root) {
     });
     const pleas = createSwitch({ checked: s.pleas, label: 'Pleas', onChange: (on) => update(changeSetting(state, 'pleas', on)) });
     const row = (title, text, control) => h('div', { class: 'sp-setting sp-glass' }, h('div', { class: 'sp-setting__text' }, h('strong', { text: title }), h('span', { text })), control);
-    const themeSlot = h('div', { class: 'sp-setting sp-glass' });
     root.append(
         h('h2', { class: 'sp-h2', text: 'Space settings' }),
         h('p', { class: 'sp-sub', text: 'Every change is announced in the room. That is the difference between governance and manipulation.' }),
@@ -289,9 +288,8 @@ function renderSettings(root) {
         row('Pleas', 'A plea buys a quiet member 12 hours. One at a time, one per person per week. Switch off for hard external deadlines.', pleas.element),
         row('Formed', state.space.born, h('span', { class: 'sp-tag', text: state.space.formed })),
         row('Member capacity', 'Larger spaces sit behind a higher plan.', h('span', { class: 'sp-tag', text: `${state.members.length} / ${state.space.capacity} · Free` })),
-        row('Attachment ceiling', 'Per milestone, on the current plan.', h('span', { class: 'sp-tag', text: `${s.attachMB} MB` })),
-        themeSlot);
-    mountThemeRow(themeSlot);
+        row('Attachment ceiling', 'Per milestone, on the current plan.', h('span', { class: 'sp-tag', text: `${s.attachMB} MB` }))
+    );
 }
 
 // ---- Router ----------------------------------------------------------------
@@ -327,7 +325,6 @@ async function boot() {
     preloadGlassBlurDialog();
     await Promise.all([preloadActionBanner(), preloadSwitch()]);
     renderAll();
-    await mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });
     nav = await mountNavSelector('#nav', {
         placement: 'bottom', links: SECTIONS.map((s) => s.title), hrefs: SECTIONS.map((s) => '#' + s.id), icons: SECTIONS.map((s) => s.icon),
         activeIndex: SECTIONS.findIndex((s) => s.id === currentId()), collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(),

@@ -3,6 +3,7 @@
 import { h, toast } from '/js/services/dom.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { mountComposeNav } from '/js/services/main-nav.js';
+import { guardReturn } from '/js/services/nav-mode.js';
 import { postSet, postWork, DEFAULT_POST_SET } from '/js/services/stash.js';
 import { SEND } from '/js/services/icons.js';
 import {
@@ -162,6 +163,7 @@ async function boot() {
     me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/index.html');
     $('publish').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
+    guardReturn(leaveThen);   // the header Return button asks about unsaved work like the bar does
     mountComposeNav('/HTML-pages/post-settings.html', { beforeLeave: leave, guard: leaveThen, beforeSettings: toSettings, restInner: '<path d="M12 5v14M5 12h14"/>' });
     const id = new URLSearchParams(location.search).get('draft');
     const work = postWork.take();

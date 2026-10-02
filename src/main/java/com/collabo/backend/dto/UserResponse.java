@@ -18,7 +18,8 @@ public record UserResponse(
         boolean verified,
         boolean test,
         boolean needsWelcome,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String navPreference
 ) {
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -29,7 +30,8 @@ public record UserResponse(
                 user.isVerified(),
                 user.isTest(),
                 user.needsWelcome(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getNavPreference()
         );
     }
 }

@@ -1,6 +1,5 @@
 // Everything you applied to, on a page of its own. Tabs by where each application stands; an accepted one leads to the space.
 import '/js/services/live.js';
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, applicationsMine, applicationWithdraw } from '/js/services/api.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
@@ -54,4 +53,3 @@ document.getElementById('back').addEventListener('click', (e) => { if (history.l
         $list.replaceChildren(h('p', { class: 'rv-empty', text: err.message || 'Could not load your applications.' }));
     }
 })();
-mountThemeSwitcher('#theme-slot', { inline: true, collapse: true });

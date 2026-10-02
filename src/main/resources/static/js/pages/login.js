@@ -1,5 +1,4 @@
 // Sign-in page. The network call lives in js/services/api.js.
-import { mountThemeSwitcher } from '/js/components/theme-switcher/theme-switcher.js';
 import { loginUser, currentUser } from '/js/services/api.js';
 import '/js/components/password-toggle.js';
 
@@ -54,7 +53,6 @@ form.addEventListener('submit', async (e) => {
 });
 
 (async () => {
-    mountThemeSwitcher('#theme-slot', { inline: true });
     const me = await currentUser();
     if (me) location.replace(me.needsWelcome ? WELCOME : safeNext());   // already signed in
 })();
