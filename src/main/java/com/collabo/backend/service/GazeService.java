@@ -58,6 +58,7 @@ public class GazeService {
         Instant cursor = cursor(before);
         Instant now = Instant.now();
         Set<UUID> hidden = hiddenFor(viewer);
+        hidden.remove(viewer.getId());   // your own new idea shows in your own Gaze, or a first post on an empty feed looks lost
         PageRequest page = PageRequest.of(0, n + 1);   // one extra row tells us whether there is a next page
 
         List<Entry> entries;

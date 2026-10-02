@@ -131,6 +131,12 @@ class GazeFeedTest {
     }
 
     @Test
+    void yourOwnPostShowsInYourOwnGaze() throws Exception {
+        newPost(annS, "Mine" + tag);
+        feed(annS, "?limit=50").andExpect(jsonPath("$.items[?(@.title=='Mine" + tag + "')]", hasSize(1)));
+    }
+
+    @Test
     void anUnknownFeedIsRefused() throws Exception {
         feed(bobS, "?feed=nope").andExpect(status().isBadRequest());
     }
