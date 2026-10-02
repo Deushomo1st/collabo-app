@@ -110,7 +110,7 @@ const mountNav = async (opts) => {
     nav?.destroy();
     nav = await mountNavSelector('#nav', {
         placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(),
-        onChange: (_l, href) => { if (href.includes('yarn-settings.html')) location.href = '/HTML-pages/yarn-settings.html'; else go(href.slice(href.lastIndexOf('#'))); },   // href can arrive absolute
+        onChange: (_l, href) => { if (href.includes('profile-settings.html')) location.href = '/HTML-pages/profile-settings.html#yarns'; else go(href.slice(href.lastIndexOf('#'))); },   // href can arrive absolute
         ...opts,
     });
 };
@@ -127,7 +127,7 @@ async function doSyncNav() {
     if (!openThread) {
         if (navMode !== 'sections') {
             navMode = 'sections';
-            await mountNav({ links: [...SECTIONS.map((s) => s.label), 'Settings'], hrefs: [...SECTIONS.map((s) => '#' + s.id), '/HTML-pages/yarn-settings.html'],
+            await mountNav({ links: [...SECTIONS.map((s) => s.label), 'Settings'], hrefs: [...SECTIONS.map((s) => '#' + s.id), '/HTML-pages/profile-settings.html#yarns'],
                 icons: [...SECTIONS.map((s) => svg(ICON[s.id])), svg(ICON.settings)], activeIndex: SECTIONS.indexOf(currentSection()) });
         }
         nav?.setActive(SECTIONS.indexOf(currentSection()));

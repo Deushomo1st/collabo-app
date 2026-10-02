@@ -4,7 +4,7 @@ export const SECTIONS = [
     { id: 'myspace',   label: 'MySpaces',   tier: 'MYSPACE' },
     { id: 'wespace',   label: 'WeSpaces',   tier: 'WESPACE' },
     { id: 'workspace', label: 'WorkSpaces', tier: 'WORKSPACE' },
-];   // Archive and Blocked live on the Yarns settings page
+];   // Archive and Blocked live in Settings
 
 export const TIER_LABEL = { MYSPACE: 'MySpace', WESPACE: 'WeSpace', WORKSPACE: 'Workspace' };
 

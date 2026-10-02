@@ -1,9 +1,6 @@
-/* The post and report settings pages. Loaded after workspace.css and gaze.css (palette, glass). */
-.sp-top { margin-bottom: 12px; }
-.sp-sub { display: block; color: var(--sp-muted); font-size: 12px; }
-.pst-main { display: grid; gap: 14px; padding-bottom: 110px; }
-.pst-card { display: grid; gap: 10px; padding: 16px 18px; border-radius: 22px; }
-.pst-card h2 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+/* The sub-modals of Settings (post and report options, default chat, Archive, Blocked). Loaded after workspace.css (palette, glass). */
+.pst-body { display: grid; gap: 10px; }
+section[data-segment] { scroll-margin-top: 96px; }   /* a segment reached by #hash stops below the header */
 
 .pst-opt {
     display: grid; gap: 2px; text-align: left; padding: 11px 14px; border-radius: 16px; cursor: pointer;
@@ -33,5 +30,3 @@
 .pst-switch input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--sp-brand); flex: none; }
 .pst-switch span { display: grid; gap: 2px; }
 .pst-switch small { color: var(--sp-muted); font-size: 12.5px; }
-
-#nav { --nav-link-padding: 9px 14px; --nav-font-size: 14px; }
