@@ -13,6 +13,7 @@
 //   ] });
 //   fan.destroy();   // when the trigger goes away
 
+import { zoomOf } from '/js/services/ui-scale.js';
 const CSS_HREF = '/js/components/hold-fan/hold-fan.css';
 const SIZE = 46;                 // px, each round button
 const RADIUS = 84;               // px, trigger centre to button centre
@@ -24,7 +25,7 @@ export function mountHoldFan(trigger, opts = {}) {
     loadStylesOnce();
     const actions = (opts.actions || []).slice(0, 5);
     const holdMs = opts.holdMs ?? 350, stagger = opts.stagger ?? 0;
-    const radius = actions.length > 3 ? 90 : RADIUS;
+    const radius = actions.length > 3 ? 124 : RADIUS + 22;   // out from the centre and well apart
     let timer = null, layer = null, startX = 0, startY = 0, justHeld = false, eatTap = false, hot = null;
 
     function close() {
@@ -46,8 +47,8 @@ export function mountHoldFan(trigger, opts = {}) {
 
     function open() {
         if (layer || !actions.length) return;
-        const r = trigger.getBoundingClientRect();
-        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const z = zoomOf(), r = trigger.getBoundingClientRect(), W = innerWidth / z;   // placed in CSS lengths, so the display size doesn't throw it off the button
+        const cx = (r.left + r.width / 2) / z, cy = (r.top + r.height / 2) / z;
         layer = document.createElement('div');
         layer.className = 'hold-fan';
         layer.setAttribute('role', 'menu');
@@ -55,7 +56,7 @@ export function mountHoldFan(trigger, opts = {}) {
         actions.forEach((a, i) => {
             const rad = ANGLES[actions.length][i] * Math.PI / 180;
             // keep every button on screen when the trigger sits near an edge
-            const x = Math.min(Math.max(Math.cos(rad) * radius, SIZE / 2 + 8 - cx), innerWidth - SIZE / 2 - 8 - cx);
+            const x = Math.min(Math.max(Math.cos(rad) * radius, SIZE / 2 + 8 - cx), W - SIZE / 2 - 8 - cx);
             const b = document.createElement('button');
             b.type = 'button'; b.className = 'hold-fan__btn'; b.setAttribute('role', 'menuitem');
             b.setAttribute('aria-label', a.label); b.title = a.label;

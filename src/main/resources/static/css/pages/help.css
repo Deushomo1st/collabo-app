@@ -1,0 +1,20 @@
+/* The Help dialog (js/services/help.js): dots for where you are, one card at a time; tap, swipe or the arrows move through them. */
+.hp { display: grid; gap: 14px; margin-top: 12px; }
+.hp__dots { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.hp__dots i { width: 7px; height: 7px; border-radius: 99px; background: color-mix(in srgb, var(--sp-text, #fff) 25%, transparent); transition: width .3s, background .3s; }
+.hp__dots i.is-on { width: 22px; background: var(--sp-brand, #ff9500); }
+.hp__row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px; }
+.hp__arrow { width: 34px; height: 34px; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--sp-text, #fff) 10%, transparent); color: var(--sp-text, currentColor); font: 700 20px/1 var(--sp-font, inherit); cursor: pointer; }
+.hp__arrow:hover:not(:disabled) { background: color-mix(in srgb, var(--sp-text, #fff) 20%, transparent); }
+.hp__arrow:disabled { opacity: .25; cursor: default; }
+.hp__card { display: grid; align-content: center; gap: 10px; min-height: 170px; padding: 16px 6px; color: var(--sp-text, currentColor); text-align: center; cursor: pointer; touch-action: pan-y; user-select: none; -webkit-tap-highlight-color: transparent; animation: hp-in .4s cubic-bezier(.2, .9, .3, 1.15); }
+.hp__card[data-dir="next"] { animation-name: hp-from-right; }
+.hp__card[data-dir="prev"] { animation-name: hp-from-left; }
+.hp__card strong { font: 800 19px/1.25 var(--sp-font, inherit); }
+.hp__card span { color: var(--sp-muted, inherit); font: 500 14px/1.55 var(--sp-font, inherit); }
+.hp__tap { font: 600 12px var(--sp-mono, monospace); font-style: normal; color: var(--sp-brand, #ff9500); animation: hp-pulse 1.6s ease-in-out infinite; }
+@keyframes hp-in { from { opacity: 0; transform: translateY(12px) scale(.97); } }
+@keyframes hp-from-right { from { opacity: 0; transform: translateX(36px); } }
+@keyframes hp-from-left { from { opacity: 0; transform: translateX(-36px); } }
+@keyframes hp-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .hp__card, .hp__tap { animation: none; } }

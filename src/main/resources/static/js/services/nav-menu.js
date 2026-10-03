@@ -1,19 +1,13 @@
 // The four-square menu (nav-mode.js): the main pages in one dialog. leave(go) lets a page with unsaved work ask before it leaves.
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { currentUser } from '/js/services/api.js';
-import { h, profileHref } from '/js/services/dom.js';
-import { GEAR, HOME, CHAT, BELL, PERSON, svg } from '/js/services/icons.js';
+import { h } from '/js/services/dom.js';
+import { DEST } from '/js/services/destinations.js';
+import { svg } from '/js/services/icons.js';
 import { unreadYarns, newPosts, unreadNotes } from '/js/services/message-notice.js';
 
-const pages = (me) => [
-    ['Gaze', '/HTML-pages/gaze.html', HOME],
-    ['Yarns', '/HTML-pages/yarnspaces.html', CHAT],
-    ['Notifications', '/HTML-pages/notifications.html', BELL],
-    ['Post', '/HTML-pages/create-post.html', '<path d="M12 5v14M5 12h14"/>'],
-    ['Profile', profileHref(me.username), PERSON],
-    ['Settings', '/HTML-pages/profile-settings.html', GEAR],
-    ['Report a problem', '/HTML-pages/report.html', '<path d="M4 22V4h12l-1.5 4L16 12H4"/>'],
-];
+const NAMES = { Report: 'Report a problem' };   // the rest are called what destinations.js calls them
+const pages = (me) => Object.entries(DEST).map(([k, d]) => [NAMES[k] ?? k, d.href(me.username), d.icon]);
 
 export async function openNavMenu(leave = (go) => go()) {
     const me = await currentUser().catch(() => null);
@@ -24,8 +18,8 @@ export async function openNavMenu(leave = (go) => go()) {
     panel.querySelector('.nm-grid').append(...pages(me).map(([name, href, icon]) => {
         const pic = h('span', { class: 'nm-icon' }); pic.innerHTML = svg(icon);
         const a = h('a', { class: 'nm-link', href }, pic, h('span', { class: 'nm-name', text: name }), dots[name] > 0 && h('span', { class: 'nm-badge', text: dots[name] > 99 ? '99+' : String(dots[name]), 'aria-label': `${dots[name]} new` }));
-        if (new URL(href, location.href).pathname === here) a.setAttribute('aria-current', 'page');
-        a.addEventListener('click', (e) => { e.preventDefault(); close(); leave(() => { location.href = href; }); });
+        if (name !== 'Help' && new URL(href, location.href).pathname === here) a.setAttribute('aria-current', 'page');
+        a.addEventListener('click', (e) => { e.preventDefault(); close(); if (name === 'Help') import('/js/services/help.js').then((m) => m.openHelp()); else leave(() => { location.href = href; }); });   // Help is a dialog on this page, so there is nothing to leave
         return a;
     }));
 }

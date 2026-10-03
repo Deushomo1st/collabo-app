@@ -100,7 +100,7 @@ document.getElementById('back').addEventListener('click', (e) => { if (history.l
     try {
         const me = await currentUser();
         if (!me) return toLogin();
-        mountMainNav(me.username, 'Gaze', { onGaze: () => { location.href = '/HTML-pages/gaze.html'; } });
+        mountMainNav(me.username, { onGaze: () => { location.href = '/HTML-pages/gaze.html'; } });
         [post, rows] = await Promise.all([postGet(postId), applicationStack(postId, 'recent', '')]);
         tab = TABS.find(([k]) => rows.some((r) => r.state === k))?.[0] || tab;   // open on the first tab that has someone in it
         draw();

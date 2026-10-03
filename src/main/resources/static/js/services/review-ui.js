@@ -1,5 +1,6 @@
 // Pieces the review pages share: the TikTok-style tab row, the sort menu under the filter icon, the same sign-in/back handling.
 import { h } from '/js/services/dom.js';
+import { zoomOf } from '/js/services/ui-scale.js';
 
 /** tabs: [[key, label, count]]. Draws into nav and calls onPick(key) when one is tapped. */
 export function drawTabs(nav, tabs, current, onPick) {
@@ -18,9 +19,10 @@ export function openMenu(anchor, groups, checked, onPick) {
         g.forEach(({ key, label }) => menu.append(h('button', { type: 'button', role: 'menuitemradio', 'aria-checked': String(checked(key)), text: label, onclick: () => { onPick(key); menu.remove(); } })));
     });
     const r = anchor.getBoundingClientRect();
-    menu.style.top = `${r.bottom + 6}px`;
+    const z = zoomOf();   // the measured position is in screen pixels, the menu's lengths are zoomed ones
+    menu.style.top = `${r.bottom / z + 6}px`;
     document.body.append(menu);
-    menu.style.left = `${Math.min(Math.max(8, r.right - menu.offsetWidth), innerWidth - menu.offsetWidth - 8)}px`;   // lines up with the button's right edge, but never off the screen (the funnel can sit at the left)
+    menu.style.left = `${Math.min(Math.max(8, r.right / z - menu.offsetWidth), innerWidth / z - menu.offsetWidth - 8)}px`;   // lines up with the button's right edge, but never off the screen (the funnel can sit at the left)
     setTimeout(() => addEventListener('click', () => menu.remove(), { once: true }), 0);
 }
 

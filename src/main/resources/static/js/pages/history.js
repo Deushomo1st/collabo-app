@@ -10,7 +10,7 @@ const list = () => document.getElementById('list');
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname));
-    mountMainNav(me.username, 'Settings');
+    mountMainNav(me.username);
     const q = document.getElementById('hs-q');
     const draw = () => {
         const all = historyRead(me.username), shown = historySearch(all, q.value.trim());

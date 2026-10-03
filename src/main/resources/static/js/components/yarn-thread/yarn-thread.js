@@ -20,6 +20,7 @@
 //   });
 //   host.append(t.element);  ...  t.destroy();      // destroy() stops the polling
 
+import { zoomOf } from '/js/services/ui-scale.js';
 const CSS_HREF = '/js/components/yarn-thread/yarn-thread.css';
 const PAGE = 50;
 
@@ -186,8 +187,9 @@ export function createYarnThread(opts) {
         tallest = Math.max(tallest, vh);
         const keyboard = vh < tallest - 120;
         const atEnd = nearBottom();
-        const room = off + vh - element.getBoundingClientRect().top - 8;
-        element.style.height = `calc(${room}px - ${keyboard ? '0px' : '88px - env(safe-area-inset-bottom, 0px)'})`;
+        const room = (off + vh - element.getBoundingClientRect().top) / zoomOf() - 8;
+        const bar = document.documentElement.dataset.nav === 'omni-wheel' ? '88px' : '8px';   // room kept for the round button; none without it
+        element.style.height = `calc(${room}px - ${keyboard ? '0px' : `${bar} - env(safe-area-inset-bottom, 0px)`})`;
         if (atEnd) toBottom();
     }
     const relayout = () => requestAnimationFrame(layout);

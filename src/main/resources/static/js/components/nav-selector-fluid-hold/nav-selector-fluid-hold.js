@@ -206,7 +206,7 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
 
     function centerIndex() {
         const links = getLinks();
-        const vc = view.getBoundingClientRect().left + view.clientWidth / 2;
+        const vr = view.getBoundingClientRect(), vc = vr.left + vr.width / 2;
         let best = 0, bd = Infinity;
         links.forEach((l, i) => {
             const r = l.getBoundingClientRect();
@@ -220,10 +220,10 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     function setActive(i) {
         const links = getLinks();
         const link = links[i];
-        if (!link) return false;
+        if (!link && i !== -1) return false;   // -1: none is lit
         links.forEach(l => l.classList.remove('is-active'));
-        link.classList.add('is-active');
-        if (windowed()) reveal(i); else link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' });
+        link?.classList.add('is-active');
+        if (link) { if (windowed()) reveal(i); else link.scrollIntoView({ inline: 'nearest', behavior: 'smooth', block: 'nearest' }); }
         picked = false;
         syncIcon();
         setTimeout(update, 50);

@@ -51,7 +51,7 @@ addEventListener('scroll', mark, { passive: true }); mark();
     try {
         const me = await currentUser();
         if (!me) return toLogin();
-        mountMainNav(me.username, 'Gaze', { onGaze: () => { location.href = '/HTML-pages/gaze.html'; } });
+        mountMainNav(me.username, { onGaze: () => { location.href = '/HTML-pages/gaze.html'; } });
         await load();
         live.on('notification', () => load().catch(() => {}));
     } catch (err) {

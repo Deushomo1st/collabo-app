@@ -402,3 +402,40 @@ button.sp-card { font: inherit; }
 
 a.sp-btn { text-decoration: none; text-align: center; }
 .sp-island__pins .sp-btn, .sp-task .sp-btn { padding: 3px 9px; font-size: 12px; margin-left: 8px; }
+
+/* ---- Workspace header: Return, name + tag + the faces, settings, menu; the sections slide in a row beneath (feed-tabs.js) ----
+   The Return and the menu show whatever the navigation preference is. A long name is cut short so the faces always show. */
+.ws-page .sp-header { flex-wrap: wrap; gap: 0 8px; padding: 8px 12px 0; }
+.ws-page .sp-header .nav-return { order: 0; }
+.ws-page .sp-header .sp-title { order: 1; flex: 1 1 0; padding-bottom: 6px; }
+.ws-page .sp-header .ws-gear { order: 2; display: grid; }   /* the gear is ours, so it shows in either navigation preference; the Return and the menu follow the preference */
+.ws-page .sp-header .nav-menu { order: 3; }
+.ws-page .sp-header #bell-slot { order: 4; }
+.ws-page .sp-title__row { flex-wrap: nowrap; min-width: 0; gap: 6px; }
+.ws-page .sp-title h1 { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ws-page .sp-title__row .sp-tag, .ws-page .sp-title__row .sp-stack { flex: none; }
+.ws-tabs { order: 5; flex: 1 1 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; overflow: hidden; touch-action: pan-y; user-select: none; }
+.ws-tabs .tt-tab { position: relative; padding: 10px 8px; border: 0; background: none; color: var(--sp-muted); font: 500 14px var(--sp-font); white-space: nowrap; cursor: pointer; transition: color .2s; }
+.ws-tabs .tt-tab:hover, .ws-tabs .tt-tab[aria-selected="true"] { color: var(--sp-text); }
+.ws-tabs .tt-tab[aria-selected="true"] { grid-column: 2; font-size: 16px; font-weight: 800; }
+.ws-tabs .tt-tab.is-prev { grid-column: 1; justify-self: end; }
+.ws-tabs .tt-tab.is-next { grid-column: 3; justify-self: start; }
+.ws-tabs .tt-tab::after { content: ''; position: absolute; left: 50%; bottom: 3px; width: 22px; height: 3px; border-radius: 3px; background: var(--sp-text); transform: translateX(-50%) scaleX(0); transition: transform .25s cubic-bezier(.16, 1, .3, 1); }
+.ws-tabs .tt-tab[aria-selected="true"]::after { transform: translateX(-50%) scaleX(1); }
+.ws-tabs[data-dir="next"] .tt-tab { animation: ws-from-right .25s cubic-bezier(.16, 1, .3, 1); }
+.ws-tabs[data-dir="prev"] .tt-tab { animation: ws-from-left .25s cubic-bezier(.16, 1, .3, 1); }
+@keyframes ws-from-right { from { transform: translateX(28px); opacity: .3; } }
+@keyframes ws-from-left { from { transform: translateX(-28px); opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .ws-tabs .tt-tab { animation: none !important; } }
+@media (max-width: 460px) { .ws-page .sp-title__row .sp-tag { display: none; } }   /* the name and the faces come first on a phone */
+/* The header is as short as it can be: the section names sit right under the name row. (Sizes follow the page-wide display size, ui-scale.js.) */
+.ws-page .sp-header { padding: 6px 12px 0; }
+.ws-page .sp-header .sp-title { padding-bottom: 0; }
+.ws-tabs .tt-tab { padding: 4px 8px 8px; }
+.ws-tabs .tt-tab::after { bottom: 2px; }
+
+/* Without the round button (Return mode) there is nothing at the bottom, so the room does not keep a gap for it. */
+html:not([data-nav="omni-wheel"]) .ws-page .sp-shell { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+html:not([data-nav="omni-wheel"]) .ws-page .sp-composer { bottom: calc(12px + env(safe-area-inset-bottom)); }
+html:not([data-nav="omni-wheel"]) .ws-page .sp-toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
+.ws-page .sp-header .ws-gear[hidden] { display: none; }

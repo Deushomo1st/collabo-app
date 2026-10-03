@@ -3,7 +3,6 @@
 // Each tab is built by its own module under components/wespace. Text goes in through textContent only.
 import '/js/services/live.js';
 import { mountMainNav } from '/js/services/main-nav.js';
-import { PEOPLE, svg } from '/js/services/icons.js';
 import { currentUser, wespaceAbout } from '/js/services/api.js';
 import { h } from '/js/services/dom.js';
 import { seatsSection } from '/js/components/wespace/seats.js';
@@ -57,7 +56,7 @@ function draw() {
 async function boot() {
     me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
-    mountMainNav(me.username, 'Yarns', { restIcon: svg(PEOPLE) });
+    mountMainNav(me.username);
     try { await refresh(); }
     catch (err) { main().replaceChildren(h('p', { class: 'gz-empty', text: err.status === 404 ? 'This group does not exist, or it is not open to you.' : err.message })); }
 }

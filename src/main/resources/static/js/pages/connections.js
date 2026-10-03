@@ -44,7 +44,7 @@ let who = params.get('u');
         if (!me) return toLogin();
         who = who || me.username;
         document.getElementById('header-title').textContent = who;
-        mountMainNav(me.username, 'Profile');
+        mountMainNav(me.username);
         mine = who.toLowerCase() === me.username.toLowerCase();
         if (!mine && tab === 'myguy') tab = 'following';   // MyGuy is for the owner's eyes only
         data = await connections(who);

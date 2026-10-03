@@ -25,7 +25,7 @@ document.getElementById('back').addEventListener('click', (e) => {
     try {
         const me = await currentUser();
         if (!me) return toLogin();
-        mountMainNav(me.username, 'Gaze', { onGaze: () => { location.href = GAZE; } });   // a post belongs to the Gaze; tapping it goes back to the feed
+        mountMainNav(me.username, { onGaze: () => { location.href = GAZE; } });   // a post belongs to the Gaze; tapping it goes back to the feed
         const p = await postGet(id);
         notificationsReadLink(`/HTML-pages/view-post.html?id=${id}`).catch(() => {});   // what was said about this post is no longer news
         document.title = `${p.title} — COLLABO`;

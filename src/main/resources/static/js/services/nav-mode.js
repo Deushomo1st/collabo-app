@@ -1,6 +1,7 @@
 // Which navigation this account uses (Settings > Appearance and themes > Navigation preference). Import it on any page that mounts a bottom bar.
 // It sets <html data-nav="..."> at once from the copy kept on this device, then asks the server (the pick follows the account across devices),
 // and puts a Return button in the page header. css/global/global.css shows the wheel and the Return button according to data-nav.
+import { adoptUiScale } from '/js/services/ui-scale.js';
 import { currentUser, profileUpdate } from '/js/services/api.js';
 import { NAV_PREFERENCES, DEFAULT_NAV_PREFERENCE } from '/js/services/nav-preference-source.js';
 
@@ -19,6 +20,8 @@ const apply = () => { document.documentElement.dataset.nav = navMode(); };
 /** Pages with unsaved work (post, report) say how Return leaves: guard(go) runs go() to leave, or asks first. */
 let leaveGuard = (go) => go();
 export const guardReturn = (g) => { leaveGuard = g; };
+/** Leave the page the way it said (see guardReturn): the bar, the fan, the menu and the Return all go through this. */
+export const leave = (go) => leaveGuard(go);
 
 /** Picks a navigation: applies it now, keeps it on this device, and saves it on the account. */
 export async function saveNavPreference(id) {
@@ -30,6 +33,8 @@ async function sync() {
     const me = await currentUser().catch(() => null);
     if (!me) return;
     keep(known(me.navPreference) ? me.navPreference : null); apply();
+    if (me.theme) import('/js/components/theme-switcher/theme-switcher.js').then((m) => { if (m.getTheme() !== me.theme) m.setTheme(me.theme, { remote: false }); });   // the account's theme
+    if (me.displaySize != null) adoptUiScale(me.displaySize);   // the account's display size (Settings > Display size)
 }
 
 const goBack = () => leaveGuard(() => { if (history.length > 1) history.back(); else location.href = GAZE; });
@@ -79,6 +84,7 @@ async function addMenu() {
     if (document.querySelector('.nav-menu') || !(await currentUser().catch(() => null))) return;
     import('/js/services/message-notice.js').then((m) => m.watchNotices());   // new yarns and notifications speak from the menu button, on every page
     const slot = bellSlot(), bar = document.querySelector('.tt-bar');
+    document.querySelector('#yn-chat #thread-wrench')?.before(menuButton());   // a Yarns chat has a header of its own: the menu sits beside its info button too
     if (!document.body.hasAttribute('data-home') || !bar) return slot?.before(menuButton());
     // The Gaze: the menu takes the left corner and the bell lives in it (css hides the bell here under Return; the wheel keeps it). A small red badge on the menu, with the icon of the latest alert (yarn or notification), stands in for the bell's badge.
     const b = menuButton(); bar.prepend(b);

@@ -39,7 +39,7 @@
     --_nf-link-active: var(--nav-selector-fluid-hold-link-active, #fff);
     --_nf-bubble-bg: var(--nav-selector-fluid-hold-bubble-bg, linear-gradient(145deg, #2b2f38, #0b0c0f));
     --_nf-bubble-shadow: var(--nav-selector-fluid-hold-bubble-shadow, inset 0 2px 4px rgba(255,255,255,.14), inset 0 -3px 6px rgba(0,0,0,.6), 0 6px 12px rgba(0,0,0,.35));
-    --_nf-hover-bg: var(--nav-selector-fluid-hold-hover-bg, linear-gradient(145deg, rgba(20,24,32,.14), rgba(20,24,32,.06)));
+    --_nf-hover-bg: var(--nav-selector-fluid-hold-hover-bg, linear-gradient(145deg, rgba(20,24,32,.26), rgba(20,24,32,.15)));
     --_nf-hover-shadow: var(--nav-selector-fluid-hold-hover-shadow, inset 0 1px 3px rgba(255,255,255,.7), 0 3px 8px rgba(0,0,0,.12));
     --_nf-arrow-bg: var(--nav-selector-fluid-hold-arrow-bg, rgba(255, 255, 255, .92));
     --_nf-arrow-ink: var(--nav-selector-fluid-hold-arrow-ink, #3a4150);

@@ -346,7 +346,7 @@ async function start() {
     try {
         me = await yarnMe();
         if (!me) return toLogin();
-        mountMainNav(me.username, 'Yarns');
+        mountMainNav(me.username);
         await loadAll();
     } catch (err) { me = null; return fatal(err); }
     route();

@@ -21,8 +21,9 @@
 }
 .hold-fan.is-open .hold-fan__btn { transform: translate(var(--x), var(--y)) scale(1); opacity: 1; pointer-events: auto; }
 .hold-fan__btn svg { width: 20px; height: 20px; }
-.hold-fan__btn:hover { filter: brightness(.96); }
-.hold-fan.is-open .hold-fan__btn.is-hot { transform: translate(var(--x), var(--y)) scale(1.18); filter: brightness(.94); box-shadow: 0 0 0 3px color-mix(in srgb, var(--_hf-ink) 25%, transparent), var(--_hf-shadow); }   /* the one under the sliding finger */
+/* the lit button glows gold: under the pointer, or under the sliding finger (is-hot) */
+html:not(.hold-fan-grab) .hold-fan.is-open .hold-fan__btn:hover { box-shadow: 0 0 0 2px #ffb020, 0 0 16px 4px rgba(255, 176, 32, .7), var(--_hf-shadow); }
+.hold-fan.is-open .hold-fan__btn.is-hot { transform: translate(var(--x), var(--y)) scale(1.18); box-shadow: 0 0 0 2px #ffb020, 0 0 18px 5px rgba(255, 176, 32, .75), var(--_hf-shadow); }   /* the one under the sliding finger */
 .hold-fan.is-open .hold-fan__btn:active { transform: translate(var(--x), var(--y)) scale(.92); }
 .hold-fan__btn:focus-visible { outline: 2px solid #FF9000; outline-offset: 3px; }
 

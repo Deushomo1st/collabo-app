@@ -1,8 +1,8 @@
 // Workspace screen: rendering + wiring. State lives in workspace-data.js.
 // All text goes in through textContent (h() never sets innerHTML), so user text is safe.
-import { fanActions } from '/js/services/fan-actions.js';
-import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import '/js/services/nav-mode.js';
+import { mountMainNav } from '/js/services/main-nav.js';
+import { feedTabs } from '/js/services/feed-tabs.js';
+import { currentUser } from '/js/services/api.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { createSwitch, preloadSwitch } from '/js/components/switch/switch.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
@@ -32,11 +32,7 @@ function h(tag, props = {}, ...kids) {
 const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 const icon = (inner, size = 16) => { const s = h('span', { style: `display:inline-grid;width:${size}px;height:${size}px` }); s.innerHTML = svg(inner); return s; };
 const ICON = {
-    room: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-    members: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-    flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
-    card: '<rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>',
-    gear: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
     star: '<polygon points="12 2 15.1 8.6 22 9.3 16.8 14 18.2 21 12 17.5 5.8 21 7.2 14 2 9.3 8.9 8.6 12 2"/>',
     pin: '<path d="M12 17v5M9 3h6l-1 7 3 3H7l3-3z"/>',
     chev: '<polyline points="6 9 12 15 18 9"/>',
@@ -61,9 +57,9 @@ function renderHeader() {
     document.getElementById('header-info').replaceChildren(
         h('div', { class: 'sp-title__row' },
             h('h1', { text: state.space.name }),
-            h('span', { class: 'sp-tag sp-tag--brand', text: 'Workspace' })),
+            h('span', { class: 'sp-tag sp-tag--brand', text: 'Workspace' }),
+            h('div', { class: 'sp-stack', id: 'header-stack', role: 'link', tabindex: '0', 'aria-label': 'Open members' }, ...state.members.map((m) => avatar(m)))),
         h('p', { text: `${state.space.tagline} · ${active.length} active of ${state.members.length}` }));
-    document.getElementById('header-stack').replaceChildren(...state.members.map((m) => avatar(m)));
 }
 
 function setIsland(open) {
@@ -294,14 +290,14 @@ function renderSettings(root) {
 
 // ---- Router ----------------------------------------------------------------
 const SECTIONS = [
-    { id: 'room', title: 'Room', icon: svg(ICON.room), render: renderRoom },
-    { id: 'members', title: 'Members', icon: svg(ICON.members), render: renderMembers },
-    { id: 'milestones', title: 'Milestones', icon: svg(ICON.flag), render: renderMilestones },
-    { id: 'payments', title: 'Payments', icon: svg(ICON.card), render: renderPayments },
-    { id: 'settings', title: 'Settings', icon: svg(ICON.gear), render: renderSettings },
+    { id: 'room', title: 'Room', render: renderRoom },
+    { id: 'members', title: 'Members', render: renderMembers },
+    { id: 'milestones', title: 'Milestones', render: renderMilestones },
+    { id: 'payments', title: 'Payments', render: renderPayments },
+    { id: 'settings', title: 'Settings', render: renderSettings },
 ];
 const currentId = () => (SECTIONS.find((s) => location.hash.endsWith('#' + s.id)) || SECTIONS[0]).id;
-let nav;
+let tabs, infoBtn;
 
 function renderSection() {
     const sec = SECTIONS.find((s) => s.id === currentId());
@@ -315,7 +311,8 @@ function renderSection() {
 }
 // Room opens at the newest message; every other section opens at the top.
 function goSection() {
-    nav?.setActive(SECTIONS.findIndex((s) => s.id === currentId()));
+    tabs?.sync();
+    if (infoBtn) infoBtn.hidden = currentId() === 'members';   // the (i) leads to Members, so it has nothing to do once you are there
     renderSection();
     window.scrollTo({ top: currentId() === 'room' ? document.documentElement.scrollHeight : 0, behavior: 'instant' });
 }
@@ -325,14 +322,16 @@ async function boot() {
     preloadGlassBlurDialog();
     await Promise.all([preloadActionBanner(), preloadSwitch()]);
     renderAll();
-    nav = await mountNavSelector('#nav', {
-        placement: 'bottom', links: SECTIONS.map((s) => s.title), hrefs: SECTIONS.map((s) => '#' + s.id), icons: SECTIONS.map((s) => s.icon),
-        activeIndex: SECTIONS.findIndex((s) => s.id === currentId()), collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(),
-        onChange: (_l, href) => {   // href can arrive absolute
-            const hash = href.slice(href.lastIndexOf('#'));
-            if (location.hash === hash) goSection(); else location.hash = hash;
-        },
+    // the sections are a slider in the header (swipe, or tap an edge one), like Yarns; the bottom bar is the same on every page
+    tabs = feedTabs(document.getElementById('ws-tabs'), {
+        labels: SECTIONS.map((s) => s.title), at: () => SECTIONS.findIndex((s) => s.id === currentId()), blocked: () => islandOpen,
+        go: (i) => { location.hash = '#' + SECTIONS[i].id; },
     });
+    const gear = h('button', { class: 'nav-gear ws-gear', type: 'button', title: 'Members', 'aria-label': 'Workspace info: the members', onclick: () => { location.hash = '#members'; } });
+    gear.innerHTML = svg(ICON.info); infoBtn = gear;
+    document.querySelector('.sp-header').append(gear);   // beside the menu (the Return and the menu come from nav-mode.js)
+    const me = await currentUser().catch(() => null);
+    if (me) mountMainNav(me.username);
     const shell = document.querySelector('.sp-shell');   // hysteresis so the height change can't flicker the state
     let lastY = window.scrollY;
     window.addEventListener('scroll', () => {
@@ -344,7 +343,7 @@ async function boot() {
     // Header shortcuts: the faces open Members, the rest of the panel opens Settings.
     const header = document.querySelector('.sp-header');
     const go = (e) => {
-        if (e.target.closest('.sp-back, #theme-slot')) return;
+        if (e.target.closest('.sp-back, #theme-slot, .nav-return, .nav-gear, #bell-slot, .ws-tabs')) return;   // the buttons and the slider do their own thing
         const hash = e.target.closest('#header-stack') ? '#members' : '#settings';
         if (location.hash === hash) goSection(); else location.hash = hash;
     };

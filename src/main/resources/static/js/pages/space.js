@@ -9,7 +9,6 @@ import { paymentsSection } from '/js/components/space/payments.js';
 import { removalsSection } from '/js/components/space/removals.js';
 import { openSettings } from '/js/components/space/settings.js';
 import { mountMainNav } from '/js/services/main-nav.js';
-import { PEOPLE, svg } from '/js/services/icons.js';
 import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
@@ -83,7 +82,7 @@ function draw() {
 async function boot() {
     me = await currentUser().catch(() => null);
     if (!me) return toLogin();
-    mountMainNav(me.username, 'Yarns', { restIcon: svg(PEOPLE) });
+    mountMainNav(me.username);
     try { await refresh(); }
     catch (err) {
         if (err.status === 401) return toLogin();

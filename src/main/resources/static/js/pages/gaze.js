@@ -255,7 +255,7 @@ function openLinkedPost() {
     if (id) location.replace(`/HTML-pages/view-post.html?id=${encodeURIComponent(id)}`);
 }
 
-const mountBottom = (username) => mountMainNav(username, 'Gaze', { onGaze: () => window.scrollTo({ top: 0, behavior: 'smooth' }) });   // Gaze again goes back to the top
+const mountBottom = (username) => mountMainNav(username, { onGaze: () => window.scrollTo({ top: 0, behavior: 'smooth' }) });   // Gaze again goes back to the top
 
 async function boot() {
     const me = await currentUser().catch(() => null);

@@ -1,5 +1,6 @@
 // Pull down at the top of the Gaze: the feed follows your finger and a ring draws itself, turning once round; letting go on a full circle refreshes.
 import { h } from '/js/services/dom.js';
+import { zoomOf } from '/js/services/ui-scale.js';
 
 const MARK = 72, MAX = 130, HOLD = 56;   // px: where letting go refreshes, the furthest it stretches, where it rests while refreshing
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -14,7 +15,7 @@ export function pullToRefresh(refresh) {
         const top = document.querySelector('.sp-top').getBoundingClientRect().bottom;
         const t = soft ? 'transform .3s cubic-bezier(.16, 1, .3, 1), opacity .3s' : 'none';
         list().style.transition = t; list().style.transform = d ? `translateY(${d}px)` : '';
-        ring.style.transition = t; ring.style.top = `${top}px`;
+        ring.style.transition = t; ring.style.top = `${top / zoomOf()}px`;
         ring.style.opacity = String(Math.min(1, d / (MARK * 0.8)));
         ring.style.transform = `translate(-50%, ${d / 2 - 18}px) scale(${0.6 + Math.min(1, d / MARK) * 0.4})`;
         const p = Math.min(1, d / MARK);   // the ring draws itself and turns once round by the time you reach the mark; a full circle means letting go loads

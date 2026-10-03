@@ -20,12 +20,14 @@ export function getTheme() {
     return document.documentElement.dataset.theme === 'light' ? 'light' : 'dusk';
 }
 
-export function setTheme(theme, { persist = true } = {}) {
+/** remote: also save the pick on the account (every device then uses it); false when adopting the account's own pick. */
+export function setTheme(theme, { persist = true, remote = persist } = {}) {
     const t = theme === 'light' ? 'light' : 'dusk';
     document.documentElement.dataset.theme = t;
     if (persist) {
         try { localStorage.setItem(THEME_STORAGE_KEY, t); } catch (e) { /* storage blocked: theme still applies */ }
     }
+    if (remote) import('/js/services/api.js').then((m) => m.profileUpdate({ theme: t })).catch(() => {});   // signed out (or offline): it stays on this device
     document.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: { theme: t } }));
     return t;
 }

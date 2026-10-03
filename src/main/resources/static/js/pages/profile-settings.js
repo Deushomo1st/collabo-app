@@ -11,6 +11,7 @@ import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { currentUser, logoutUser } from '/js/services/api.js';
 import { h } from '/js/services/dom.js';
 import { openNavPreference, navPreferenceName } from '/js/services/nav-preference.js';
+import { displaySizeRow } from '/js/components/settings/display-size.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 
 const PROFILE = '/HTML-pages/profile.html';
@@ -39,7 +40,7 @@ const segment = (id, name, ...rows) => h('section', { id, class: 'yn-group sp-gl
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return toLogin();
-    mountMainNav(me.username, 'Settings');
+    mountMainNav(me.username);
     await loadYarnLists().catch(() => {});   // the Archive and Blocked counts; the lists say so themselves if they cannot load
     const sub = (name, now, open) => {   // a row that opens its own dialog; the line under the name says what is set
         const line = h('span', { class: 'yn-last', text: now() });
@@ -50,7 +51,7 @@ async function boot() {
         await mountThemeRow(panel.lastElementChild);
     };
     const segments = [
-        segment('appearance', 'Appearance and themes', sub('Theme', () => (getTheme() === 'light' ? 'Light' : 'Dusk'), openTheme), sub('Navigation preference', navPreferenceName, openNavPreference)),
+        segment('appearance', 'Appearance and themes', sub('Theme', () => (getTheme() === 'light' ? 'Light' : 'Dusk'), openTheme), sub('Navigation preference', navPreferenceName, openNavPreference), displaySizeRow()),
         segment('yarns', 'Yarns', sub('Default chat', defaultChatName, openDefaultChat), sub('Archive', archivedCount, openArchive)),
         // what every new post starts from; the Create post page can change it for one post (a stored copy, so it stays on this device)
         segment('postdefaults', 'New posts', h('p', { class: 'yn-hint', text: 'Every new post starts like this. On the Create post page you can change it for just that post.' }),

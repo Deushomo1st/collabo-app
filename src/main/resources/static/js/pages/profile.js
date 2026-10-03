@@ -71,7 +71,7 @@ function fail(err) {
     if (err.status === 401) return toLogin();
     section().replaceChildren(
         h('p', { class: 'pf-empty', text: err.status === 404 ? 'No one has that username.' : (err.message || 'Could not load this profile.') }),
-        err.status === 404 ? null : h('button', { class: 'pf-btn', type: 'button', text: 'Try again', onclick: boot }));
+        ...(err.status === 404 ? [] : [h('button', { class: 'pf-btn', type: 'button', text: 'Try again', onclick: boot })]));   // (replaceChildren would print a null as the word "null")
 }
 
 // ---- identity card ---------------------------------------------------------
@@ -310,7 +310,7 @@ async function boot() {
         if (!me) return toLogin();
         viewer = me.username;
         const who = usernameInUrl() || me.username;
-        mountMainNav(viewer, 'Profile', who === viewer ? { restIcon: () => face(viewer, 'ns-face') } : {});   // your own profile rests on your picture (your initial if none)
+        mountMainNav(viewer, who === viewer ? { restIcon: () => face(viewer, 'ns-face') } : {});   // your own profile rests on your picture (your initial if none)
         if (who === viewer) addSettingsGear();
         await load(who);
         if (who === viewer) remind();

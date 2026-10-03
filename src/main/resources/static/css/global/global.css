@@ -1,5 +1,8 @@
 @import url("theme.css");
 
+/* Display size (ui-scale.js sets --ui-scale: the size picked in Settings times a small shrink on narrow screens): text, icons and spacing scale together. */
+html { zoom: var(--ui-scale, 1); }
+
 /* Moving between pages cross-fades instead of flashing white (Chrome and Edge; other browsers just navigate). */
 @media (prefers-reduced-motion: no-preference) {
     @view-transition { navigation: auto; }
@@ -72,13 +75,13 @@ input[type="date"], input[type="datetime-local"], input[type="time"], input[type
 @keyframes dangle-sway { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg); } }
 @media (prefers-reduced-motion: reduce) { .dangle, .dangle__swing, .dangle__string { animation: none; } .dangle.is-up { display: none; } }
 
-/* Only while the omni button is in use (pill open, or its fan out): the whole screen dims and blurs behind it (the pill is above, z 45, so it stays sharp),
-   and with the pill open alone a top-bar-style blurred backing also fades up from the bottom edge. */
+/* Wherever the omni button is on the screen (every page that has it): a top-bar-style blurred backing fades up from the bottom edge, so anything scrolling under the button stays readable.
+   While the pill is open or its fan is out the whole screen also dims and blurs behind it (the pill is above, z 45, so it stays sharp), and the fan hides the backing. */
 body::after, body::before { content: ''; position: fixed; left: 0; right: 0; bottom: 0; z-index: 44; pointer-events: none; opacity: 0; transition: opacity .3s; }
 body::after { height: 150px; background: linear-gradient(to top, color-mix(in srgb, color-mix(in srgb, var(--sp-bg) 92%, #000) 80%, transparent), color-mix(in srgb, var(--sp-bg) 50%, transparent) 70%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); -webkit-mask-image: linear-gradient(to top, #000 45%, transparent); mask-image: linear-gradient(to top, #000 45%, transparent); }
 body::before { top: 0; background: rgba(0, 0, 0, .55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 :root[data-theme="light"] body::before { background: rgba(20, 24, 32, .35); }
-body:has(.nav-selector-fluid-hold:not(.iconized))::after { opacity: 1; }
+html[data-nav="omni-wheel"] body:has(.nav-selector-fluid-hold)::after { opacity: 1; }
 body:has(.nav-selector-fluid-hold:not(.iconized), .hold-fan.is-open)::before { opacity: 1; }
-body:has(.hold-fan.is-open)::after { opacity: 0; }
+html[data-nav="omni-wheel"] body:has(.hold-fan.is-open)::after { opacity: 0; }
 .nav-selector-fluid-hold-wrap--bottom { z-index: 45; }

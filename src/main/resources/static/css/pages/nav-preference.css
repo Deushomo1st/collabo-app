@@ -15,3 +15,26 @@
 .np-name strong { font-size: 14px; font-weight: 800; }
 .np-hint { margin: 0; opacity: .7; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { .np-tile { transition: none; } }
+
+/* Settings > Appearance and themes > Display size (js/components/settings/display-size.js): the slider and the sample screen under it. */
+.ds-row { display: grid; gap: 10px; padding: 14px; border-radius: 18px; background: var(--sp-panel); }
+.ds-head { display: flex; justify-content: space-between; align-items: baseline; }
+.ds-value { color: var(--sp-brand, #ff9500); font-variant-numeric: tabular-nums; }
+.ds-slide { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; color: var(--sp-muted); }
+.ds-slide small { font-size: 12px; } .ds-slide big { font-size: 20px; }
+.ds-range { width: 100%; accent-color: var(--sp-brand, #ff9500); }
+.ds-reset { justify-self: start; padding: 6px 12px; border: 1px solid var(--sp-line); border-radius: 99px; background: none; color: var(--sp-muted); font: 600 12px var(--sp-font, inherit); cursor: pointer; }
+.ds-screen { overflow: hidden; border: 1px solid var(--sp-line); border-radius: 18px; background: var(--sp-bg); }
+.ds-zoom { display: grid; gap: 10px; padding: 12px; transform-origin: top left; }
+.ds-top { display: flex; justify-content: space-between; align-items: center; font-size: 16px; }
+.ds-ico { display: inline-grid; place-items: center; } .ds-ico svg { width: 20px; height: 20px; }
+.ds-card { display: grid; gap: 8px; padding: 12px; border-radius: 14px; background: var(--sp-panel); }
+.ds-card p { margin: 0; font-size: 14px; line-height: 1.45; }
+.ds-who { display: flex; align-items: center; gap: 8px; font-size: 14px; } .ds-who span { display: grid; } .ds-who small { color: var(--sp-muted); font-size: 11px; }
+.ds-face { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--sp-brand, #ff9500); color: #1a1200; font: 800 14px var(--sp-font, inherit); font-style: normal; }
+.ds-actions { display: flex; gap: 8px; }
+.ds-btn { padding: 7px 14px; border-radius: 99px; background: var(--sp-brand, #ff9500); color: #1a1200; font: 700 13px var(--sp-font, inherit); }
+.ds-btn--ghost { background: none; border: 1px solid var(--sp-line); color: var(--sp-text); }
+.ds-pill { display: flex; justify-content: space-around; padding: 8px 12px; border-radius: 99px; background: var(--sp-panel-hi); }
+
+.ds-row .yn-last { white-space: normal; }

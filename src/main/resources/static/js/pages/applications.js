@@ -44,7 +44,7 @@ document.getElementById('back').addEventListener('click', (e) => { if (history.l
     try {
         const me = await currentUser();
         if (!me) return toLogin();
-        mountMainNav(me.username, 'Profile');
+        mountMainNav(me.username);
         rows = await applicationsMine();
         tab = TABS.find((t) => rows.some((r) => t[2].includes(r.state)))?.[0] || tab;   // open on the first tab that has something
         draw();
