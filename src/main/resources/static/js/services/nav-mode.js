@@ -77,12 +77,20 @@ function bellSlot() {
 
 async function addMenu() {
     if (document.querySelector('.nav-menu') || !(await currentUser().catch(() => null))) return;
+    import('/js/services/message-notice.js').then((m) => m.watchNotices());   // new yarns and notifications speak from the menu button, on every page
     const slot = bellSlot(), bar = document.querySelector('.tt-bar');
     if (!document.body.hasAttribute('data-home') || !bar) return slot?.before(menuButton());
-    // The Gaze: the menu takes the left corner and the bell lives in it (css hides the bell here under Return; the wheel keeps it). A dot on the menu stands in for the bell's badge.
+    // The Gaze: the menu takes the left corner and the bell lives in it (css hides the bell here under Return; the wheel keeps it). A small red badge on the menu, with the icon of the latest alert (yarn or notification), stands in for the bell's badge.
     const b = menuButton(); bar.prepend(b);
-    const unread = () => b.classList.toggle('has-unread', !!slot?.querySelector('.notification-bell__badge:not([hidden])'));
+    const alert = document.createElement('span'); alert.className = 'nav-alert'; b.append(alert);
+    const unread = async () => {
+        const { alertKind } = await import('/js/services/message-notice.js'), { CHAT, BELL, svg } = await import('/js/services/icons.js');
+        const kind = await alertKind();
+        b.classList.toggle('has-unread', !!kind);
+        alert.innerHTML = kind ? svg(kind === 'yarn' ? CHAT : BELL) : '';
+    };
     if (slot) new MutationObserver(unread).observe(slot, { subtree: true, childList: true, attributes: true });
+    document.addEventListener('alert-change', unread);
     unread();
 }
 

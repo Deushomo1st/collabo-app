@@ -5,6 +5,8 @@ import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, notificationsList, notificationRead, notificationsReadAll } from '/js/services/api.js';
 import { h, toast } from '/js/services/dom.js';
 import { drawTabs, openMenu, toLogin } from '/js/services/review-ui.js';
+import { face } from '/js/services/face.js';
+import { whoIn } from '/js/services/notice-who.js';
 
 const $tabs = document.getElementById('tabs'), $list = document.getElementById('list'), $sum = document.getElementById('summary'), $filter = document.getElementById('filter');
 const TABS = [['ALL', 'All'], ['SPACES', 'Spaces'], ['ACTIVITY', 'Activity'], ['PERSONAL', 'Personal']];
@@ -29,7 +31,7 @@ function draw() {
 const row = (n) => h('button', { class: `rv-note${n.read ? '' : ' is-unread'}`, type: 'button', onclick: () => {
     if (!n.read) { n.read = true; notificationRead(n.id).catch(() => {}); }
     if (n.link) location.href = n.link; else draw();
-} }, h('b', { text: n.title }), n.body && h('span', { text: n.body }), n.createdAt && h('time', { datetime: n.createdAt, text: new Date(n.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) }));
+} }, whoIn(n).length > 0 && h('div', { class: 'rv-note__who' }, ...whoIn(n).map((u) => face(u, 'sp-avatar--sm'))), h('b', { text: n.title }), n.body && h('span', { text: n.body }), n.createdAt && h('time', { datetime: n.createdAt, text: new Date(n.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) }));
 
 async function load() { items = (await notificationsList()) || []; draw(); }
 

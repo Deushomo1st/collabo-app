@@ -18,7 +18,7 @@ const toLogin = () => location.replace('/HTML-pages/login.html?next=' + encodeUR
 function toast(text) {
     const el = document.getElementById('toast');
     el.textContent = text; el.classList.add('is-on');
-    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('is-on'), 2600);
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('is-on'), 1300);
 }
 
 // Each card is a segment. The header names the segment you are in: it starts on the first and follows you down the page.

@@ -2,6 +2,7 @@ package com.collabo.backend.service;
 
 import com.collabo.backend.dto.PostDtos.CommentResponse;
 import com.collabo.backend.dto.PersonDto;
+import com.collabo.backend.entity.Notification;
 import com.collabo.backend.entity.Post;
 import com.collabo.backend.entity.PostComment;
 import com.collabo.backend.entity.User;
@@ -31,9 +32,10 @@ public class CommentService {
     private final PostService posts;
     private final UserRepository users;
     private final UserBlockRepository blocks;
+    private final NotificationService notifications;
 
-    public CommentService(PostCommentRepository comments, PostCommentLikeRepository likes, PostService posts, UserRepository users, UserBlockRepository blocks) {
-        this.likes = likes; this.comments = comments; this.posts = posts; this.users = users; this.blocks = blocks;
+    public CommentService(PostCommentRepository comments, PostCommentLikeRepository likes, PostService posts, UserRepository users, UserBlockRepository blocks, NotificationService notifications) {
+        this.likes = likes; this.comments = comments; this.posts = posts; this.users = users; this.blocks = blocks; this.notifications = notifications;
     }
 
     @Transactional(readOnly = true)
@@ -55,13 +57,30 @@ public class CommentService {
     }
 
     public CommentResponse add(User me, UUID postId, String text, UUID parentId) {
-        if (!posts.visible(me, postId).isCommentsOn()) throw new InvalidProfileException("The author turned comments off for this post.");
+        Post post = posts.visible(me, postId);
+        if (!post.isCommentsOn()) throw new InvalidProfileException("The author turned comments off for this post.");
         String body = text == null ? "" : text.trim();
         if (body.isEmpty()) throw new InvalidProfileException("Write something first.");
         if (body.length() > MAX_BODY) throw new InvalidProfileException("Keep comments under " + MAX_BODY + " characters.");
         UUID parent = null;
         if (parentId != null) parent = visibleComment(me, postId, parentId).getId();   // a reply goes under any comment, however deep
-        return response(comments.save(new PostComment(postId, me.getId(), body, parent)), me, me, 0, false, 0);
+        PostComment saved = comments.save(new PostComment(postId, me.getId(), body, parent));
+        tell(me, post, parent);
+        return response(saved, me, me, 0, false, 0);
+    }
+
+    /** The owner of the comment replied to hears of the reply, the author of the post hears of a comment (one line each, never about yourself, never across a block). */
+    private void tell(User me, Post post, UUID parentId) {
+        Set<UUID> hidden = new HashSet<>(blocks.counterpartsOf(me.getId()));
+        String link = "/HTML-pages/view-post.html?id=" + post.getId();
+        UUID replied = parentId == null ? null : comments.findById(parentId).map(PostComment::getAuthorId).orElse(null);
+        if (replied != null && !replied.equals(me.getId()) && !hidden.contains(replied)) {
+            notifications.notify(replied, Notification.Bucket.ACTIVITY, "New reply", me.getUsername() + " replied to your comment on \"" + post.getTitle() + "\".", link);
+        }
+        UUID owner = post.getAuthorId();
+        if (!owner.equals(me.getId()) && !owner.equals(replied) && !hidden.contains(owner)) {
+            notifications.notify(owner, Notification.Bucket.ACTIVITY, "New comment", me.getUsername() + " commented on \"" + post.getTitle() + "\".", link);
+        }
     }
 
     public void delete(User me, UUID postId, UUID commentId) {
@@ -79,10 +98,16 @@ public class CommentService {
         comments.delete(c);
     }
 
-    /** Like a comment you can see: free, silent, idempotent. */
+    /** Like a comment you can see: free, idempotent, and its writer hears of it once. */
     public CommentResponse like(User me, UUID postId, UUID commentId) {
         PostComment c = visibleComment(me, postId, commentId);
-        if (!likes.existsByCommentIdAndUserId(commentId, me.getId())) likes.save(new PostCommentLike(commentId, postId, me.getId()));
+        if (!likes.existsByCommentIdAndUserId(commentId, me.getId())) {
+            likes.save(new PostCommentLike(commentId, postId, me.getId()));
+            if (!c.getAuthorId().equals(me.getId())) {
+                String title = posts.visible(me, postId).getTitle();
+                notifications.notifyUnlessSame(c.getAuthorId(), Notification.Bucket.ACTIVITY, "New like", me.getUsername() + " liked your comment on \"" + title + "\".", "/HTML-pages/view-post.html?id=" + postId);
+            }
+        }
         return present(c, me);
     }
 

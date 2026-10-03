@@ -118,7 +118,7 @@ class NotificationTest {
         send(post("/api/notifications/" + id + "/read"), danS, null).andExpect(status().isNotFound());   // not theirs
         send(post("/api/notifications/" + id + "/read"), bobS, null).andExpect(status().isOk());
         send(get("/api/notifications/unread-count"), bobS, null).andExpect(jsonPath("$.count").value(0));
-        mine(annS, "").andExpect(jsonPath("$", hasSize(0)));
+        mine(annS, "").andExpect(jsonPath("$[?(@.bucket=='SPACES')]", hasSize(0)));   // the founder hears only of the applications
     }
 
     @Test

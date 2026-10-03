@@ -153,7 +153,7 @@ class RemovalRecordTest {
         removeBob();
         String id = recordId();
         send(post("/api/removals/" + id + "/addresses"), bobS, "{\"body\":\"I was travelling with no signal.\"}").andExpect(status().isOk());
-        send(get("/api/notifications?filter=activity"), annS, null).andExpect(jsonPath("$", hasSize(1))).andExpect(jsonPath("$[0].bucket").value("ACTIVITY"));
+        send(get("/api/notifications?filter=activity"), annS, null).andExpect(jsonPath("$[?(@.title =~ /.*addressed.*/)]", hasSize(1))).andExpect(jsonPath("$[?(@.title =~ /.*addressed.*/)].bucket").value("ACTIVITY"));   // beside bob's application
         send(post("/api/removals/" + id + "/addresses"), annS, "{\"body\":\"Two weeks is long.\"}").andExpect(status().isOk());
         send(get("/api/notifications?filter=activity"), bobS, null).andExpect(jsonPath("$", hasSize(1)));
         recordsOf(bob, bobS).andExpect(jsonPath("$[0].addresses", hasSize(2))).andExpect(jsonPath("$[0].addresses[0].by.username").value(bob))

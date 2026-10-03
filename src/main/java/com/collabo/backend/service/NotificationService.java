@@ -38,6 +38,11 @@ public class NotificationService {
         if (!notifications.existsByUserIdAndLinkAndReadFalse(userId, link)) notify(userId, bucket, title, body, link);
     }
 
+    /** Like notify, but the same line (same words, same place) is not repeated while it waits unread: like, unlike, like again stays one line. */
+    public void notifyUnlessSame(UUID userId, Bucket bucket, String title, String body, String link) {
+        if (!notifications.existsByUserIdAndLinkAndBodyAndReadFalse(userId, link, body)) notify(userId, bucket, title, body, link);
+    }
+
     /** Pinned until resolve(refKey): a payment claim holding a room, a clock running down, a removal awaiting an answer. */
     public void require(UUID userId, String refKey, Bucket bucket, String title, String body, String link) {
         notifications.save(new Notification(userId, bucket, true, refKey, title, body, link));
@@ -66,6 +71,14 @@ public class NotificationService {
         n.markRead();
         notifications.save(n);
         signals.notification(me.getId());   // the same person's other tabs
+    }
+
+    /** Looking at the thing a notification points to settles it: whatever was waiting about that link is read. */
+    public void readLink(User me, String link) {
+        List<Notification> waiting = notifications.findByUserIdAndLinkAndReadFalse(me.getId(), link);
+        if (waiting.isEmpty()) return;
+        waiting.forEach(n -> { n.markRead(); notifications.save(n); });
+        signals.notification(me.getId());
     }
 
     public void readAll(User me) {

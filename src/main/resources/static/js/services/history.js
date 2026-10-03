@@ -16,6 +16,8 @@ export function historyAdd(user, posts) {
     const seen = new Set(posts.map((p) => p.id));
     write(user, [...posts, ...historyRead(user).filter((p) => !seen.has(p.id))].slice(0, MAX));
 }
+/** The ids of the 5 newest posts you have seen: the Gaze counts what is newer than them (what is in History no longer sits in the feed). */
+export const historyTop = (user) => historyRead(user).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 5).map((p) => p.id);
 export const historyDrop = (user, id) => write(user, historyRead(user).filter((p) => p.id !== id));
 export const historyClear = (user) => { try { localStorage.removeItem(key(user)); } catch { /* nothing to clear */ } };
 

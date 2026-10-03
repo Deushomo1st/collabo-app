@@ -270,10 +270,15 @@ public class PostService {
         return out;
     }
 
-    /** Like a post: free, silent, idempotent. Your own post too. */
+    /** Like a post: free, idempotent, and the author hears of it once. Your own post too, without telling yourself. */
     public PostResponse like(User me, UUID id) {
         Post p = visible(me, id);
-        if (!likes.existsByPostIdAndUserId(id, me.getId())) likes.save(new PostLike(id, me.getId()));
+        if (!likes.existsByPostIdAndUserId(id, me.getId())) {
+            likes.save(new PostLike(id, me.getId()));
+            if (!p.getAuthorId().equals(me.getId()) && !blocked(p.getAuthorId(), me.getId())) {
+                notifications.notifyUnlessSame(p.getAuthorId(), Notification.Bucket.ACTIVITY, "New like", me.getUsername() + " liked your post \"" + p.getTitle() + "\".", "/HTML-pages/view-post.html?id=" + id);
+            }
+        }
         return view(p, me);
     }
 

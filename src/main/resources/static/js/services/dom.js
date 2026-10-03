@@ -16,7 +16,7 @@ export function toast(text) {
     const el = document.getElementById('toast');
     if (!el) return;
     el.textContent = text; el.classList.add('is-on');
-    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('is-on'), 2600);
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('is-on'), 1300);
 }
 
 export const day = (iso) => new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });

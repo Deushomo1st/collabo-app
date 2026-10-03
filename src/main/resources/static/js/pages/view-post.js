@@ -2,7 +2,7 @@
 // from a card in the feed, from a copied link, or from a post yarned to you.
 import '/js/services/live.js';
 import { mountMainNav } from '/js/services/main-nav.js';
-import { currentUser, postGet } from '/js/services/api.js';
+import { currentUser, postGet, notificationsReadLink } from '/js/services/api.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountCommentSection } from '/js/components/comment-section/comment-section.js';
 import { skeletonCards } from '/js/services/skeleton.js';
@@ -27,6 +27,7 @@ document.getElementById('back').addEventListener('click', (e) => {
         if (!me) return toLogin();
         mountMainNav(me.username, 'Gaze', { onGaze: () => { location.href = GAZE; } });   // a post belongs to the Gaze; tapping it goes back to the feed
         const p = await postGet(id);
+        notificationsReadLink(`/HTML-pages/view-post.html?id=${id}`).catch(() => {});   // what was said about this post is no longer news
         document.title = `${p.title} — COLLABO`;
         document.getElementById('header-title').textContent = p.anonymous && !p.mine ? 'Anonymous post' : `${p.author.username}'s Post`;   // an anonymous author is never named
         $post.replaceChildren(postCard(p, { detail: true, onGone: () => location.replace(GAZE) }));

@@ -29,11 +29,12 @@ public class SpaceMemberService {
     private final CredentialService credentials;
     private final CollaboratorRepository collaborators;
     private final SpaceThreadService spaceThreads;
+    private final NotificationService notifications;
 
     public SpaceMemberService(SpaceRepository spaces, SpaceMemberRepository members, UserRepository users,
                               SpaceService spaceAccess, CredentialService credentials,
-                              CollaboratorRepository collaborators, SpaceThreadService spaceThreads) {
-        this.spaceThreads = spaceThreads; this.collaborators = collaborators;
+                              CollaboratorRepository collaborators, SpaceThreadService spaceThreads, NotificationService notifications) {
+        this.spaceThreads = spaceThreads; this.notifications = notifications; this.collaborators = collaborators;
         this.spaces = spaces; this.members = members; this.users = users; this.spaceAccess = spaceAccess; this.credentials = credentials;
     }
 
@@ -65,6 +66,7 @@ public class SpaceMemberService {
         m.setState(SpaceMember.State.LEFT);
         members.save(m);
         spaceThreads.leaveWorkspace(s, me.getId());
+        notifications.notify(s.getOwnerId(), Notification.Bucket.SPACES, "A member left", me.getUsername() + " left \"" + s.getName() + "\".", "/HTML-pages/space.html?id=" + s.getId());
     }
 
     @Transactional(readOnly = true)
@@ -115,6 +117,10 @@ public class SpaceMemberService {
         m.setPermissions(EnumSet.noneOf(SpacePermission.class));
         members.save(m);
         spaceThreads.leaveWorkspace(s, target.getId());
+        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were removed from the space", me.getUsername() + " removed you from \"" + s.getName() + "\".", "/HTML-pages/yarnspaces.html");
+        if (!s.getOwnerId().equals(me.getId())) {
+            notifications.notify(s.getOwnerId(), Notification.Bucket.SPACES, "Someone was removed", me.getUsername() + " removed " + target.getUsername() + " from \"" + s.getName() + "\".", "/HTML-pages/space.html?id=" + s.getId());
+        }
     }
 
     private boolean isCollaborator(User me, Space s) {

@@ -4,11 +4,12 @@ import { live } from '/js/services/live.js';   // keeps the live socket open (ya
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { mountMainNav } from '/js/services/main-nav.js';
-import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, profileGet, following } from '/js/services/api.js';
+import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, following } from '/js/services/api.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { skeletonCards } from '/js/services/skeleton.js';
-import { historyAdd, historyDrop } from '/js/services/history.js';
+import { pullToRefresh } from '/js/pages/gaze-pull.js';
+import { historyAdd, historyDrop, historyRead, historyTop } from '/js/services/history.js';
 
 const EMPTY = {
     gaze: 'Nothing here yet. Be the first to post an idea.',
@@ -48,7 +49,7 @@ window.addEventListener('scroll', () => { clearTimeout(saveTimer); saveTimer = s
 window.addEventListener('pagehide', () => { clearTimeout(saveTimer); save(); });   // leaving mid-scroll (a quick tap on a post) still remembers the exact spot
 
 const card = (p) => { const c = postCard(p, { onGone: () => drop(p.id) }); c.dataset.id = p.id; return c; };
-const emptyNote = () => h('p', { class: 'gz-empty', text: EMPTY[feed] });
+const emptyNote = () => h('p', { class: 'gz-empty', text: historyRead(who).length ? 'You are all caught up. Ideas you have seen are in History.' : EMPTY[feed] });
 
 // The feed choices are tabs in the header: The Gaze, Shared Gaze, or the Gaze narrowed to ideas still open to applications.
 const FEEDS = [
@@ -148,20 +149,14 @@ function render() {
     mark();   // a restored scroll position starts with the backing already on
 }
 
-// "Latest": a button at the bottom that jumps to the newest post, loading the new ones first when there are some. It shows once the newest is more than a screen away.
-const headerH = () => document.querySelector('.sp-top').offsetHeight || 52;
+// "Latest": a button at the bottom that restarts from the newest post (everything seen so far goes to History). It shows only while new posts wait.
 // While new posts wait, the faces of up to three of their authors sit in it, people you follow first.
 const faces = h('span', { class: 'gz-faces' });
-const latest = h('button', { class: 'gz-latest', type: 'button', hidden: true, onclick: () => {
-    if (newCount > 0) return restart();
-    const f = list().querySelector('.gz-fresh');
-    window.scrollTo({ top: f ? f.getBoundingClientRect().top + window.scrollY - headerH() - 8 : 0, behavior: 'smooth' });
-} }, faces, h('span', { text: 'Latest' }));
+const latest = h('button', { class: 'gz-latest', type: 'button', hidden: true, onclick: restart }, h('span', { text: 'Latest' }), faces);
 document.body.append(latest);
 let newAuthors = [], facesShown = '';
 function markLatest() {
-    const f = list().querySelector('.gz-fresh'), top = f ? f.getBoundingClientRect().top - headerH() : 0;
-    latest.hidden = !(newCount > 0 || Math.abs(top) > window.innerHeight);
+    latest.hidden = newCount === 0;
     latest.title = newCount > 0 ? `${newCount >= 50 ? '50+' : newCount} new` : '';
     const names = newCount > 0 ? newAuthors : [];
     if (names.join() !== facesShown) { facesShown = names.join(); faces.replaceChildren(...names.map((n) => face(n))); }
@@ -171,11 +166,10 @@ async function authorsOfNew(mine) {
     followed ??= following(who).then((us) => new Set(us.map((u) => u.username))).catch(() => new Set());
     const [page, set] = await Promise.all([gazeFeed(feed, { pending: pendingOnly }), followed]);
     if (mine !== gen) return [];
-    const have = ids(fresh), names = [];
+    const have = new Set([...ids(fresh), ...historyRead(who).map((p) => p.id)]), names = [];
     for (const p of page.items) if (!have.has(p.id) && !p.anonymous && !p.mine && p.author?.username && !names.includes(p.author.username)) names.push(p.author.username);
     return [...names.filter((n) => set.has(n)), ...names.filter((n) => !set.has(n))].slice(0, 3);
 }
-window.addEventListener('scroll', markLatest, { passive: true });
 window.addEventListener('pageshow', (e) => { if (e.persisted && refreshAsked()) restart(); });   // back to a kept page after posting
 
 /** Entry: the first load, and flipping tabs or filters. Shows what this tab already has; fetches only when there is nothing, or after a refresh. */
@@ -196,7 +190,7 @@ async function show() {
     await more(true);
 }
 
-/** The Latest button with new posts waiting: restart from the newest; everything seen so far goes to History. */
+/** The Latest button: restart from the newest; everything seen so far goes to History. */
 async function restart() {
     gen++; loading = false; newCount = 0; newAuthors = [];
     historyAdd(who, fresh);
@@ -210,18 +204,24 @@ async function more(first) {
     if (loading) return;
     loading = true;
     const mine = gen;
-    const sentinel = list().querySelector('.gz-sentinel');
-    if (sentinel && !first) sentinel.textContent = 'Loading…';
-    const holders = first && !fresh.length ? skeletonCards(3) : [];   // the first load shows the shape of the feed, not empty space
+    const holders = skeletonCards(first && !fresh.length ? 3 : 2);   // placeholders in the shape of the next cards, so scrolling never meets a gap
     list().querySelector('.gz-fresh')?.append(...holders);
     try {
-        const page = await gazeFeed(feed, { pending: pendingOnly, before: first ? undefined : next });
-        if (mine !== gen) return;   // you moved to another tab while this loaded
+        // What you have already seen lives in History, so the Gaze brings only newer ideas: pages that hold nothing new are passed over (a few at a time).
+        const seenIds = new Set(historyRead(who).map((p) => p.id));
+        let page, items = [], before = first ? undefined : next;
+        for (let i = 0; i < 5; i++) {
+            page = await gazeFeed(feed, { pending: pendingOnly, before });
+            if (mine !== gen) return;   // you moved to another tab while this loaded
+            const have = ids(fresh);
+            items = page.items.filter((p) => !have.has(p.id) && !seenIds.has(p.id));
+            if (items.length || !page.next) break;
+            before = page.next;
+        }
         next = page.next || null;
-        const have = ids(fresh);
-        const items = page.items.filter((p) => !have.has(p.id));
         fresh = [...fresh, ...items];
         const freshEl = list().querySelector('.gz-fresh');
+        holders.forEach((e) => e.remove());
         freshEl.append(...items.map(card));
         freshEl.querySelector('.gz-empty')?.remove();
         if (!fresh.length) freshEl.append(emptyNote());
@@ -255,7 +255,7 @@ function drop(id) {
 }
 
 async function checkNewer() {
-    const top = fresh.slice(0, 5).map((p) => p.id), mine = gen;
+    const top = [...fresh.slice(0, 5).map((p) => p.id), ...historyTop(who)], mine = gen;
     if (!top.length) return;
     try {
         const { count } = await gazeNewer(feed, { pending: pendingOnly, top });
@@ -275,19 +275,6 @@ function openLinkedPost() {
 
 const mountBottom = (username) => mountMainNav(username, 'Gaze', { onGaze: () => window.scrollTo({ top: 0, behavior: 'smooth' }) });   // Gaze again goes back to the top
 
-// Someone who skipped the welcome flow keeps a gentle reminder until they add a photo or a bio (or close it for this tab).
-async function nudge(name) {
-    try {
-        if (sessionStorage.getItem('collaboNudge')) return;
-        const p = await profileGet(name);
-        if (p.bio || p.avatarVersion) return;
-        const bar = h('div', { class: 'gz-nudge sp-glass' },
-            h('a', { href: '/HTML-pages/profile.html', text: 'Finish your profile: a photo and a short bio help people say yes to you.' }),
-            h('button', { type: 'button', 'aria-label': 'Dismiss', text: '×', onclick: () => { bar.remove(); try { sessionStorage.setItem('collaboNudge', '1'); } catch { /* it just comes back */ } } }));
-        list().before(bar);
-    } catch { /* a reminder is never worth an error */ }
-}
-
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return toLogin();
@@ -296,6 +283,7 @@ async function boot() {
     mountFeeds();
     mountBottom(me.username);
     live.on('gaze', soon);
+    pullToRefresh(restart);   // dragging down at the top refreshes: what you have seen goes to History and the newer posts come in
     live.on('post-gone', (s) => drop(s.post));
     live.onResync(soon);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') soon(); });
@@ -303,7 +291,6 @@ async function boot() {
     show();
     try { const msg = sessionStorage.getItem('collaboToast'); if (msg) { sessionStorage.removeItem('collaboToast'); toast(msg); } } catch { /* just no message */ }
     openLinkedPost();
-    nudge(me.username);
 }
 
 preloadGlassBlurDialog();

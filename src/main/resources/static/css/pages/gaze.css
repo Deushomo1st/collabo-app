@@ -103,9 +103,10 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 }
 .gz-latest { display: inline-flex; align-items: center; gap: 6px; }
 .gz-latest[hidden] { display: none; }
-.gz-faces { display: inline-flex; padding-left: 4px; }
+.gz-faces { display: inline-flex; }
 .gz-faces:empty { display: none; }
-.gz-faces .sp-avatar { --_size: 16px; width: 16px; height: 16px; font-size: 9px; margin-left: -5px; border: 1.5px solid var(--sp-brand); }
+.gz-faces .sp-avatar { --_size: 16px; width: 16px; height: 16px; font-size: 9px; border: 1.5px solid var(--sp-brand); }
+.gz-faces .sp-avatar + .sp-avatar { margin-left: -5px; }
 html[data-nav="omni-wheel"] .gz-latest { bottom: calc(env(safe-area-inset-bottom, 0px) + 110px); }   /* clear of the bottom wheel */
 .gz-fresh { display: grid; gap: 12px; }
 .gz-sentinel { min-height: 1px; text-align: center; color: var(--sp-muted); font-size: 12.5px; padding: 6px 0 18px; }
@@ -168,14 +169,6 @@ html[data-nav="omni-wheel"] .gz-latest { bottom: calc(env(safe-area-inset-bottom
 .pc-tags { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--sp-brand); font-weight: 700; font-size: 13px; }
 .gz-linked { display: grid; }
 
-/* "Finish your profile" reminder, shown above the feed until the profile has a photo or a bio */
-.gz-nudge { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 10px 14px; border-radius: 16px; font-size: 13.5px; animation: gz-nudge-in .4s cubic-bezier(.16, 1, .3, 1) both; }
-.gz-nudge a { flex: 1; color: var(--sp-text); font-weight: 600; text-decoration: none; }
-.gz-nudge a:hover { color: var(--sp-brand); }
-.gz-nudge button { border: 0; background: none; color: var(--sp-muted); font-size: 18px; line-height: 1; cursor: pointer; }
-@keyframes gz-nudge-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .gz-nudge { animation: none; } }
-
 /* search: filters under the box, and a person in the results */
 .tt-filters { padding: 0 4px; }
 .tt-filters[hidden] { display: none; }
@@ -205,3 +198,11 @@ html[data-nav="omni-wheel"] .gz-latest { bottom: calc(env(safe-area-inset-bottom
 @keyframes tt-from-left { from { transform: translateX(-28px); opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { #filter-nav .tt-tab { animation: none !important; } }
 @media (max-width: 420px) { .sp-top--feed #filter-nav { -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); } }   /* too narrow for all three: the edge tabs fade out under the icons */
+
+/* pull down to refresh (gaze-pull.js): the page's own pull-to-refresh is switched off so ours follows the finger */
+body[data-home] { overscroll-behavior-y: contain; }
+.ptr { position: fixed; left: 50%; z-index: 80; width: 36px; height: 36px; margin-top: 4px; opacity: 0; pointer-events: none; display: grid; place-items: center; border-radius: 50%; background: var(--sp-bg, #10162a); box-shadow: 0 0 0 1px rgba(255, 255, 255, .12), 0 4px 14px rgba(0, 0, 0, .35); }
+.ptr__ring { --p: 0; width: 22px; height: 22px; border-radius: 50%; background: conic-gradient(var(--sp-brand) calc(var(--p) * 360deg), color-mix(in srgb, var(--sp-brand) 22%, transparent) 0); -webkit-mask: radial-gradient(circle, transparent 7.5px, #000 8px); mask: radial-gradient(circle, transparent 7.5px, #000 8px); }
+.ptr.is-spinning .ptr__ring { animation: ptr-spin .7s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ptr.is-spinning .ptr__ring { animation-duration: 1.6s; } }

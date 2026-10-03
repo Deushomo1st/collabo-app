@@ -13,6 +13,8 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     long countByUserIdAndReadFalse(UUID userId);
     void deleteByUserId(UUID userId);
     boolean existsByUserIdAndLinkAndReadFalse(UUID userId, String link);
+    boolean existsByUserIdAndLinkAndBodyAndReadFalse(UUID userId, String link, String body);
     List<Notification> findByUserIdAndReadFalse(UUID userId);
+    List<Notification> findByUserIdAndLinkAndReadFalse(UUID userId, String link);
     List<Notification> findByRefKeyAndActionRequiredTrue(String refKey);
 }

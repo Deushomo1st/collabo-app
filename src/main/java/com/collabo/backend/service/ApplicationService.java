@@ -75,7 +75,9 @@ public class ApplicationService {
             applications.delete(existing.get());   // a withdrawn application makes way for a fresh one
             applications.flush();
         }
-        return response(applications.save(new Application(postId, me.getId(), statement)), post);
+        ApplicationResponse sent = response(applications.save(new Application(postId, me.getId(), statement)), post);
+        notifications.notify(post.getAuthorId(), com.collabo.backend.entity.Notification.Bucket.ACTIVITY, "New application", me.getUsername() + " applied to \"" + post.getTitle() + "\".", "/HTML-pages/view-post.html?id=" + postId);
+        return sent;
     }
 
     public ApplicationResponse withdraw(User me, UUID applicationId) {
@@ -85,7 +87,9 @@ public class ApplicationService {
             throw new InvalidProfileException("This application can no longer be withdrawn.");
         }
         a.setState(ApplicationState.WITHDRAWN);
-        return response(applications.save(a), posts.findById(a.getPostId()).orElseThrow(() -> new ResourceNotFoundException("That post is gone.")));
+        Post post = posts.findById(a.getPostId()).orElseThrow(() -> new ResourceNotFoundException("That post is gone."));
+        notifications.notify(post.getAuthorId(), com.collabo.backend.entity.Notification.Bucket.ACTIVITY, "Application withdrawn", me.getUsername() + " withdrew their application to \"" + post.getTitle() + "\".", "/HTML-pages/view-post.html?id=" + post.getId());
+        return response(applications.save(a), post);
     }
 
     /** Your own applications, newest first. Posts behind a block are left out, without saying why. */
@@ -169,6 +173,10 @@ public class ApplicationService {
         else if (r.equals("AGREE") || r.equals("DISAGREE")) {
             boolean fresh = record(a, me, ApplicationReaction.Kind.valueOf(r));
             if (r.equals("DISAGREE") && fresh) {
+                reactions.findByApplicationId(a.getId()).stream()
+                        .filter(x -> x.getKind() == ApplicationReaction.Kind.AGREE && !x.getUserId().equals(me.getId()) && reviewerIds(post).contains(x.getUserId()))
+                        .forEach(x -> notifications.notify(x.getUserId(), com.collabo.backend.entity.Notification.Bucket.SPACES, "Disagreed with your selection",
+                                me.getUsername() + " disagreed with your selection of " + applicantName(a) + ".", "/HTML-pages/wespace.html?post=" + post.getId()));
                 threads.announceWeSpace(post.getId(), me.getUsername() + " disagrees with accepting " + applicantName(a) + ". Talk it through here.");
             }
         } else throw new InvalidProfileException("Choose agree, disagree or none.");

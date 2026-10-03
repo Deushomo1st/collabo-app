@@ -218,6 +218,7 @@ public class YarnService {
         Instant before = mine.getLastReadAt(), now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MICROS);
         mine.setLastReadAt(now);
         mine.deliveredUpTo(now);
+        notifications.readLink(me, "/HTML-pages/yarnspaces.html#t/" + threadId);   // you have seen what the "new messages" line was about
         boolean news = t.getLastYarnAt().isAfter(before) && !me.getId().equals(t.getLastSenderId());
         if (news) signals.receipt(threadId, othersOf(threadId, me.getId()));
     }

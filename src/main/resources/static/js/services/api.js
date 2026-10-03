@@ -213,6 +213,7 @@ export const paymentCancel = (id, pid) => call(sp(id, `/payments/${pid}/cancel`)
 // ---- notifications, removal records, appeals -----------------------
 export const notificationsList = (filter) => call(`/api/notifications${q({ filter })}`);
 export const notificationRead = (id) => call(`/api/notifications/${id}/read`, { method: 'POST' });
+export const notificationsReadLink = (link) => call(`/api/notifications/read-link${q({ link })}`, { method: 'POST' });   // you looked at what it points to
 export const notificationsReadAll = () => call('/api/notifications/read-all', { method: 'POST' });
 export const removalRecordsOf = (name) => call(user(name, '/removals'));
 export const removalAddress = (recordId, body) => call(`/api/removals/${recordId}/addresses`, { method: 'POST', body: { body } }, 'Could not post your address.');

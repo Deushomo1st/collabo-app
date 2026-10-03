@@ -11,13 +11,21 @@ html:not([data-nav="omni-wheel"]) .nav-selector-fluid-hold-wrap--bottom { displa
 html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html[data-nav="omni-wheel"] .nav-gear { display: none; }
 .nav-return, .nav-gear { flex: none; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--sp-panel, rgba(255, 255, 255, .08)); color: var(--sp-text, currentColor); cursor: pointer; }
 .nav-menu { position: relative; }
-.nav-menu.has-unread::after { content: ''; position: absolute; top: 6px; right: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--sp-brand, #ff9500); box-shadow: 0 0 0 2px var(--sp-bg, #0b0f14); }
+.nav-alert { display: none; position: absolute; top: 1px; right: 1px; width: 17px; height: 17px; border-radius: 50%; place-items: center; background: #e5484d; color: #fff; box-shadow: 0 0 0 2px var(--sp-bg, #0b0f14); }
+.nav-menu.has-unread .nav-alert { display: grid; }
+.nav-menu .nav-alert svg { width: 10px; height: 10px; stroke-width: 2.6; }
 .nav-return:hover, .nav-gear:hover { background: var(--sp-panel-hi, rgba(255, 255, 255, .14)); }
 .nav-return svg, .nav-gear svg { width: 22px; height: 22px; }
 
 /* The four-square menu (nav-menu.js): the main pages as a grid of links in a dialog. */
-.nm-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 12px; }
-.nm-link { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 14px; background: var(--sp-panel, rgba(255, 255, 255, .08)); color: var(--sp-text, currentColor); text-decoration: none; font-weight: 700; font-size: 14px; }
+/* It fits whatever the screen: the dialog slims first (less padding, nearly the full width), then the tiles slim and the font steps down with the dialog's width, and when two columns no longer fit it becomes a vertical list. */
+.glass-blur-dialog__panel.nm-panel { container-type: inline-size; }
+@media (max-width: 420px) { .glass-blur-dialog__panel.nm-panel { width: 94vw; min-width: 0; padding: 18px; } }
+.nm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(6px, 3cqw, 10px); margin-top: 12px; }
+.nm-link { display: flex; align-items: center; gap: clamp(6px, 2.5cqw, 10px); min-width: 0; padding: clamp(8px, 3cqw, 12px); border-radius: 14px; background: var(--sp-panel, rgba(255, 255, 255, .08)); color: var(--sp-text, currentColor); text-decoration: none; font-weight: 700; font-size: clamp(11px, 4.1cqw, 14px); }
+.nm-name { min-width: 0; }
+.nm-grid .nm-badge { position: absolute; top: -5px; right: -3px; margin: 0; }   /* a corner badge while the tiles are narrow */
+@container (max-width: 320px) { .nm-grid { grid-template-columns: minmax(0, 1fr); } .nm-link { font-size: clamp(12px, 4.4cqw, 14px); } .nm-grid .nm-badge { position: static; margin-left: auto; } }
 .nm-link:hover { background: var(--sp-panel-hi, rgba(255, 255, 255, .14)); }
 .nm-link[aria-current="page"] { outline: 2px solid #8fb4d9; }
 .nm-icon svg { display: block; width: 22px; height: 22px; }
@@ -28,3 +36,16 @@ html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html
 
 /* The bell is retired from every header while a new style of notification is built. bell.js still runs (the four-square menu mirrors its unread badge as a dot). */
 #bell-slot { display: none; }
+
+/* the chat bubble that speaks from the menu button (bubble.js) */
+.speech { position: fixed; z-index: 90; display: flex; align-items: center; gap: 8px; max-width: min(300px, 78vw); padding: 10px 14px; border-radius: 18px; background: var(--sp-brand, #ff9500); color: #1a1200; font-size: 13.5px; font-weight: 700; pointer-events: none; opacity: 0; transform: translateY(-10px) scale(.8); transition: opacity .6s, transform .6s cubic-bezier(.16, 1, .3, 1); }
+.speech.is-right { transform-origin: calc(100% - 22px) 0; }
+.speech.is-left { transform-origin: 22px 0; }
+.speech::after { content: ''; position: absolute; top: -5px; width: 12px; height: 12px; background: inherit; transform: rotate(45deg); border-radius: 3px 0 0 0; }
+.speech.is-right::after { right: 16px; }
+.speech.is-left::after { left: 16px; }
+.speech.is-on { opacity: 1; transform: none; }
+.speech .sp-avatar { flex: none; --_size: 28px; }
+@media (prefers-reduced-motion: reduce) { .speech { transition: opacity .6s; transform: none; } }
+.nm-link { position: relative; }
+.nm-badge { margin-left: auto; min-width: 18px; padding: 0 5px; border-radius: 999px; background: #e5484d; color: #fff; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; }

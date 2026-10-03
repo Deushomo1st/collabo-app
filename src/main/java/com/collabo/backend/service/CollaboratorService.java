@@ -35,11 +35,12 @@ public class CollaboratorService {
     private final SpaceRepository spaces;
     private final SpaceService spaceService;
     private final SpaceThreadService spaceThreads;
+    private final NotificationService notifications;
 
     public CollaboratorService(CollaboratorRepository collaborators, PostRepository posts, UserRepository users, FollowRepository follows,
                                UserBlockRepository blocks, ApplicationRepository applications, SpaceRepository spaces, SpaceService spaceService,
-                               SpaceThreadService spaceThreads) {
-        this.spaceThreads = spaceThreads;
+                               SpaceThreadService spaceThreads, NotificationService notifications) {
+        this.spaceThreads = spaceThreads; this.notifications = notifications;
         this.collaborators = collaborators; this.posts = posts; this.users = users; this.follows = follows;
         this.blocks = blocks; this.applications = applications; this.spaces = spaces; this.spaceService = spaceService;
     }
@@ -59,7 +60,15 @@ public class CollaboratorService {
         if (c == null) c = new Collaborator(postId, target.getId());
         else if (c.getState() == Collaborator.State.DECLINED || c.getState() == Collaborator.State.DISBANDED) c.reinvite();   // a disbanded spot stays open to them
         else throw new InvalidProfileException(c.getState() == Collaborator.State.INVITED ? "You already asked that person." : "That person is already a collaborator.");
+        Post post = posts.findById(postId).orElseThrow(() -> new ResourceNotFoundException(GONE));
+        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were asked to collaborate", me.getUsername() + " asked you to co-found \"" + post.getTitle() + "\".", "/HTML-pages/yarnspaces.html");
         return new CollaboratorResponse(PersonDto.of(target), collaborators.save(c).getState().name(), c.getCreatedAt());
+    }
+
+    /** The founder hears how an invitation was answered, or that a collaborator stepped down. */
+    private void tellFounder(UUID postId, User me, String title, String what) {
+        posts.findById(postId).filter(p -> !p.getAuthorId().equals(me.getId())).ifPresent(p ->
+                notifications.notify(p.getAuthorId(), Notification.Bucket.SPACES, title, me.getUsername() + " " + what + " \"" + p.getTitle() + "\".", "/HTML-pages/view-post.html?id=" + postId));
     }
 
     /** Asked or active collaborators, for the author and for active collaborators. */
@@ -91,12 +100,14 @@ public class CollaboratorService {
         collaborators.save(c);
         posts.findById(postId).ifPresent(p -> spaceThreads.joinWeSpace(p, me.getId()));
         spaces.findByPostId(postId).ifPresent(s -> spaceService.seat(s, me.getId(), "Collaborator"));
+        tellFounder(postId, me, "Collaborator accepted", "accepted your request to co-found");
     }
 
     public void decline(User me, UUID postId) {
         Collaborator c = pending(me, postId);
         c.setState(Collaborator.State.DECLINED);
         collaborators.save(c);
+        tellFounder(postId, me, "Collaborator declined", "declined your request to co-found");
     }
 
     /** The author removes someone, or a collaborator steps down (username is their own). */
@@ -110,6 +121,13 @@ public class CollaboratorService {
         collaborators.delete(c);
         spaceThreads.leaveWeSpace(postId, target.getId());
         spaces.findByPostId(postId).ifPresent(s -> spaceService.unseat(s, target.getId()));
+        if (target.getId().equals(me.getId())) tellFounder(postId, me, "A collaborator stepped down", "stepped down from");
+        else {
+            notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were removed as a collaborator", me.getUsername() + " removed you from \"" + post.getTitle() + "\".", "/HTML-pages/yarnspaces.html");
+            collaborators.findByPostIdAndStateInOrderByCreatedAtAsc(postId, List.of(Collaborator.State.ACTIVE)).stream().map(Collaborator::getUserId)
+                    .filter(u -> !u.equals(me.getId()) && !u.equals(target.getId()))
+                    .forEach(u -> notifications.notify(u, Notification.Bucket.SPACES, "Someone was removed", me.getUsername() + " removed " + target.getUsername() + " from \"" + post.getTitle() + "\".", "/HTML-pages/wespace.html?post=" + postId));
+        }
     }
 
     private Post authored(User me, UUID postId) {

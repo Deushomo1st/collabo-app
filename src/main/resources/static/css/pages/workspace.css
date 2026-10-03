@@ -327,7 +327,7 @@ button.sp-card { font: inherit; }
 /* ---- Toast ---- */
 .sp-toast {
     position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 90; transform: translate(-50%, 20px);
-    padding: 10px 16px; border-radius: 14px; background: #111; color: #fff; font-size: 13px; opacity: 0; pointer-events: none; transition: .3s;
+    padding: 10px 18px; border-radius: 999px; background: #111; color: #fff; font-size: 13px; opacity: 0; pointer-events: none; transition: .3s;
 }
 .sp-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
 

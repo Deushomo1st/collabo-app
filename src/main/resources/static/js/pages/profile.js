@@ -8,6 +8,7 @@ import { openDrafts } from '/js/components/drafts/drafts.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { GEAR, svg } from '/js/services/icons.js';
 import { skeletonCards } from '/js/services/skeleton.js';
+import { profileBubbles } from '/js/services/profile-bubbles.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
@@ -45,7 +46,7 @@ function h(tag, props = {}, ...kids) {
 function toast(text) {
     const el = document.getElementById('toast');
     el.textContent = text; el.classList.add('is-on');
-    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('is-on'), 2600);
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('is-on'), 1300);
 }
 const section = () => document.getElementById('section');
 const usernameInUrl = () => new URLSearchParams(location.search).get('u');
@@ -60,6 +61,7 @@ async function load(name) {
     feeds = {};
     [profile, credentials] = await Promise.all([profileGet(name), credentialsOf(name)]);
     document.getElementById('header-title').textContent = profile.username;
+    if (!profile.self) notificationsReadLink(`/HTML-pages/profile.html?u=${encodeURIComponent(profile.username)}`).catch(() => {});   // a new follower you have gone to look at
     document.title = `COLLABO — ${profile.username}`;
     render();
 }
@@ -294,6 +296,13 @@ function addSettingsGear() {
     document.getElementById('bell-slot')?.before(a);
 }
 
+// Your own profile: what is still missing comes out as a chat bubble, one at a time.
+const remind = () => profileBubbles([
+    [() => !profile.avatarVersion, 'Add a photo so people recognise you.'],
+    [() => !profile.bio, 'Add a short bio so people know what you build.'],
+    [async () => (await userPosts(viewer, 'posts').catch(() => null))?.items.length === 0, 'Share your first idea on the Gaze.'],
+]);
+
 async function boot() {
     try {
         const me = await currentUser();
@@ -304,6 +313,7 @@ async function boot() {
         if (who === viewer) addSettingsGear();
         else mountMainNav(viewer, 'Profile');
         await load(who);
+        if (who === viewer) remind();
     } catch (err) { fail(err); }
 }
 

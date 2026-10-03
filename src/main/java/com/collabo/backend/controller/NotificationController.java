@@ -28,6 +28,9 @@ public class NotificationController {
     @PostMapping("/{id}/read")
     public void read(@PathVariable UUID id) { notifications.markRead(current.require(), id); }
 
+    @PostMapping("/read-link")
+    public void readLink(@RequestParam String link) { notifications.readLink(current.require(), link); }
+
     @PostMapping("/read-all")
     public void readAll() { notifications.readAll(current.require()); }
 }
