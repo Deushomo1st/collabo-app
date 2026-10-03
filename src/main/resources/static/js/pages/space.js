@@ -32,9 +32,11 @@ async function act(fn, done) {
     try { await fn(); if (done) toast(done); await refresh(); } catch (err) { toast(err.message); }
 }
 
+const row = (title, text, control) => h('div', { class: 'sp-setting sp-glass' }, h('div', { class: 'sp-setting__text' }, h('strong', { text: title }), h('span', { text })), control);
+const day = (iso) => new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+
 /** The Workspace prototype's settings rows, read-only here; whoever may edit gets the button. */
 function settingsSection(mayEdit) {
-    const row = (title, text, control) => h('div', { class: 'sp-setting sp-glass' }, h('div', { class: 'sp-setting__text' }, h('strong', { text: title }), h('span', { text })), control);
     return h('section', {},
         h('h2', { class: 'sp-h2', text: 'Space settings' }),
         h('p', { class: 'sp-sub', text: 'Every change is announced in the room. That is the difference between governance and manipulation.' }),
@@ -63,6 +65,13 @@ function draw() {
                 h('h2', { text: space.postTitle }),
                 h('p', { class: 'pc-hint' }, 'The idea, by ', h('a', { class: 'pc-who', href: profileHref(space.owner.username), text: space.owner.username })),
                 h('p', { class: 'spc-idea', text: space.postBody })),
+            // the Workspace design's info rows: who is in it, when it was formed, and the rules the team runs on
+            h('section', {},
+                h('h2', { class: 'sp-h2', text: 'At a glance' }),
+                row('Team', `${members.length} ${members.length === 1 ? 'person' : 'people'}. Open Team for roles and permissions.`, h('div', { class: 'sp-stack' }, ...members.slice(0, 5).map((m) => face(m.person.username)))),
+                row('Formed', `Born from the post “${space.postTitle}”.`, h('span', { class: 'sp-tag', text: day(space.createdAt) })),
+                row('Response clock', 'How long a quiet member has to answer a nudge.', h('span', { class: 'sp-tag', text: `${space.responseClockHours} hours` })),
+                row('Pleas', 'A plea buys a quiet member 12 hours.', h('span', { class: `sp-tag ${space.pleasEnabled ? 'sp-tag--ok' : ''}`, text: space.pleasEnabled ? 'On' : 'Off' }))),
             space.threadId && h('a', { class: 'sp-btn sp-btn--brand', href: `/HTML-pages/yarnspaces.html#t/${space.threadId}`, text: 'Open the room' }),
             space.role === 'MEMBER' && !space.canManage && h('div', { class: 'pc-actions' }, h('button', { class: 'sp-btn sp-btn--danger', type: 'button', text: 'Leave space',
                 onclick: () => act(() => spaceLeave(space.id), 'You left the space.') }))]],
