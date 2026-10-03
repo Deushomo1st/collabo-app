@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** The Navigation preference follows the account, so it shows up on every device that signs in. */
+/** The Navigation preference, the display size and the theme follow the account, so they show up on every device that signs in. */
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:navpreftest;DB_CLOSE_DELAY=-1",
         "spring.datasource.username=sa",
@@ -60,5 +60,22 @@ class NavPreferenceTest {
         Cookie ann = signIn("bob" + UUID.randomUUID().toString().substring(0, 6));
         mvc.perform(patch("/api/users/me").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"navPreference\":\"<script>\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void displaySizeAndThemeAreSavedOnTheAccountToo() throws Exception {
+        Cookie ann = signIn("cat" + UUID.randomUUID().toString().substring(0, 6));
+        mvc.perform(get("/api/auth/me").cookie(ann)).andExpect(jsonPath("$.displaySize").doesNotExist()).andExpect(jsonPath("$.theme").doesNotExist());   // a new account: all defaults (the page falls back to the Return navigation)
+
+        mvc.perform(patch("/api/users/me").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"displaySize\":115,\"theme\":\"light\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/auth/me").cookie(ann)).andExpect(jsonPath("$.displaySize").value(115)).andExpect(jsonPath("$.theme").value("light"));
+    }
+
+    @Test
+    void anOutOfRangeSizeOrOddThemeIsRefused() throws Exception {
+        Cookie ann = signIn("dan" + UUID.randomUUID().toString().substring(0, 6));
+        mvc.perform(patch("/api/users/me").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"displaySize\":400}")).andExpect(status().isBadRequest());
+        mvc.perform(patch("/api/users/me").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"theme\":\"<b>\"}")).andExpect(status().isBadRequest());
     }
 }

@@ -58,6 +58,8 @@ public class ProfileService {
         if (req.credentialsPrivacy() != null) user.setCredentialsPrivacy(req.credentialsPrivacy());
         if (req.messagePrivacy() != null) user.setMessagePrivacy(req.messagePrivacy());
         if (req.navPreference() != null) user.setNavPreference(cleanNav(req.navPreference()));
+        if (req.displaySize() != null) user.setDisplaySize(cleanSize(req.displaySize()));
+        if (req.theme() != null) user.setTheme(cleanTheme(req.theme()));
         return ProfileResponse.of(users.save(user), true, linksOf(user), avatars.versionOf(user), follows.stateFor(user, user));
     }
 
@@ -130,6 +132,19 @@ public class ProfileService {
             throw new InvalidProfileException("Your bio can be at most " + MAX_BIO_WORDS + " words.");
         }
         return bio;
+    }
+
+    /** The theme: dusk or light. */
+    static String cleanTheme(String raw) {
+        String t = raw.trim();
+        if (!t.equals("dusk") && !t.equals("light")) throw new InvalidProfileException("That theme isn't recognised.");
+        return t;
+    }
+
+    /** The Display size in percent: 80 to 130. */
+    static int cleanSize(int pct) {
+        if (pct < 80 || pct > 130) throw new InvalidProfileException("That display size isn't allowed.");
+        return pct;
     }
 
     /** The id of a Navigation preference tile: short lowercase words joined by dashes. An empty string goes back to the default. */

@@ -72,6 +72,14 @@ public class User {
     @Column(name = "nav_preference", length = 30)
     private String navPreference;
 
+    // How big text and icons are, in percent (Settings > Display size, 80 to 130); null = as designed. Follows the account across devices.
+    @Column(name = "display_size")
+    private Integer displaySize;
+
+    // Dusk or light (Settings > Theme); null = the default (dusk). Follows the account across devices.
+    @Column(name = "theme", length = 10)
+    private String theme;
+
     // First-run flag. Nullable wrapper: legacy rows are null and never see the welcome flow;
     // new accounts are saved as FALSE and flipped to TRUE when they finish or skip it.
     @Column
@@ -145,6 +153,10 @@ public class User {
     public void setMessagePrivacy(MessagePrivacy messagePrivacy) { this.messagePrivacy = messagePrivacy; }
     public String getNavPreference() { return navPreference; }
     public void setNavPreference(String navPreference) { this.navPreference = navPreference; }
+    public Integer getDisplaySize() { return displaySize; }
+    public void setDisplaySize(Integer displaySize) { this.displaySize = displaySize; }
+    public String getTheme() { return theme; }
+    public void setTheme(String theme) { this.theme = theme; }
     public CredentialsPrivacy getCredentialsPrivacy() { return credentialsPrivacy == null ? CredentialsPrivacy.EVERYONE : credentialsPrivacy; }
     public void setCredentialsPrivacy(CredentialsPrivacy credentialsPrivacy) { this.credentialsPrivacy = credentialsPrivacy; }
 }

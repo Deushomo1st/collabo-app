@@ -19,7 +19,9 @@ public record UserResponse(
         boolean test,
         boolean needsWelcome,
         LocalDateTime createdAt,
-        String navPreference
+        String navPreference,
+        Integer displaySize,
+        String theme
 ) {
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -31,7 +33,9 @@ public record UserResponse(
                 user.isTest(),
                 user.needsWelcome(),
                 user.getCreatedAt(),
-                user.getNavPreference()
+                user.getNavPreference(),
+                user.getDisplaySize(),
+                user.getTheme()
         );
     }
 }
