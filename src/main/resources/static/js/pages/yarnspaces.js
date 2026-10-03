@@ -71,6 +71,9 @@ function setHeader(t) {
     const faces = document.getElementById('header-faces');
     faces.hidden = !t;
     faces.replaceChildren(...(t ? headFaces(t) : []));
+    const room = !!t && t.tier !== 'MYSPACE', title = document.querySelector('#yn-chat .sp-title');
+    if (room) title.after(faces); else title.before(faces);   // a room's lineup sits to the right of its name (the name gives way with a "..."); a person's picture stays on the left
+    document.getElementById('yn-chat').classList.toggle('is-room', room);
     document.getElementById('yn-bar').hidden = !!t;   // the lists have the Gaze-style bar; a chat has its own header
     document.getElementById('yn-chat').hidden = !t;
     document.getElementById('header-title').textContent = t ? t.name : 'Yarns';

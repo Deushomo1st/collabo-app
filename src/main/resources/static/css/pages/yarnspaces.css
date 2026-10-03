@@ -59,6 +59,17 @@
 .yn-headfaces a:first-child { margin-left: 0; }
 .yn-headfaces a:focus-visible { outline: 2px solid var(--sp-brand); outline-offset: 2px; }
 .yn-headfaces .sp-avatar { --_size: 46px; border: 2px solid var(--sp-bg); }
+.yn-header.is-room .yn-headfaces .sp-avatar { --_size: 34px; }   /* the lineup beside a room's name is smaller, so the name keeps room */
+.yn-header.is-room .yn-headfaces a { margin-left: -10px; }
+.yn-header.is-room .yn-headfaces a:first-child { margin-left: 0; }
+.yn-header.is-room .yn-header__top { gap: 10px; }
+@media (max-width: 430px) {   /* on a phone the name needs the room more than the tag, the big circles and the gaps do */
+    .yn-header.is-room #header-tag { display: none; }
+    .yn-header.is-room .yn-header__top { gap: 8px; }
+    .yn-header.is-room .yn-headfaces .sp-avatar { --_size: 28px; }
+    .yn-header.is-room .yn-headfaces a { margin-left: -9px; }
+    .yn-header.is-room .yn-headfaces a:first-child { margin-left: 0; }
+}
 .nav-selector-fluid-hold__link .yn-navface { --_size: 26px; border: 0; font-style: normal; }
 .nav-selector-fluid-hold__icon .yn-navface { --_size: 32px; border: 0; font-style: normal; }
 

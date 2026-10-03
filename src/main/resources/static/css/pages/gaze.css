@@ -29,6 +29,8 @@
 
 /* post card */
 .pc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 16px 18px; border-radius: 20px; }   /* no content-visibility here: on some Android phones it left a lighter box over the lower part of the card */
+/* The tint over a solid base, not on its own: a see-through card shows anything painted twice or left behind it (on some Android phones a lighter box with a hard edge across its lower part). */
+.pc.sp-glass { background: linear-gradient(var(--sp-panel), var(--sp-panel)), var(--sp-bg); }
 .pc-shouted { margin: 0; color: var(--sp-muted); font-size: 12.5px; }
 .pc-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .pc-who { display: inline-flex; align-items: center; gap: 7px; font-weight: 800; color: inherit; text-decoration: none; }

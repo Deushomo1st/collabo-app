@@ -111,6 +111,9 @@ class LiveSocketTest {
         assertThrows(Exception.class, () -> HttpClient.newHttpClient().newWebSocketBuilder().buildAsync(URI.create("ws://localhost:" + port + "/ws/live"), new WebSocket.Listener() {}).get(5, TimeUnit.SECONDS));
         // a session, but from another site's page: refused (this is what stops cross-site socket hijacking)
         assertThrows(Exception.class, () -> ann.listen("http://evil.example"));
+        // behind the proxy the app may see another scheme or host than the browser used, so the site's public address is let in by name
+        ann.listen("https://collaboapp.pro");
+        ann.ws.abort();
         // a session from this site: in, and it answers pings
         var q = ann.listen("http://localhost:" + port);
         ann.ws.sendText("{\"t\":\"ping\"}", true);
