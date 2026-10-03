@@ -82,6 +82,9 @@ body::after { height: 150px; background: linear-gradient(to top, color-mix(in sr
 body::before { top: 0; background: rgba(0, 0, 0, .55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 :root[data-theme="light"] body::before { background: rgba(20, 24, 32, .35); }
 html[data-nav="omni-wheel"] body:has(.nav-selector-fluid-hold)::after { opacity: 1; }
+/* Return mode has no round button, but the bottom edge still fades the same way, on every page except the ones with a message box down there (it would blur the box).
+   The Workspace pages draw their own, under their box (workspace.css). */
+html:not([data-nav="omni-wheel"]) body:not(.ws-page):has(.nav-selector-fluid-hold):not(:has(.yarn-thread__composer:not([hidden])))::after { opacity: 1; }
 body:has(.nav-selector-fluid-hold:not(.iconized), .hold-fan.is-open)::before { opacity: 1; }
 html[data-nav="omni-wheel"] body:has(.hold-fan.is-open)::after { opacity: 0; }
 .nav-selector-fluid-hold-wrap--bottom { z-index: 45; }

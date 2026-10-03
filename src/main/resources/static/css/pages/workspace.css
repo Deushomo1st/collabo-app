@@ -438,8 +438,23 @@ a.sp-btn { text-decoration: none; text-align: center; }
 .ws-tabs .tt-tab { padding: 4px 8px 8px; }
 .ws-tabs .tt-tab::after { bottom: 2px; }
 
+/* The header shrinks with the screen so the name, the faces and the buttons all stay readable: sizes follow the width (vw) between a floor and the usual size. */
+.ws-page .sp-header .nav-return, .ws-page .sp-header .nav-gear { width: clamp(32px, 9.6vw, 40px); height: clamp(32px, 9.6vw, 40px); }
+.ws-page .sp-header .nav-return svg, .ws-page .sp-header .nav-gear svg { width: clamp(17px, 5.4vw, 22px); height: clamp(17px, 5.4vw, 22px); }
+.ws-page .sp-header { gap: 0 clamp(4px, 1.6vw, 8px); padding-inline: clamp(8px, 3vw, 12px); }
+.ws-page .sp-title h1 { font-size: clamp(.9rem, 4.8vw, 1.25rem); }
+.ws-page .sp-shell.is-compact .sp-title h1 { font-size: clamp(.85rem, 4.2vw, 1rem); }
+.ws-page .sp-title .sp-stack .sp-avatar { --_size: clamp(20px, 6.6vw, 28px); }
+.ws-page .sp-shell.is-compact .sp-header .sp-avatar { --_size: clamp(20px, 6vw, 26px); }
+.ws-tabs .tt-tab { font-size: clamp(11.5px, 3.5vw, 14px); padding-inline: clamp(4px, 2vw, 8px); }
+.ws-tabs .tt-tab[aria-selected="true"] { font-size: clamp(13px, 4.2vw, 16px); }
+
 /* Without the round button (Return mode) there is nothing at the bottom, so the room does not keep a gap for it. */
 html:not([data-nav="omni-wheel"]) .ws-page .sp-shell { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 html:not([data-nav="omni-wheel"]) .ws-page .sp-composer { bottom: calc(12px + env(safe-area-inset-bottom)); }
 html:not([data-nav="omni-wheel"]) .ws-page .sp-toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
 .ws-page .sp-header .ws-gear[hidden] { display: none; }
+/* Return mode: the same bottom fade as every page (global.css), drawn inside the page so the message box (z 5) stays above it and sharp. */
+html:not([data-nav="omni-wheel"]) .ws-page .sp-shell::after { content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: 110px; z-index: 4; pointer-events: none;
+    background: linear-gradient(to top, color-mix(in srgb, color-mix(in srgb, var(--sp-bg) 92%, #000) 80%, transparent), color-mix(in srgb, var(--sp-bg) 50%, transparent) 70%, transparent);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); -webkit-mask-image: linear-gradient(to top, #000 45%, transparent); mask-image: linear-gradient(to top, #000 45%, transparent); }
