@@ -1,8 +1,7 @@
 // Yarnspaces: MySpace (1-on-1), WeSpace (1-to-many) and Workspaces, plus Archive and Blocked.
 // Reached through the "Yarns" label. All network calls live in js/services/api.js.
 // Text goes in through textContent only (h() never sets innerHTML for user text).
-import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import '/js/services/nav-mode.js';
+import { mountMainNav } from '/js/services/main-nav.js';
 import { createActionBanner, preloadActionBanner } from '/js/components/action-banner/action-banner.js';
 import { openGlassBlurDialog, glassBlurConfirm, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { face as faceOf } from '/js/services/face.js';
@@ -10,7 +9,6 @@ import { mountIsland } from '/js/components/space/task-island.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import { live } from '/js/services/live.js';
 import { skeletonRows } from '/js/services/skeleton.js';
-import { fanActions } from '/js/services/fan-actions.js';
 import { GEAR } from '/js/services/icons.js';
 import { feedTabs } from '/js/services/feed-tabs.js';
 import {
@@ -25,7 +23,7 @@ let inbox = [], archived = [];
 let openThread = null;      // the thread being read, if any
 let threadView = null;      // its yarn-thread instance
 let lastSection = 'myspace';
-let nav, tabs;
+let tabs;
 
 // ---- tiny DOM helper -------------------------------------------------------
 function h(tag, props = {}, ...kids) {
@@ -42,13 +40,6 @@ function h(tag, props = {}, ...kids) {
     return el;
 }
 const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
-const ICON = {
-    all: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
-    myspace: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-    wespace: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-    workspace: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',
-    settings: GEAR,
-};
 
 function toast(text) {
     const el = document.getElementById('toast');
@@ -57,7 +48,7 @@ function toast(text) {
 }
 // An avatar circle: the person's picture when they have one (pic is its version), otherwise their initial on a colour.
 const face = (name, cls = '', pic = null, tag = 'span') => {
-    const el = h(tag, { class: `sp-avatar ${cls}`, style: `--hue:${hue(name)}`, title: name, text: name[0].toUpperCase() });
+    const el = h(tag, { class: `sp-avatar sp-face ${cls}`, style: `--hue:${hue(name)}`, title: name, text: name[0].toUpperCase() });
     if (pic) {
         const img = h('img', { class: 'yn-face-img', src: avatarUrl(name, pic), alt: '', loading: 'lazy' });
         img.setAttribute('onerror', 'this.remove()');   // a picture that will not load falls back to the initial underneath (also survives outerHTML)
@@ -105,45 +96,6 @@ function headFaces(t) {
         h('a', { href: `/HTML-pages/profile.html?u=${encodeURIComponent(m.username)}`, title: m.username, 'aria-label': `${m.username}'s profile` }, face(m.username, '', m.avatar)));
 }
 
-// ---- the bottom nav: sections in the lists, a scroller of chats inside one ----------------------------------------------
-let navMode = '', navIds = '', navQueue = Promise.resolve();
-
-const mountNav = async (opts) => {
-    nav?.destroy();
-    nav = await mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(),
-        onChange: (_l, href) => { if (href.includes('profile-settings.html')) location.href = '/HTML-pages/profile-settings.html#yarns'; else go(href.slice(href.lastIndexOf('#'))); },   // href can arrive absolute
-        ...opts,
-    });
-};
-
-/** A chat's picture for the scroller: the other person for a MySpace, the room's initial for a group. */
-const navFace = (t) => {
-    const other = t.tier === 'MYSPACE' ? t.members.find((m) => m.id !== me.id) : null;
-    // not a <span>: the nav writes each link's label into the first span it finds
-    return face(other ? other.username : t.name, 'yn-navface', other ? other.avatar : null, 'i').outerHTML;   // built from DOM, so user text is escaped
-};
-
-async function doSyncNav() {
-    if (!me) return;
-    if (!openThread) {
-        if (navMode !== 'sections') {
-            navMode = 'sections';
-            await mountNav({ links: [...SECTIONS.map((s) => s.label), 'Settings'], hrefs: [...SECTIONS.map((s) => '#' + s.id), '/HTML-pages/profile-settings.html#yarns'],
-                icons: [...SECTIONS.map((s) => svg(ICON[s.id])), svg(ICON.settings)], activeIndex: SECTIONS.indexOf(currentSection()) });
-        }
-        nav?.setActive(SECTIONS.indexOf(currentSection()));
-        return;
-    }
-    const chats = inbox.some((x) => x.id === openThread.id) ? inbox : [openThread, ...inbox];   // an archived chat you opened is still in its own scroller
-    const ids = chats.map((x) => x.id).join(',');
-    if (navMode !== 'threads' || navIds !== ids) {
-        navMode = 'threads'; navIds = ids;
-        await mountNav({ links: chats.map((x) => x.name), hrefs: chats.map((x) => '#t/' + x.id), icons: chats.map(navFace), activeIndex: chats.findIndex((x) => x.id === openThread.id) });
-    }
-    nav?.setActive(chats.findIndex((x) => x.id === openThread.id));
-}
-const syncNav = () => (navQueue = navQueue.then(doSyncNav).catch(() => {}));   // one at a time, so a quick hash change cannot mount two navs
 
 async function loadAll() {
     [inbox, archived] = await Promise.all([yarnThreads('inbox'), yarnThreads('archived')]);
@@ -178,7 +130,7 @@ async function route() {
     stopThread();
     if (location.hash.startsWith('#to/')) return routeToPerson(decodeURIComponent(location.hash.slice(4)));
     const id = threadIdInHash();
-    if (!id) { setHeader(null); syncNav(); renderSection(); return; }
+    if (!id) { setHeader(null); renderSection(); return; }
     try {
         if (![...inbox, ...archived].some((t) => t.id === id)) await loadAll();
     } catch (err) { return fatal(err); }
@@ -186,7 +138,6 @@ async function route() {
     if (!t) { setHeader(null); return message('That thread is gone, or it is not yours.'); }
     openThread = t;
     setHeader(t);
-    syncNav();
     renderThread();
 }
 
@@ -395,6 +346,7 @@ async function start() {
     try {
         me = await yarnMe();
         if (!me) return toLogin();
+        mountMainNav(me.username, 'Yarns');
         await loadAll();
     } catch (err) { me = null; return fatal(err); }
     route();
@@ -413,7 +365,7 @@ async function boot() {
     const top = document.getElementById('yn-top'), mark = () => top.classList.toggle('is-scrolled', scrollY > 8);
     addEventListener('scroll', mark, { passive: true }); mark();   // the header's blurred backing once the list has moved under it
     document.getElementById('find-btn').addEventListener('click', () => me && openFind({ me, threads: () => [...inbox, ...archived],
-        openThread: (id) => { location.hash = '#t/' + id; }, startWith: (name) => openNew(name) }));
+        openThread: (id) => { location.hash = '#t/' + id; } }));
     document.getElementById('thread-wrench').addEventListener('click', () => openThread && openThreadSettings(openThread));
     document.getElementById('new-btn').addEventListener('click', () => me && openNew());
     window.addEventListener('hashchange', () => { if (me) route(); });

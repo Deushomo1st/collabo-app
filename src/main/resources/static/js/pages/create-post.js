@@ -2,7 +2,7 @@
 // A page of its own. The bar is Gaze, Yarns, Settings (audience, comments, shout-outs, anonymous live on the settings page); hold it to leave.
 import { h, toast } from '/js/services/dom.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
-import { mountComposeNav } from '/js/services/main-nav.js';
+import { mountMainNav } from '/js/services/main-nav.js';
 import { guardReturn } from '/js/services/nav-mode.js';
 import { postSet, postWork, postDefault, DEFAULT_POST_SET } from '/js/services/stash.js';
 import { openPostSettings } from '/js/components/settings/post-settings.js';
@@ -168,7 +168,7 @@ async function boot() {
     if (!me) return location.replace('/HTML-pages/index.html');
     $('publish').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
     guardReturn(leaveThen);   // the header Return button asks about unsaved work like the bar does
-    mountComposeNav(me.username, '/HTML-pages/profile-settings.html#post', { beforeLeave: leave, guard: leaveThen, restInner: '<path d="M12 5v14M5 12h14"/>' });
+    mountMainNav(me.username, null, { beforeLeave: leave, guard: leaveThen, restIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>' });
     const id = new URLSearchParams(location.search).get('draft');
     const work = postWork.take();
     if (work) {   // back from the settings page: the text and files are as you left them

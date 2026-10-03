@@ -6,13 +6,14 @@ import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/component
 import { openMine } from '/js/components/applications/applications.js';
 import { openDrafts } from '/js/components/drafts/drafts.js';
 import { mountMainNav } from '/js/services/main-nav.js';
+import { face } from '/js/services/face.js';
 import { GEAR, svg } from '/js/services/icons.js';
 import { skeletonCards } from '/js/services/skeleton.js';
 import { profileBubbles } from '/js/services/profile-bubbles.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
     currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatarSave, avatarRemove,
-    follow, unfollow, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, mediaUrl,
+    follow, unfollow, credentialsOf, credentialFeature, credentialShip, credentialUnship, userPosts, mediaUrl, notificationsReadLink,
 } from '/js/services/api.js';
 
 const MAX_LINKS = 12, MAX_SHIPPED = 5;
@@ -309,9 +310,8 @@ async function boot() {
         if (!me) return toLogin();
         viewer = me.username;
         const who = usernameInUrl() || me.username;
-        if (who === viewer) mountMainNav(viewer, 'Settings', { onSettings: () => { location.href = '/HTML-pages/profile-settings.html'; } });
+        mountMainNav(viewer, 'Profile', who === viewer ? { restIcon: () => face(viewer, 'ns-face') } : {});   // your own profile rests on your picture (your initial if none)
         if (who === viewer) addSettingsGear();
-        else mountMainNav(viewer, 'Profile');
         await load(who);
         if (who === viewer) remind();
     } catch (err) { fail(err); }

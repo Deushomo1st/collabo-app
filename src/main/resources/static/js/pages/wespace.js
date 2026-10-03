@@ -2,10 +2,8 @@
 // Three tabs: About (the idea and the way in), Collaborators (the seats), Quiet (the response clock and flagged collaborators).
 // Each tab is built by its own module under components/wespace. Text goes in through textContent only.
 import '/js/services/live.js';
-import { mountNavSelector } from '/js/components/nav-selector-fluid-hold/nav-selector-fluid-hold.js';
-import '/js/services/nav-mode.js';
-import { fanActions } from '/js/services/fan-actions.js';
-import { CHAT, PERSON, PEOPLE, BRIEFCASE, svg } from '/js/services/icons.js';
+import { mountMainNav } from '/js/services/main-nav.js';
+import { PEOPLE, svg } from '/js/services/icons.js';
 import { currentUser, wespaceAbout } from '/js/services/api.js';
 import { h } from '/js/services/dom.js';
 import { seatsSection } from '/js/components/wespace/seats.js';
@@ -59,13 +57,7 @@ function draw() {
 async function boot() {
     me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
-    mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, holdActions: fanActions(), activeIndex: 2, restIcon: svg(PEOPLE),
-        links: ['All yarns', 'MySpaces', 'WeSpaces', 'WorkSpaces'],
-        hrefs: [YARNS, `${YARNS}#myspace`, `${YARNS}#wespace`, `${YARNS}#workspace`],
-        icons: [CHAT, PERSON, PEOPLE, BRIEFCASE].map(svg),
-        onChange: (_l, href) => { location.href = href.slice(href.indexOf('/HTML-pages')); },
-    });
+    mountMainNav(me.username, 'Yarns', { restIcon: svg(PEOPLE) });
     try { await refresh(); }
     catch (err) { main().replaceChildren(h('p', { class: 'gz-empty', text: err.status === 404 ? 'This group does not exist, or it is not open to you.' : err.message })); }
 }

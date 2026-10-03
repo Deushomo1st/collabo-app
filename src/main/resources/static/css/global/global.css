@@ -8,6 +8,7 @@
 
 /* Navigation preference (nav-mode.js sets html[data-nav]): the bottom wheel only shows under "omni-wheel", the Return button and the four-square menu in each header only under the default ("return"). */
 html:not([data-nav="omni-wheel"]) .nav-selector-fluid-hold-wrap--bottom { display: none; }
+html:not([data-nav="omni-wheel"]) #section, html:not([data-nav="omni-wheel"]) .gz-list { padding-bottom: 24px; }   /* no wheel, no room kept for it */
 html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html[data-nav="omni-wheel"] .nav-gear { display: none; }
 .nav-return, .nav-gear { flex: none; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--sp-panel, rgba(255, 255, 255, .08)); color: var(--sp-text, currentColor); cursor: pointer; }
 .nav-menu { position: relative; }
@@ -37,8 +38,8 @@ html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html
 /* The bell is retired from every header while a new style of notification is built. bell.js still runs (the four-square menu mirrors its unread badge as a dot). */
 #bell-slot { display: none; }
 
-/* the chat bubble that speaks from the menu button (bubble.js) */
-.speech { position: fixed; z-index: 90; display: flex; align-items: center; gap: 8px; max-width: min(300px, 78vw); padding: 10px 14px; border-radius: 18px; background: var(--sp-brand, #ff9500); color: #1a1200; font-size: 13.5px; font-weight: 700; pointer-events: none; opacity: 0; transform: translateY(-10px) scale(.8); transition: opacity .6s, transform .6s cubic-bezier(.16, 1, .3, 1); }
+/* the chat bubble that speaks from the puppet (bubble.js) */
+.speech { position: fixed; z-index: 90; display: flex; align-items: center; gap: 8px; max-width: min(300px, 78vw); padding: 10px 14px; border-radius: 18px; background: var(--sp-brand, #ff9500); color: #1a1200; font-size: 13.5px; font-weight: 700; top: 80px; right: 14px; cursor: pointer; opacity: 0; transform: translateY(-10px) scale(.6); transition: opacity .4s, transform .6s cubic-bezier(.34, 1.56, .64, 1); }
 .speech.is-right { transform-origin: calc(100% - 22px) 0; }
 .speech.is-left { transform-origin: 22px 0; }
 .speech::after { content: ''; position: absolute; top: -5px; width: 12px; height: 12px; background: inherit; transform: rotate(45deg); border-radius: 3px 0 0 0; }
@@ -57,3 +58,27 @@ html, body { max-width: 100%; overflow-x: clip; }
 input, textarea, select { max-width: 100%; }
 input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"] { min-width: 0; }
 .sp-form, .ps-form { grid-template-columns: minmax(0, 1fr); }
+
+/* the puppet the bubbles hang from (bubble.js): your picture on a string drops from the top right corner and springs back up */
+.dangle { position: fixed; top: 0; right: 14px; z-index: 91; width: 44px; pointer-events: none; animation: dangle-in .4s ease-in both; }
+.dangle.is-up { animation: dangle-out .55s cubic-bezier(.5, -.3, .8, .5) both; }
+.dangle__swing { transform-origin: 50% 0; animation: dangle-swing 2.8s .35s ease-out both, dangle-sway 3.2s 3.2s ease-in-out infinite alternate; }
+.dangle__string { display: block; width: 2px; height: 26px; margin: 0 auto; border-radius: 1px; background: rgba(255, 255, 255, .75); animation: dangle-spring 1s .35s both; }
+.dangle .dangle__face { --_size: 44px; width: 44px; height: 44px; font-size: 18px; margin: 0 auto; border: 2px solid var(--sp-brand, #ff9500); box-shadow: 0 6px 16px rgba(0, 0, 0, .35); }
+@keyframes dangle-in { from { transform: translateY(-80px); } to { transform: none; } }
+@keyframes dangle-out { 0% { transform: none; } 22% { transform: translateY(12px); } 100% { transform: translateY(-110px); } }
+@keyframes dangle-spring { 0% { height: 26px; } 28% { height: 48px; } 52% { height: 16px; } 72% { height: 33px; } 88% { height: 23px; } 100% { height: 26px; } }
+@keyframes dangle-swing { 0% { transform: rotate(0); } 18% { transform: rotate(15deg); } 40% { transform: rotate(-11deg); } 60% { transform: rotate(6deg); } 80% { transform: rotate(-3deg); } 100% { transform: rotate(0); } }
+@keyframes dangle-sway { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg); } }
+@media (prefers-reduced-motion: reduce) { .dangle, .dangle__swing, .dangle__string { animation: none; } .dangle.is-up { display: none; } }
+
+/* Only while the omni button is in use (pill open, or its fan out): the whole screen dims and blurs behind it (the pill is above, z 45, so it stays sharp),
+   and with the pill open alone a top-bar-style blurred backing also fades up from the bottom edge. */
+body::after, body::before { content: ''; position: fixed; left: 0; right: 0; bottom: 0; z-index: 44; pointer-events: none; opacity: 0; transition: opacity .3s; }
+body::after { height: 150px; background: linear-gradient(to top, color-mix(in srgb, color-mix(in srgb, var(--sp-bg) 92%, #000) 80%, transparent), color-mix(in srgb, var(--sp-bg) 50%, transparent) 70%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); -webkit-mask-image: linear-gradient(to top, #000 45%, transparent); mask-image: linear-gradient(to top, #000 45%, transparent); }
+body::before { top: 0; background: rgba(0, 0, 0, .55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+:root[data-theme="light"] body::before { background: rgba(20, 24, 32, .35); }
+body:has(.nav-selector-fluid-hold:not(.iconized))::after { opacity: 1; }
+body:has(.nav-selector-fluid-hold:not(.iconized), .hold-fan.is-open)::before { opacity: 1; }
+body:has(.hold-fan.is-open)::after { opacity: 0; }
+.nav-selector-fluid-hold-wrap--bottom { z-index: 45; }

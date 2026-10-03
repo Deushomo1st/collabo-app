@@ -134,7 +134,15 @@ export async function mountNavSelector(targetSelector = '#nav-selector-fluid-hol
     scrollRoot.addEventListener('scroll', onScroll, { passive: true });
 
     // Pressing anywhere outside the nav (another surface) tucks it away at once.
-    const onOutside = (e) => { if (!root.contains(e.target) && !arrowL.contains(e.target) && !arrowR.contains(e.target) && !isIconized()) iconize(); };
+    // The press that tucks it away is only that: the click it would become is swallowed, so it does not also hit whatever is behind.
+    function swallowClick() {
+        const off = () => { document.removeEventListener('click', eat, true); document.removeEventListener('pointerdown', off, true); clearTimeout(t); };
+        const eat = (ev) => { ev.preventDefault(); ev.stopImmediatePropagation(); off(); };
+        const t = setTimeout(off, 600);   // no click came (it was a scroll or a drag): stop waiting
+        document.addEventListener('click', eat, true);
+        document.addEventListener('pointerdown', off, true);   // a new press is a new gesture
+    }
+    const onOutside = (e) => { if (!root.contains(e.target) && !arrowL.contains(e.target) && !arrowR.contains(e.target) && !isIconized()) { iconize(); swallowClick(); } };
     document.addEventListener('pointerdown', onOutside, true);
 
     navIcon.addEventListener('click', () => { expand(); armIdle(); });

@@ -2,7 +2,7 @@
 // Files go up first (POST /api/media, the same as post pictures), then the report names them. Text goes in through textContent only.
 import { h, toast } from '/js/services/dom.js';
 import { currentUser, mediaUpload, mediaDiscard, mediaUrl, reportSend } from '/js/services/api.js';
-import { mountComposeNav } from '/js/services/main-nav.js';
+import { mountMainNav } from '/js/services/main-nav.js';
 import { guardReturn } from '/js/services/nav-mode.js';
 import { glassBlurConfirm } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { reportSet, reportWork } from '/js/services/stash.js';
@@ -80,8 +80,8 @@ async function boot() {
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
     send.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
     guardReturn(leaveThen);   // the header Return button asks about unsaved work like the bar does
-    mountComposeNav(me.username, '/HTML-pages/profile-settings.html#report', {
-        restInner: '<path d="M4 22V4h12l-2 4 2 4H4"/>',
+    mountMainNav(me.username, null, {
+        restIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4h12l-2 4 2 4H4"/></svg>',
         beforeLeave: (href) => leaveThen(() => { location.href = href; }), guard: leaveThen });
     const work = reportWork.take();
     if (work) { text.value = work.text; files = work.files; $('rp-count').textContent = `${text.value.length} / 2000`; } else reportSet.clear();

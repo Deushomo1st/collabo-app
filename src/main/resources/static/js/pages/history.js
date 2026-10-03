@@ -1,17 +1,16 @@
 // History: the ideas you have already seen on the Gaze (kept on this device), with a search over their words and usernames.
-import { mountSettingsNav } from '/js/services/settings-nav.js';
+import { mountMainNav } from '/js/services/main-nav.js';
 import { postCard } from '/js/components/post-card/post-card.js';
 import { historyRead, historyDrop, historyClear, historySearch } from '/js/services/history.js';
 import { currentUser } from '/js/services/api.js';
 import { h } from '/js/services/dom.js';
 
-const SETTINGS = '/HTML-pages/profile-settings.html';
 const list = () => document.getElementById('list');
 
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname));
-    mountSettingsNav(SETTINGS);
+    mountMainNav(me.username, 'Settings');
     const q = document.getElementById('hs-q');
     const draw = () => {
         const all = historyRead(me.username), shown = historySearch(all, q.value.trim());

@@ -4,10 +4,9 @@ import '/js/services/live.js';
 import { mountThemeRow, getTheme } from '/js/components/theme-switcher/theme-switcher.js';
 import { securityRows } from '/js/components/account/security.js';
 import { loadYarnLists, archivedCount, blockedCount, defaultChatName, openDefaultChat, openArchive, openBlocked } from '/js/components/settings/yarn-settings.js';
-import { audienceName, postOptionsNow, reportAnonymousNow, openPostAudience, openPostOptions, openReportOptions } from '/js/components/settings/post-settings.js';
+import { audienceName, postOptionsNow, openPostAudience, openPostOptions } from '/js/components/settings/post-settings.js';
 import { postDefault } from '/js/services/stash.js';
-import { postWork, reportWork } from '/js/services/stash.js';
-import { mountSettingsNav } from '/js/services/settings-nav.js';
+import { mountMainNav } from '/js/services/main-nav.js';
 import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { currentUser, logoutUser } from '/js/services/api.js';
 import { h } from '/js/services/dom.js';
@@ -40,7 +39,7 @@ const segment = (id, name, ...rows) => h('section', { id, class: 'yn-group sp-gl
 async function boot() {
     const me = await currentUser().catch(() => null);
     if (!me) return toLogin();
-    mountSettingsNav(PROFILE);
+    mountMainNav(me.username, 'Settings');
     await loadYarnLists().catch(() => {});   // the Archive and Blocked counts; the lists say so themselves if they cannot load
     const sub = (name, now, open) => {   // a row that opens its own dialog; the line under the name says what is set
         const line = h('span', { class: 'yn-last', text: now() });
@@ -52,17 +51,14 @@ async function boot() {
     };
     const segments = [
         segment('appearance', 'Appearance and themes', sub('Theme', () => (getTheme() === 'light' ? 'Light' : 'Dusk'), openTheme), sub('Navigation preference', navPreferenceName, openNavPreference)),
-        segment('privacy', 'Privacy', await messagePrivacyRow(me.username, toast),
-            h('p', { class: 'yn-hint', text: 'Only new conversations are limited. Chats you already have carry on.' }), sub('Blocked', blockedCount, openBlocked),
-            h('a', { class: 'yn-row', href: '/HTML-pages/history.html' }, h('span', { class: 'yn-body' }, h('strong', { text: 'History' }), h('span', { class: 'yn-last', text: 'Ideas you have seen on the Gaze' })), h('span', { text: '›', 'aria-hidden': 'true' }))),
         segment('yarns', 'Yarns', sub('Default chat', defaultChatName, openDefaultChat), sub('Archive', archivedCount, openArchive)),
         // what every new post starts from; the Create post page can change it for one post (a stored copy, so it stays on this device)
         segment('postdefaults', 'New posts', h('p', { class: 'yn-hint', text: 'Every new post starts like this. On the Create post page you can change it for just that post.' }),
             sub('Who can see it', () => audienceName(postDefault), (done) => openPostAudience(me.username, done, postDefault)), sub('On the post', () => postOptionsNow(postDefault), (done) => openPostOptions(done, postDefault))),
-        // the post and report settings belong to the one being written, so they show only while it waits in this tab (it was left for this page)
-        postWork.read() && segment('post', 'Post in progress', sub('Who can see it', audienceName, (done) => openPostAudience(me.username, done)), sub('On the post', postOptionsNow, openPostOptions)),
-        reportWork.read() && segment('report', 'Report in progress', sub('On the report', reportAnonymousNow, openReportOptions)),
-        segment('security', 'Account security', ...securityRows(toast)),
+        segment('security', 'Security and privacy', await messagePrivacyRow(me.username, toast),
+            h('p', { class: 'yn-hint', text: 'Only new conversations are limited. Chats you already have carry on.' }), sub('Blocklist', blockedCount, openBlocked),
+            h('a', { class: 'yn-row', href: '/HTML-pages/history.html' }, h('span', { class: 'yn-body' }, h('strong', { text: 'History' }), h('span', { class: 'yn-last', text: 'Ideas you have seen on the Gaze' })), h('span', { text: '›', 'aria-hidden': 'true' })),
+            ...securityRows(toast)),
     ].filter(Boolean);
     document.getElementById('section').replaceChildren(...segments,
         h('p', { class: 'yn-hint' }, `Signed in as ${me.username}. `, h('a', { href: PROFILE, text: 'Back to my profile' })),

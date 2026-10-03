@@ -37,7 +37,7 @@ async function listen() {
     changed(fresh.length ? 'note' : null);
     fresh.slice(0, 3).reverse().forEach((n) => {
         const who = whoIn(n);
-        speak((who.length ? n.body : n.body ? `${n.title}: ${n.body}` : n.title).slice(0, 90), ...who);
+        speak((who.length ? n.body : n.body ? `${n.title}: ${n.body}` : n.title).slice(0, 90), who[0], who[1], n.link || '/HTML-pages/notifications.html');
     });
 }
 
@@ -53,7 +53,7 @@ async function look() {
     changed(news.length ? 'yarn' : null);
     for (const t of news) {
         const from = t.members.find((m) => m.username === t.lastSender) || t.members.find((m) => m.id === t.otherUserId);
-        speak(`${t.lastSender}: ${t.lastBody || 'sent a yarn'}`.slice(0, 80), from?.username);
+        speak(`${t.lastSender}: ${t.lastBody || 'sent a yarn'}`.slice(0, 80), from?.username, undefined, `/HTML-pages/yarnspaces.html#t/${t.id}`);
     }
 }
 

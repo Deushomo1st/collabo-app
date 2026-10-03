@@ -1,6 +1,6 @@
 // Yarn search, WhatsApp style: a bubble that grows out of the search icon. People show as round pictures along the top
 // (the name on hover); chats whose name or words match show as tablets underneath. Text goes in through textContent only.
-import { h } from '/js/services/dom.js';
+import { h, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { yarnDirectory, yarnFind } from '/js/services/api.js';
 import { ago } from '/js/pages/yarnspaces-data.js';
@@ -15,7 +15,7 @@ function snippet(body, text) {
     return [(from ? '…' : '') + body.slice(from, at), h('mark', { text: body.slice(at, end) }), body.slice(end, end + SNIPPET)];
 }
 
-export function openFind({ me, threads, openThread, startWith }) {
+export function openFind({ me, threads, openThread }) {
     const input = h('input', { class: 'yn-find__input', type: 'search', placeholder: 'Search people or words in your yarns', 'aria-label': 'Search yarns', autocomplete: 'off' });
     const people = h('div', { class: 'gz-circles yn-find__people', 'aria-label': 'People' });
     const tablets = h('div', { class: 'yn-find__list' });
@@ -32,10 +32,8 @@ export function openFind({ me, threads, openThread, startWith }) {
     function close() { document.removeEventListener('keydown', onKey); shade.classList.remove('is-open'); setTimeout(() => shade.remove(), 220); }
 
     const all = threads(), byId = new Map(all.map((t) => [t.id, t]));
-    const mySpaceWith = (id) => all.find((t) => t.tier === 'MYSPACE' && t.otherUserId === id);
-    const pick = (person) => { close(); const t = mySpaceWith(person.id); if (t) openThread(t.id); else startWith(person.username); };
 
-    const circle = (p) => h('button', { class: 'gz-circle', type: 'button', 'data-name': p.username, 'aria-label': p.username, onclick: () => pick(p) }, face(p.username));
+    const circle = (p) => h('a', { class: 'gz-circle', href: profileHref(p.username), 'data-name': p.username, 'aria-label': p.username }, face(p.username));
     const tablet = (t, who, body, at, text) => h('button', { class: 'yn-find__tablet', type: 'button', onclick: () => { close(); openThread(t.id); } },
         h('span', { class: 'yn-find__top' }, h('strong', { text: t.name }), h('time', { text: ago(at) })),
         h('span', { class: 'yn-find__text' }, who ? `${who}: ` : '', ...snippet(body, text)));

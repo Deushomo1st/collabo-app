@@ -26,6 +26,7 @@ export function pullToRefresh(refresh) {
         if (y0 === null) return;
         const dy = e.touches[0].clientY - y0;
         if (dy <= 0 || scrollY > 0) return void (pull && lay((pull = 0)));
+        if (!pull && dy < 14) return;   // a tap wobbles a pixel or two; stopping that move would cancel the tap's click
         e.preventDefault();   // the page itself does not move, the feed does
         pull = Math.min(MAX, dy * 0.5);   // it gets heavier the further you pull
         lay(pull);
