@@ -143,10 +143,12 @@ html[data-nav="omni-wheel"] .gz-latest { bottom: calc(env(safe-area-inset-bottom
 .tt-icon { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--sp-text); cursor: pointer; }
 .tt-icon:hover { background: var(--sp-panel); }
 .tt-icon svg { width: 22px; height: 22px; }
-.tt-search { display: flex; flex: 1; align-items: center; gap: 10px; padding: 6px 0; }
-.tt-search input { flex: 1; min-width: 0; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); color: inherit; font: 500 15px var(--sp-font); }
+.tt-search { min-width: 0; display: flex; flex: 1; align-items: center; gap: 10px; padding: 6px 0; }
+.tt-search input { flex: 1; width: 0; min-width: 0; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-panel); color: inherit; font: 500 15px var(--sp-font); }
 .tt-search input:focus { border-color: color-mix(in srgb, var(--sp-brand) 60%, var(--sp-line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-brand) 20%, transparent); }
-.tt-cancel { padding: 8px 4px; border: 0; background: none; color: var(--sp-text); font: 700 14px var(--sp-font); cursor: pointer; }
+.tt-cancel { flex: none; display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 1.5px solid var(--sp-line); border-radius: 50%; background: none; color: var(--sp-text); cursor: pointer; }   /* a circled X, so it never needs the room a word does */
+.tt-cancel:hover { background: var(--sp-panel); }
+.tt-cancel svg { width: 16px; height: 16px; }
 @media (prefers-reduced-motion: reduce) { .sp-top, .tt-tab::after { transition: none; } }
 .sp-header { flex-wrap: nowrap; }
 .sp-header .sp-title { flex: 1 1 0; }
@@ -170,7 +172,7 @@ html[data-nav="omni-wheel"] .gz-latest { bottom: calc(env(safe-area-inset-bottom
 .gz-linked { display: grid; }
 
 /* search: filters under the box, and a person in the results */
-.tt-filters { padding: 0 4px; }
+.tt-filters { padding: 0 4px; justify-content: center; }
 .tt-filters[hidden] { display: none; }
 .gz-person { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 18px; content-visibility: auto; contain-intrinsic-size: auto 64px; color: inherit; text-decoration: none; }
 .gz-person .sp-avatar { --_size: 42px; }
@@ -184,12 +186,16 @@ html[data-nav="omni-wheel"] .gz-latest { bottom: calc(env(safe-area-inset-bottom
 /* The Gaze header: the feed tabs sit in the middle (left and right columns balance them), the search, menu and bell stay at the right. The live tab is bold
    with the underline; the two at the edges are lighter and smaller. A new middle tab slides in from the side it was swiped from. */
 .sp-top--feed .tt-bar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(max-content, 1fr); }
-.sp-top--feed #filter-nav { grid-column: 2; justify-content: center; overflow: hidden; touch-action: pan-y; user-select: none; }
+.sp-top--feed #filter-nav { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; overflow: hidden; touch-action: pan-y; user-select: none; }   /* the whole width, the live tab in the middle column (dead centre), its neighbours hanging off either side; the icons sit above it */
+#filter-nav .tt-tab.is-prev { grid-column: 1; justify-self: end; }
+#filter-nav .tt-tab[aria-selected="true"] { grid-column: 2; }
+#filter-nav .tt-tab.is-next { grid-column: 3; justify-self: start; }
 .sp-top--feed .tt-end { grid-column: 1; justify-self: start; }
 .sp-top--feed .tt-search { grid-column: 1 / -1; }
 .sp-top--feed > .tt-bar > .nav-menu { grid-column: 3; justify-self: end; }   /* search at the far left, the four-square menu at the far right */
 .sp-top--feed #filter-nav, .sp-top--feed .tt-end, .sp-top--feed > .tt-bar > .nav-menu { grid-row: 1; }   /* the order in the page no longer follows the columns, so pin the row */
 .sp-top--feed .nav-menu[hidden] { display: none; }
+.sp-top--feed .tt-end, .sp-top--feed > .tt-bar > .nav-menu { position: relative; z-index: 2; }   /* the icons sit above the tabs: on a narrow screen an edge tab runs under them, and a tap on the icon must not land on it */
 #filter-nav .tt-tab { padding-inline: 8px; font-size: 14px; font-weight: 500; }
 #filter-nav .tt-tab[aria-selected="true"] { font-size: 16px; font-weight: 800; }
 #filter-nav[data-dir="next"] .tt-tab { animation: tt-from-right .25s cubic-bezier(.16, 1, .3, 1); }

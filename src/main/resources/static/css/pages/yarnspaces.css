@@ -117,3 +117,10 @@
 /* a Workspace bar opens its space */
 .yn-header .sp-title.is-link { cursor: pointer; }
 .yn-header .sp-title.is-link h1::after { content: " \203A"; color: var(--sp-brand); }
+
+/* The Yarns header borrows the Gaze's bar (gaze.css): search and the plus at the left, the kinds of yarns as tabs, the four-square menu at the right.
+   The tabs are wider than the Gaze's, so the neighbours at the edges fade out instead of being cut off. */
+#yn-bar { grid-template-columns: auto minmax(0, 1fr) auto; }
+#yn-bar #filter-nav { -webkit-mask-image: linear-gradient(90deg, transparent 26%, #000 36%, #000 64%, transparent 74%); mask-image: linear-gradient(90deg, transparent 26%, #000 36%, #000 64%, transparent 74%); }
+#yn-bar[hidden], #yn-chat[hidden] { display: none; }
+#yn-back { flex: none; }

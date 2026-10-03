@@ -4,11 +4,12 @@ import { live } from '/js/services/live.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, notificationsList, notificationRead, notificationsReadAll } from '/js/services/api.js';
 import { h, toast } from '/js/services/dom.js';
-import { drawTabs, openMenu, toLogin } from '/js/services/review-ui.js';
+import { openMenu, toLogin } from '/js/services/review-ui.js';
+import { feedTabs } from '/js/services/feed-tabs.js';
 import { face } from '/js/services/face.js';
 import { whoIn } from '/js/services/notice-who.js';
 
-const $tabs = document.getElementById('tabs'), $list = document.getElementById('list'), $sum = document.getElementById('summary'), $filter = document.getElementById('filter');
+const $list = document.getElementById('list'), $sum = document.getElementById('summary'), $filter = document.getElementById('filter');
 const TABS = [['ALL', 'All'], ['SPACES', 'Spaces'], ['ACTIVITY', 'Activity'], ['PERSONAL', 'Personal']];
 const STEP = 20;
 let items = [], tab = 'ALL', unreadOnly = false, query = '', limit = STEP;
@@ -21,7 +22,6 @@ $sum.style.display = 'block';
 const inTab = (n, k) => k === 'ALL' || n.actionRequired || n.bucket === k;
 
 function draw() {
-    drawTabs($tabs, TABS.map(([k, label]) => [k, label, items.filter((n) => !n.read && inTab(n, k)).length]), tab, (k) => { tab = k; limit = STEP; draw(); });
     const shown = items.filter((n) => inTab(n, tab) && (!unreadOnly || !n.read) && (!query || `${n.title} ${n.body || ''}`.toLowerCase().includes(query)));
     const page = shown.slice(0, limit);
     $list.replaceChildren(...(page.length ? page.map(row) : [h('p', { class: 'rv-empty', text: items.length ? 'No matches.' : 'No notifications yet.' })]),
@@ -42,7 +42,10 @@ $filter.addEventListener('click', () => openMenu($filter,
         if (k === 'readall') { try { await notificationsReadAll(); items.forEach((n) => { n.read = true; }); toast('All read.'); } catch (err) { toast(err.message); } } else unreadOnly = k === 'unread';
         draw();
     }));
-document.getElementById('back').addEventListener('click', (e) => { if (history.length > 1 && document.referrer.startsWith(location.origin)) { e.preventDefault(); history.back(); } });
+// The Gaze's switcher: the kinds as tabs in the header, a swipe sideways anywhere moves to the next one.
+feedTabs(document.getElementById('filter-nav'), { labels: TABS.map(([, label]) => label), at: () => TABS.findIndex(([k]) => k === tab), go: (i) => { tab = TABS[i][0]; limit = STEP; draw(); } });
+const top = document.getElementById('nt-top'), mark = () => top.classList.toggle('is-scrolled', scrollY > 8);
+addEventListener('scroll', mark, { passive: true }); mark();
 
 (async () => {
     try {

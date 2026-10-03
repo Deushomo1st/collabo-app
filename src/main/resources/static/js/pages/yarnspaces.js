@@ -12,6 +12,7 @@ import { live } from '/js/services/live.js';
 import { skeletonRows } from '/js/services/skeleton.js';
 import { fanActions } from '/js/services/fan-actions.js';
 import { GEAR } from '/js/services/icons.js';
+import { feedTabs } from '/js/services/feed-tabs.js';
 import {
     following, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
     yarnMarkRead, yarnPrefs, yarnRespond, yarnBlock, yarnReport, avatarUrl,
@@ -24,7 +25,7 @@ let inbox = [], archived = [];
 let openThread = null;      // the thread being read, if any
 let threadView = null;      // its yarn-thread instance
 let lastSection = 'myspace';
-let nav;
+let nav, tabs;
 
 // ---- tiny DOM helper -------------------------------------------------------
 function h(tag, props = {}, ...kids) {
@@ -42,6 +43,7 @@ function h(tag, props = {}, ...kids) {
 }
 const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 const ICON = {
+    all: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
     myspace: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
     wespace: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     workspace: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>',
@@ -78,8 +80,8 @@ function setHeader(t) {
     const faces = document.getElementById('header-faces');
     faces.hidden = !t;
     faces.replaceChildren(...(t ? headFaces(t) : []));
-    document.getElementById('new-btn').hidden = !!t;
-    document.getElementById('find-btn').hidden = !!t;
+    document.getElementById('yn-bar').hidden = !!t;   // the lists have the Gaze-style bar; a chat has its own header
+    document.getElementById('yn-chat').hidden = !t;
     document.getElementById('header-title').textContent = t ? t.name : 'Yarns';
     document.getElementById('header-tag').textContent = t ? TIER_LABEL[t.tier] : 'Yarnspaces';
     const sub = document.getElementById('header-sub');
@@ -237,6 +239,7 @@ async function act(fn, done) {
 function renderSection() {
     const sec = currentSection();
     lastSection = sec.id;
+    tabs?.sync();
     const root = document.getElementById('section');
     const list = inSection(inbox, sec);
     const requests = list.filter((t) => t.incomingRequest);
@@ -249,9 +252,7 @@ function renderSection() {
                 { label: 'Decline', variant: 'danger', onClick: () => respond(t, false) },
             ],
         }).element),
-        rest.length ? h('section', { class: 'yn-group' },
-            h('h2', { class: 'sp-h2', text: sec.label }),
-            h('div', { class: 'yn-list' }, ...rest.map(row))) : null,
+        rest.length ? h('section', { class: 'yn-group' }, h('div', { class: 'yn-list' }, ...rest.map(row))) : null,
         list.length ? null : h('p', { class: 'yn-empty', text: sec.id === 'wespace' ? 'The collaborators room opens here once someone accepts your request.' : sec.id === 'workspace' ? 'A Workspace opens here when a space forms and you are in it.' : 'No yarns here yet. Tap + to start one.' }));
 }
 
@@ -403,6 +404,14 @@ async function boot() {
     preloadGlassBlurDialog(); preloadYarnThread();
     document.getElementById('section').replaceChildren(...skeletonRows(5));   // the list's shape while it loads
     await preloadActionBanner();
+    // The kinds of yarns are the header's tabs, like the Gaze's feeds: tap one, or swipe sideways anywhere, to move to the next.
+    tabs = feedTabs(document.getElementById('filter-nav'), {
+        labels: SECTIONS.map((s) => s.label), at: () => SECTIONS.indexOf(currentSection()), blocked: () => !!openThread || inDraft(),
+        go: (i) => { location.hash = '#' + SECTIONS[i].id; },
+    });
+    document.getElementById('yn-back').addEventListener('click', () => go('#' + lastSection));
+    const top = document.getElementById('yn-top'), mark = () => top.classList.toggle('is-scrolled', scrollY > 8);
+    addEventListener('scroll', mark, { passive: true }); mark();   // the header's blurred backing once the list has moved under it
     document.getElementById('find-btn').addEventListener('click', () => me && openFind({ me, threads: () => [...inbox, ...archived],
         openThread: (id) => { location.hash = '#t/' + id; }, startWith: (name) => openNew(name) }));
     document.getElementById('thread-wrench').addEventListener('click', () => openThread && openThreadSettings(openThread));

@@ -18,8 +18,9 @@ export function openMenu(anchor, groups, checked, onPick) {
         g.forEach(({ key, label }) => menu.append(h('button', { type: 'button', role: 'menuitemradio', 'aria-checked': String(checked(key)), text: label, onclick: () => { onPick(key); menu.remove(); } })));
     });
     const r = anchor.getBoundingClientRect();
-    menu.style.top = `${r.bottom + 6}px`; menu.style.right = `${Math.max(8, innerWidth - r.right)}px`;
+    menu.style.top = `${r.bottom + 6}px`;
     document.body.append(menu);
+    menu.style.left = `${Math.min(Math.max(8, r.right - menu.offsetWidth), innerWidth - menu.offsetWidth - 8)}px`;   // lines up with the button's right edge, but never off the screen (the funnel can sit at the left)
     setTimeout(() => addEventListener('click', () => menu.remove(), { once: true }), 0);
 }
 

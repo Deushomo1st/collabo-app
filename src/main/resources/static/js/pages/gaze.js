@@ -9,6 +9,7 @@ import { h, toast, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { skeletonCards } from '/js/services/skeleton.js';
 import { pullToRefresh } from '/js/pages/gaze-pull.js';
+import { feedTabs } from '/js/services/feed-tabs.js';
 import { historyAdd, historyDrop, historyRead, historyTop } from '/js/services/history.js';
 
 const EMPTY = {
@@ -59,33 +60,14 @@ const FEEDS = [
 ];
 const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 
-// TikTok-style: plain text tabs in the middle of the header, the live one bold with a short underline. The three feeds go round: the live one is
-// always in the middle with the other two at the edges; a swipe sideways (or a tap on an edge one) brings its neighbour to the middle and the third rotates round.
+// TikTok-style tabs (services/feed-tabs.js): the three feeds go round, a swipe sideways brings the neighbour to the middle.
 // The search icon swaps the tabs for a search box.
 const mountFeeds = () => {
-    const nav = document.getElementById('filter-nav');
     const live = (f) => f.feed === feed && f.open === pendingOnly;
-    const at = () => Math.max(0, FEEDS.findIndex(live));
-    const of = (d) => FEEDS[(at() + d + FEEDS.length) % FEEDS.length];
-    const pick = (f, dir) => { if (live(f)) return; save(); feed = f.feed; pendingOnly = f.open; draw(dir); show(); };
-    const draw = (dir = '') => {
-        nav.dataset.dir = dir;
-        nav.replaceChildren(...[-1, 0, 1].map((d) => { const f = of(d); return h('button', { class: 'tt-tab', type: 'button', role: 'tab', 'aria-selected': String(d === 0), text: f.label, onclick: () => pick(f, d > 0 ? 'next' : 'prev') }); }));
-    };
-    let x0 = 0, swiped = false;
-    nav.addEventListener('pointerdown', (e) => { x0 = e.clientX; swiped = false; });
-    nav.addEventListener('pointerup', (e) => { if (Math.abs(e.clientX - x0) < 30) return; swiped = true; const d = e.clientX < x0 ? 1 : -1; pick(of(d), d > 0 ? 'next' : 'prev'); });
-    nav.addEventListener('click', (e) => { if (swiped) { e.stopPropagation(); swiped = false; } }, true);   // a swipe that ends on a tab is not also a tap on it
-    // The same swipe anywhere on the feed: a clear sideways stroke (not a scroll that drifted) moves to the neighbouring feed. Typing and the tab bar keep their own gestures.
-    let t0 = null;
-    document.addEventListener('touchstart', (e) => { const t = e.touches[0]; t0 = e.touches.length === 1 && !e.target.closest('input, textarea, select, #filter-nav, [role="dialog"]') ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
-    document.addEventListener('touchend', (e) => {
-        const t = e.changedTouches[0], s = t0; t0 = null;
-        if (!s || searching) return;
-        const dx = t.clientX - s.x, dy = t.clientY - s.y;
-        if (Math.abs(dx) > 70 && Math.abs(dx) > 2 * Math.abs(dy)) { const d = dx < 0 ? 1 : -1; pick(of(d), d > 0 ? 'next' : 'prev'); }
-    }, { passive: true });
-    draw();
+    feedTabs(document.getElementById('filter-nav'), {
+        labels: FEEDS.map((f) => f.label), at: () => Math.max(0, FEEDS.findIndex(live)), blocked: () => searching,
+        go: (i) => { save(); feed = FEEDS[i].feed; pendingOnly = FEEDS[i].open; show(); },
+    });
 };
 
 let searching = false, searchTimer, searchGen = 0;

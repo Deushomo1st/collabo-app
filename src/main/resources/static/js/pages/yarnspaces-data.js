@@ -1,6 +1,7 @@
 // Yarnspaces hub: section list + small pure helpers. No DOM, no network (those are in yarnspaces.js and js/services/api.js).
 
 export const SECTIONS = [
+    { id: 'all',       label: 'All yarns',  tier: null },
     { id: 'myspace',   label: 'MySpaces',   tier: 'MYSPACE' },
     { id: 'wespace',   label: 'WeSpaces',   tier: 'WESPACE' },
     { id: 'workspace', label: 'WorkSpaces', tier: 'WORKSPACE' },
