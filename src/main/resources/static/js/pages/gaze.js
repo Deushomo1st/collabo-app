@@ -1,4 +1,4 @@
-// The Gaze: everyone's ideas newest first, or Shared Gaze (your network only). Filter, endless scroll. Posting happens on post.html.
+// The Gaze: everyone's ideas newest first, or Shared Gaze (your network only). Filter, endless scroll. Posting happens on create-post.html.
 // All network calls live in js/services/api.js; text goes in through textContent only.
 import { live } from '/js/services/live.js';   // keeps the live socket open (yarns are acknowledged from any page) and tells us when ideas are posted or deleted
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
@@ -129,19 +129,13 @@ function render() {
     drawBar();
 }
 
-// The header (title, bell, theme) folds away while you scroll down and returns the moment you scroll up; the feed pill stays.
-const placeBar = () => { const t = document.querySelector('.sp-top'); document.getElementById('gz-bar').style.top = `${t.classList.contains('is-hidden') ? 12 : (t.offsetHeight || 52) + 8}px`; };
+// The header (tabs, search, bell) stays pinned; its blurred backing fades in once the feed has moved under it.
+const placeBar = () => { document.getElementById('gz-bar').style.top = `${(document.querySelector('.sp-top').offsetHeight || 52) + 8}px`; };
 {
     const top = document.querySelector('.sp-top');
-    let lastY = window.scrollY;
-    window.addEventListener('scroll', () => {
-        const y = window.scrollY, dy = y - lastY;
-        if (Math.abs(dy) < 6) return;   // ignore jitter
-        lastY = y;
-        top.classList.toggle('is-hidden', !searching && dy > 0 && y > 80);
-        top.classList.toggle('is-scrolled', y > 8);   // the backing behind the tabs shows once the feed is under them
-        placeBar();
-    }, { passive: true });
+    const mark = () => top.classList.toggle('is-scrolled', window.scrollY > 8);
+    window.addEventListener('scroll', mark, { passive: true });
+    mark();   // a restored scroll position starts with the backing already on
 }
 
 // "N new" and "See old" share one slot at the top of the screen.

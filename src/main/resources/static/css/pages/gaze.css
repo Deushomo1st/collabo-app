@@ -111,9 +111,8 @@ a.pc-btn { text-decoration: none; justify-self: start; }
 .gz-sentinel { min-height: 1px; text-align: center; color: var(--sp-muted); font-size: 12.5px; padding: 6px 0 18px; }
 
 /* TikTok-style header: text tabs, the live one bold with a short underline; search, bell and theme on the right.
-   It folds away on scroll-down and comes back on scroll-up. */
-.sp-top { position: sticky; top: 0; z-index: 20; transition: transform .3s ease, opacity .25s ease; }
-.sp-top.is-hidden { transform: translateY(-110%); opacity: 0; pointer-events: none; }
+   It stays pinned while you scroll. */
+.sp-top { position: sticky; top: 0; z-index: 20; }
 .tt-bar { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; padding: 0 4px; }
 /* The Gaze's header is pinned over a scrolling feed, so once the feed has moved under it a backing appears behind it, reaching a little below:
    blurred and a touch darker than the page, fading out at the bottom edge. (Pages that do not pin their header have none.) */
