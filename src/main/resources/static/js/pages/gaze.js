@@ -260,7 +260,7 @@ const soon = () => { clearTimeout(newerTimer); newerTimer = setTimeout(checkNewe
 /** An older shared link (gaze.html?post=ID) goes to the post's own page. */
 function openLinkedPost() {
     const id = new URLSearchParams(location.search).get('post');
-    if (id) location.replace(`/HTML-pages/post-view.html?id=${encodeURIComponent(id)}`);
+    if (id) location.replace(`/HTML-pages/view-post.html?id=${encodeURIComponent(id)}`);
 }
 
 const mountBottom = (username) => mountMainNav(username, 'Gaze', { onGaze: () => window.scrollTo({ top: 0, behavior: 'smooth' }) });   // Gaze again goes back to the top

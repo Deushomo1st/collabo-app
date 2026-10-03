@@ -5,7 +5,7 @@ import { currentUser, profileGet, profileUpdate, profileLinks, avatarUrl, avatar
 import { h } from '/js/services/dom.js';
 
 const $ = (id) => document.getElementById(id);
-const GAZE = '/HTML-pages/gaze.html', POST = '/HTML-pages/post.html';
+const GAZE = '/HTML-pages/gaze.html', POST = '/HTML-pages/create-post.html';
 const MAX_LINKS = 3;
 
 let me, profile, idx = 0, steps = [], current = null, finishing = false;

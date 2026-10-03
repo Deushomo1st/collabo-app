@@ -55,7 +55,7 @@ function runFlashClock() {
         if (!flashers.size) { clearInterval(flashClock); flashClock = null; }
     }, 4000);
 }
-const viewHref = (id) => `/HTML-pages/post-view.html?id=${id}`;
+const viewHref = (id) => `/HTML-pages/view-post.html?id=${id}`;
 
 export function postCard(initial, { onGone, detail = false } = {}) {
     let p = initial;

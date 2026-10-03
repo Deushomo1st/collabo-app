@@ -32,12 +32,12 @@ function next(a) {
 
 const card = (a) => h('div', { class: 'rv-card rv-card--post' },
     h('div', { class: 'rv-head' },
-        h('a', { class: 'rv-title', href: `/HTML-pages/post-view.html?id=${a.postId}`, text: a.postTitle }),
+        h('a', { class: 'rv-title', href: `/HTML-pages/view-post.html?id=${a.postId}`, text: a.postTitle }),
         h('time', { class: 'rv-time', datetime: a.createdAt, text: day(a.createdAt) })),
     h('span', { class: 'rv-at' }, 'by ', h('a', { class: 'rv-name', href: profileHref(a.postAuthor.username), text: a.postAuthor.username }),
         a.postStatus === 'closed' ? ' · applications closed' : '', a.state === 'WITHDRAWN' ? ' · withdrawn' : ''),
     h('p', { class: 'rv-text', text: a.statement }),
-    h('div', { class: 'rv-acts' }, next(a), h('a', { class: 'pc-btn', href: `/HTML-pages/post-view.html?id=${a.postId}`, text: 'View post' })));
+    h('div', { class: 'rv-acts' }, next(a), h('a', { class: 'pc-btn', href: `/HTML-pages/view-post.html?id=${a.postId}`, text: 'View post' })));
 
 document.getElementById('back').addEventListener('click', (e) => { if (history.length > 1 && document.referrer.startsWith(location.origin)) { e.preventDefault(); history.back(); } });
 (async () => {

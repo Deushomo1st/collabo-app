@@ -7,7 +7,7 @@ import { GEAR, HOME, CHAT, PERSON, svg } from '/js/services/icons.js';
 const pages = (me) => [
     ['Gaze', '/HTML-pages/gaze.html', HOME],
     ['Yarns', '/HTML-pages/yarnspaces.html', CHAT],
-    ['Post', '/HTML-pages/post.html', '<path d="M12 5v14M5 12h14"/>'],
+    ['Post', '/HTML-pages/create-post.html', '<path d="M12 5v14M5 12h14"/>'],
     ['Profile', profileHref(me.username), PERSON],
     ['Settings', '/HTML-pages/profile-settings.html', GEAR],
     ['Report a problem', '/HTML-pages/report.html', '<path d="M4 22V4h12l-1.5 4L16 12H4"/>'],

@@ -197,7 +197,7 @@ const eye = () => { const i = h('span', { class: 'pf-eye', 'aria-hidden': 'true'
 
 function tile(p) {   // opening the post page counts a view, the same as a shared link
     const pic = p.media?.find((m) => m.kind !== 'VIDEO');
-    return h('button', { class: 'pf-tile', type: 'button', onclick: () => { location.href = `/HTML-pages/post-view.html?id=${p.id}`; } },
+    return h('button', { class: 'pf-tile', type: 'button', onclick: () => { location.href = `/HTML-pages/view-post.html?id=${p.id}`; } },
         pic ? h('img', { src: mediaUrl(pic.id), alt: '', loading: 'lazy' }) : h('span', { class: 'pf-tile__text' }, h('strong', { text: p.title }), h('span', { text: p.body })),
         h('span', { class: 'pf-tile__views', title: 'Times someone else opened this', onclick: (e) => e.stopPropagation() }, eye(), String(p.views)));   // a statistic only: tapping it does nothing
 }

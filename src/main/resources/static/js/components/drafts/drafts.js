@@ -21,7 +21,7 @@ export async function openDrafts() {
             h('time', { class: 'pc-time', datetime: d.updatedAt, text: `Saved ${ago(d.updatedAt)}` })),
         d.body && h('p', { class: 'ap-text', text: d.body.length > 160 ? `${d.body.slice(0, 160)}…` : d.body }),
         h('div', { class: 'pc-actions' },
-            h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/post.html?draft=${d.id}`, text: 'Continue' }),
+            h('a', { class: 'pc-btn pc-btn--brand', href: `/HTML-pages/create-post.html?draft=${d.id}`, text: 'Continue' }),
             h('button', { class: 'pc-btn pc-btn--danger', type: 'button', text: 'Delete', onclick: async () => {
                 try { await draftDelete(d.id); load(); } catch (err) { toast(err.message); }
             } })));

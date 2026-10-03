@@ -26,7 +26,7 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
     const pages = [
         ['Gaze', GAZE, svg(HOME)],
         ['Yarns', '/HTML-pages/yarnspaces.html', svg(CHAT)],
-        ['Post', '/HTML-pages/post.html', svg('<path d="M12 5v14M5 12h14"/>')],
+        ['Post', '/HTML-pages/create-post.html', svg('<path d="M12 5v14M5 12h14"/>')],
         onSettings   // on your own profile the last item is its settings
             ? ['Settings', '#', svg(GEAR)]
             : ['Profile', profileHref(username), svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>')],

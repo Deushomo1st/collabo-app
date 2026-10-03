@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#10162a">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>if('serviceWorker'in navigator)addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})</script>
-<title>COLLABO — Post</title>
+<title>COLLABO — Create post</title>
 <link rel="stylesheet" href="/css/global/global.css">
 <!-- Apply the saved theme before first paint (see theme-switcher README) -->
 <script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/pages/workspace.css">
 <link rel="stylesheet" href="/css/pages/gaze.css">
-<link rel="stylesheet" href="/css/pages/post.css">
+<link rel="stylesheet" href="/css/pages/create-post.css">
 </head>
 <body>
 <div class="sp-aurora" aria-hidden="true">
@@ -29,7 +29,7 @@
 <div class="sp-shell">
     <div class="sp-top">
         <header class="tt-bar">
-            <h1 class="tt-title">Post</h1>
+            <h1 class="tt-title">Create post</h1>
             <div class="tt-end">
                 <button type="submit" form="post-form" class="gz-nav gz-nav--brand ps-send" id="publish" aria-label="Publish" title="Publish"></button>
             </div>
@@ -60,6 +60,6 @@
 <div id="nav"></div>
 <div class="sp-toast" id="toast" role="status"></div>
 
-<script type="module" src="/js/pages/post.js"></script>
+<script type="module" src="/js/pages/create-post.js"></script>
 </body>
 </html>

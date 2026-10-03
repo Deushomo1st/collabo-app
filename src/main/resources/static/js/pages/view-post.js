@@ -1,4 +1,4 @@
-// A post on a page of its own, with its comments open (like opening a tweet). Reached as post-view.html?id=<post id>:
+// A post on a page of its own, with its comments open (like opening a tweet). Reached as view-post.html?id=<post id>:
 // from a card in the feed, from a copied link, or from a post yarned to you.
 import '/js/services/live.js';
 import { mountMainNav } from '/js/services/main-nav.js';
@@ -28,6 +28,7 @@ document.getElementById('back').addEventListener('click', (e) => {
         mountMainNav(me.username, 'Gaze', { onGaze: () => { location.href = GAZE; } });   // a post belongs to the Gaze; tapping it goes back to the feed
         const p = await postGet(id);
         document.title = `${p.title} — COLLABO`;
+        document.getElementById('header-title').textContent = p.anonymous && !p.mine ? 'Anonymous post' : `${p.author.username}'s Post`;   // an anonymous author is never named
         $post.replaceChildren(postCard(p, { detail: true, onGone: () => location.replace(GAZE) }));
         mountCommentSection(document.getElementById('comments'), p);
         try { const msg = sessionStorage.getItem('collaboToast'); if (msg) { sessionStorage.removeItem('collaboToast'); toast(msg); } } catch { /* just no message */ }

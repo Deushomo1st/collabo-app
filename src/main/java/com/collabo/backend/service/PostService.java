@@ -87,7 +87,7 @@ public class PostService {
         drafts.consume(me, req.draftId());
         signals.gaze();
         int delivered = 0;
-        String note = (p.isAnonymous() ? "Someone" : me.getUsername()) + " shared a post with you: \"" + title + "\"\n/HTML-pages/post-view.html?id=" + saved.getId();
+        String note = (p.isAnonymous() ? "Someone" : me.getUsername()) + " shared a post with you: \"" + title + "\"\n/HTML-pages/view-post.html?id=" + saved.getId();
         for (String name : recipients) {
             User to = users.findByUsername(name).orElse(null);
             if (to != null && yarns.tryShare(me, to, note)) delivered++;
@@ -103,7 +103,7 @@ public class PostService {
         for (Follow f : follows.findTop500ByFollowedIdOrderByCreatedAtDesc(me.getId())) {
             UUID to = f.getFollowerId();
             if (blocked(to, me.getId()) || !seesId(to, p)) continue;
-            notifications.notify(to, Notification.Bucket.ACTIVITY, me.getUsername() + " posted", p.getTitle(), "/HTML-pages/post-view.html?id=" + p.getId());
+            notifications.notify(to, Notification.Bucket.ACTIVITY, me.getUsername() + " posted", p.getTitle(), "/HTML-pages/view-post.html?id=" + p.getId());
         }
     }
 
@@ -294,7 +294,7 @@ public class PostService {
         List<String> names = DraftService.names(usernames);
         if (names.isEmpty()) throw new InvalidProfileException("Pick at least one person.");
         if (names.size() > MAX_SHARE) throw new InvalidProfileException("Share with up to " + MAX_SHARE + " people at a time.");
-        String note = me.getUsername() + " shared a post with you: \"" + p.getTitle() + "\"\n/HTML-pages/post-view.html?id=" + p.getId();
+        String note = me.getUsername() + " shared a post with you: \"" + p.getTitle() + "\"\n/HTML-pages/view-post.html?id=" + p.getId();
         int delivered = 0;
         for (String name : names) {
             User to = users.findByUsername(name).orElse(null);
