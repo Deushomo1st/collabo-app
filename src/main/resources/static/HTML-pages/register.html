@@ -70,6 +70,7 @@
 </div>
 
 <script type="module">
+    import '/js/services/warm.js';   // the app's pages load in the background, so the first move in is quick
     import '/js/components/password-toggle.js';
     import { registerUser, verifyOtp, resendOtp } from '../js/services/api.js';
 

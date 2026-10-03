@@ -4,6 +4,7 @@
 import '/js/services/live.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, wespaceAbout } from '/js/services/api.js';
+import { skeletonCards } from '/js/services/skeleton.js';
 import { h } from '/js/services/dom.js';
 import { seatsSection } from '/js/components/wespace/seats.js';
 import { clockRow } from '/js/components/wespace/clock.js';
@@ -54,6 +55,7 @@ function draw() {
 }
 
 async function boot() {
+    main().replaceChildren(...skeletonCards(2));   // the cards' shape while the space loads
     me = await currentUser().catch(() => null);
     if (!me) return location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
     mountMainNav(me.username);

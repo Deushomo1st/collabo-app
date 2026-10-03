@@ -81,3 +81,13 @@
 .yarn-thread__pin { background: none; border: 0; padding: 0 2px; font: inherit; font-size: 11px; color: inherit; opacity: 0; cursor: pointer; }
 .yarn-thread__msg:hover .yarn-thread__pin, .yarn-thread__pin:focus-visible { opacity: .7; }
 @media (hover: none) { .yarn-thread__pin { opacity: .5; } }
+
+/* A post in a yarn: a small card with its picture, title, author and the first lines. The whole card opens the post. */
+.yarn-thread__post { position: relative; display: flex; flex-direction: column; margin-top: 18px; border-radius: 14px; background: rgba(0, 0, 0, .22); color: inherit; text-decoration: none; }
+.yarn-thread__post > strong { padding: 10px 12px; font-size: 13px; }
+.yarn-thread__post-pic { flex: none; width: 100%; height: 120px; object-fit: cover; border-radius: 14px 14px 0 0; }
+.yarn-thread__post-face { --_size: 36px; position: absolute; top: -30px; left: 8px; border: 2px solid var(--sp-bg, #10162a); }
+.yarn-thread__post-body { display: grid; gap: 2px; min-width: 0; padding: 9px 12px 9px 10px; }
+.yarn-thread__post-body strong { font-size: 14px; line-height: 1.3; }
+.yarn-thread__post-body small { opacity: .75; font-size: 11.5px; }
+.yarn-thread__post-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; opacity: .85; font-size: 12.5px; line-height: 1.4; }

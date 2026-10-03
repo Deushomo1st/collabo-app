@@ -7,6 +7,7 @@ import { currentUser, postGet, applicationStack, applicationDecide, applicationR
 import { face } from '/js/services/face.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
 import { drawTabs, openMenu, toLogin } from '/js/services/review-ui.js';
+import { skeletonCards } from '/js/services/skeleton.js';
 
 const postId = new URLSearchParams(location.search).get('post');
 const $tabs = document.getElementById('tabs'), $list = document.getElementById('list'), $sum = document.getElementById('summary'), $filter = document.getElementById('filter');
@@ -97,6 +98,7 @@ document.getElementById('back').addEventListener('click', (e) => { if (history.l
 
 (async () => {
     if (!postId) return say('Open this from one of your posts.');
+    $list.replaceChildren(...skeletonCards(3));   // the cards' shape while they load
     try {
         const me = await currentUser();
         if (!me) return toLogin();

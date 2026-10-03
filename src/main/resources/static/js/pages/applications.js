@@ -4,6 +4,7 @@ import { mountMainNav } from '/js/services/main-nav.js';
 import { currentUser, applicationsMine, applicationWithdraw } from '/js/services/api.js';
 import { h, toast, day, profileHref } from '/js/services/dom.js';
 import { drawTabs, toLogin } from '/js/services/review-ui.js';
+import { skeletonCards } from '/js/services/skeleton.js';
 
 const $tabs = document.getElementById('tabs'), $list = document.getElementById('list');
 const TABS = [['OPEN', 'Pending', ['SUBMITTED']], ['SHORTLISTED', 'Shortlisted', ['SHORTLISTED']], ['ACCEPTED', 'Accepted', ['ACCEPTED']], ['DECLINED', 'Closed', ['DECLINED', 'WITHDRAWN']]];
@@ -40,6 +41,7 @@ const card = (a) => h('div', { class: 'rv-card rv-card--post' },
     h('div', { class: 'rv-acts' }, next(a), h('a', { class: 'pc-btn', href: `/HTML-pages/view-post.html?id=${a.postId}`, text: 'View post' })));
 
 document.getElementById('back').addEventListener('click', (e) => { if (history.length > 1 && document.referrer.startsWith(location.origin)) { e.preventDefault(); history.back(); } });
+$list.replaceChildren(...skeletonCards(3));   // the cards' shape while they load
 (async () => {
     try {
         const me = await currentUser();

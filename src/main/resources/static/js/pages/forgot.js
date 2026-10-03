@@ -1,3 +1,4 @@
+import '/js/services/warm.js';   // the app's pages load in the background, so the first move in is quick
 // Forgot password: ask for a code by email, then set a new password with it. The network calls live in js/services/api.js.
 import { forgotPassword, resetPassword } from '/js/services/api.js';
 import '/js/components/password-toggle.js';

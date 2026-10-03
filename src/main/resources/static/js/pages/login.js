@@ -1,3 +1,4 @@
+import '/js/services/warm.js';   // the app's pages load in the background, so the first move in is quick
 // Sign-in page. The network call lives in js/services/api.js.
 import { loginUser, currentUser } from '/js/services/api.js';
 import '/js/components/password-toggle.js';

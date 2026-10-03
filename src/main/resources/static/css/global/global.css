@@ -85,3 +85,23 @@ html[data-nav="omni-wheel"] body:has(.nav-selector-fluid-hold)::after { opacity:
 body:has(.nav-selector-fluid-hold:not(.iconized), .hold-fan.is-open)::before { opacity: 1; }
 html[data-nav="omni-wheel"] body:has(.hold-fan.is-open)::after { opacity: 0; }
 .nav-selector-fluid-hold-wrap--bottom { z-index: 45; }
+
+/* A long name, title or subtitle in any header is cut with "…" and the faces and buttons beside it stay in view (it used to be the Workspace only). */
+.sp-title__row { flex-wrap: nowrap; min-width: 0; }
+.sp-title h1, .tt-title, .sp-title p { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-title__row h1 { flex: 0 1 auto; }
+.sp-title__row .sp-tag, .sp-title__row .sp-stack { flex: none; }
+.sp-header, .tt-bar { min-width: 0; }
+
+/* The loading screen between pages (page-loader.js): a spinner over the page you are leaving, only if the next one is slow. */
+.page-veil { position: fixed; inset: 0; z-index: 300; display: grid; place-content: center; justify-items: center; gap: 14px; background: color-mix(in srgb, var(--sp-bg, #0b0f14) 78%, transparent); color: var(--sp-muted, #9099a8); font: 600 13px var(--sp-font, inherit); animation: veil-in .25s both; }
+.page-veil__ring { width: 38px; height: 38px; border-radius: 50%; border: 3px solid color-mix(in srgb, var(--sp-text, #fff) 18%, transparent); border-top-color: var(--sp-brand, #ff9500); animation: veil-spin .8s linear infinite; }
+@keyframes veil-in { from { opacity: 0; } }
+@keyframes veil-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .page-veil__ring { animation-duration: 2.4s; } }
+
+/* Lite look for weaker phones (lite.js): no frosted-glass blur anywhere, panels a little more solid instead. */
+html.lite *, html.lite *::before, html.lite *::after { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.lite .sp-glass, html.lite .yarn-thread__msg--theirs, html.lite .glass-blur-dialog__panel { background-color: color-mix(in srgb, var(--sp-bg, #0b0f14) 88%, #fff 4%); }
+html.lite body::before { background: rgba(0, 0, 0, .72); }
+html.lite body::after { background: linear-gradient(to top, color-mix(in srgb, var(--sp-bg) 94%, #000), color-mix(in srgb, var(--sp-bg) 70%, transparent) 55%, transparent); }

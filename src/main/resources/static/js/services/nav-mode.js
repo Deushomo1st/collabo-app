@@ -2,6 +2,9 @@
 // It sets <html data-nav="..."> at once from the copy kept on this device, then asks the server (the pick follows the account across devices),
 // and puts a Return button in the page header. css/global/global.css shows the wheel and the Return button according to data-nav.
 import { adoptUiScale } from '/js/services/ui-scale.js';
+import '/js/services/lite.js';
+import '/js/services/warm.js';
+import '/js/services/page-loader.js';
 import { currentUser, profileUpdate } from '/js/services/api.js';
 import { NAV_PREFERENCES, DEFAULT_NAV_PREFERENCE } from '/js/services/nav-preference-source.js';
 
@@ -65,6 +68,8 @@ function menuButton() {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'nav-gear nav-menu'; b.setAttribute('aria-label', 'Menu'); b.title = 'Menu'; b.innerHTML = GRID;
     b.addEventListener('click', () => import('/js/services/nav-menu.js').then((m) => m.openNavMenu(leaveGuard)));
+    const ready = () => import('/js/services/nav-menu.js').then((m) => m.warm());   // the menu's code and your account, ready before the tap
+    if (window.requestIdleCallback) requestIdleCallback(ready, { timeout: 3000 }); else setTimeout(ready, 1500);
     return b;
 }
 

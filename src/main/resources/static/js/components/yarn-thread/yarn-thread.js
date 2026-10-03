@@ -21,6 +21,8 @@
 //   host.append(t.element);  ...  t.destroy();      // destroy() stops the polling
 
 import { zoomOf } from '/js/services/ui-scale.js';
+import { face } from '/js/services/face.js';
+import { skeletonBubbles } from '/js/services/skeleton.js';
 const CSS_HREF = '/js/components/yarn-thread/yarn-thread.css';
 const PAGE = 50;
 
@@ -28,11 +30,12 @@ export function preloadYarnThread() {
     return loadStylesOnce(CSS_HREF, 'yarn-thread');
 }
 
-// A shared post arrives as a yarn ending in its own address; make just that address a link (everything else stays plain text).
-const POST_LINK = /(\/HTML-pages\/gaze\.html\?post=[0-9a-f-]{36})/;
-const linkify = (text) => text.split(POST_LINK).map((part, i) => i % 2 ? h('a', { href: part, text: 'Open the post' }) : part);
+// A post's address in a yarn, whether the app sent it (a shared post) or someone pasted it, becomes a card for the post instead of a link.
+// The words around it stay plain text. opts.postInfo(id) -> the post (title, author, body, media); without it, or if it fails, the card just says "Open the post".
+const POST_LINK = /((?:https?:\/\/[^\s/]+)?\/HTML-pages\/(?:view-post\.html\?id|gaze\.html\?post)=[0-9a-f-]{36})/;
+const seen = new Map();   // post id -> the post, so a redrawn chat does not ask again
 
-// opts: { meId, showNames, load(before), send(body), onRead(), signals(refresh), isLive(), pollMs = 6000, disabledReason, onError(err) }
+// opts: { meId, showNames, postInfo(id), load(before), send(body), onRead(), signals(refresh), isLive(), pollMs = 6000, disabledReason, onError(err) }
 // Returns { element, refresh(), destroy(), setDisabledReason(text) }.
 export function createYarnThread(opts) {
     preloadYarnThread().catch(() => {});
@@ -90,6 +93,26 @@ export function createYarnThread(opts) {
         }
         return items.find((y) => y.kind !== 'SYSTEM' && y.senderId !== opts.meId)?.id ?? null;
     }
+    function postCard(url) {
+        const u = new URL(url, location.href);
+        if (u.origin !== location.origin) return url;   // someone else's site stays plain text
+        const id = u.searchParams.get('id') || u.searchParams.get('post');
+        const card = h('a', { class: 'yarn-thread__post', href: u.pathname + u.search, 'aria-label': 'Open the post' }, h('strong', { text: 'Open the post' }));
+        const fill = (p) => {
+            const pic = p.media?.find((m) => m.kind !== 'VIDEO');
+            const who = p.anonymous && !p.mine ? 'Anonymous' : (p.author?.fullName || p.author?.username || '');
+            card.replaceChildren(...[
+                !p.anonymous && p.author?.username && face(p.author.username, 'yarn-thread__post-face'),   // the author's picture, on the corner of the bubble
+                pic && h('img', { class: 'yarn-thread__post-pic', src: `/api/media/${pic.id}`, alt: '', loading: 'lazy' }),
+                h('span', { class: 'yarn-thread__post-body' }, h('strong', { text: p.title }), who && h('small', { text: who }), p.body && h('span', { class: 'yarn-thread__post-text', text: p.body }))].filter(Boolean));   // (replaceChildren would print an undefined)
+        };
+        if (seen.has(id)) fill(seen.get(id));
+        else opts.postInfo?.(id).then((p) => { seen.set(id, p); if (card.isConnected) fill(p); }).catch(() => {});
+        return card;
+    }
+    const SHARED = /^\S+ shared a post with you: "[\s\S]*"\s*$/;   // the app's own line before a shared post; the card says it already
+    const withCards = (text) => text.split(POST_LINK).flatMap((part, i) => (i % 2 ? [postCard(part)] : SHARED.test(part) || !part.trim() ? [] : [part.replace(/\n+$/, '')]));
+
     function bubble(y) {
         if (y.kind === 'SYSTEM') return h('p', { class: 'yarn-thread__system', text: y.body });
         const mine = y.senderId === opts.meId;
@@ -102,7 +125,7 @@ export function createYarnThread(opts) {
         return h('div', { class: `yarn-thread__msg ${mine ? 'yarn-thread__msg--mine' : 'yarn-thread__msg--theirs'}${y.sending ? ' yarn-thread__msg--sending' : ''}` },
             !mine && opts.showNames ? h('strong', { class: 'yarn-thread__name', text: y.sender }) : null,
             y.pinned ? h('span', { class: 'yarn-thread__pinned', text: 'PINNED' }) : null,
-            h('span', { class: 'yarn-thread__text' }, ...linkify(y.body)),
+            h('span', { class: 'yarn-thread__text' }, ...withCards(y.body)),
             h('span', { class: 'yarn-thread__meta' },
                 h('time', { class: 'yarn-thread__time', text: new Date(y.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }),
                 opts.onPin && opts.canPin?.() !== false && !y.sending ? h('button', { class: 'yarn-thread__pin', type: 'button', text: y.pinned ? 'Unpin' : 'Pin', 'aria-label': y.pinned ? 'Unpin this yarn' : 'Pin this yarn', onclick: () => opts.onPin(y) }) : null,
@@ -116,6 +139,7 @@ export function createYarnThread(opts) {
             const fresh = page.slice().reverse();
             const first = !items.length;
             const grew = fresh.length && (first || fresh[fresh.length - 1].id !== items[items.length - 1].id);
+            if (first && !fresh.length) render();   // an empty chat: the placeholders give way to its own empty state
             if (grew) {
                 // The newest page is merged in, so earlier pages already loaded stay put.
                 const atEnd = nearBottom(), ids = new Set(fresh.map((y) => y.id));
@@ -136,7 +160,7 @@ export function createYarnThread(opts) {
             }
             clearError();
             layout();
-        } catch (err) { fail(err); }
+        } catch (err) { if (!items.length) list.replaceChildren(); fail(err); }   // no placeholders left pulsing under an error
     }
     async function loadEarlier() {
         if (loadingEarlier || !items.length) return;
@@ -217,6 +241,7 @@ export function createYarnThread(opts) {
     // Looked at for real: a thread that loaded while the tab was hidden counts as read the moment the tab is shown.
     const onShown = () => { if (document.visibilityState === 'visible' && items.length && !dead) { opts.onRead?.(); refresh(); } };
     document.addEventListener('visibilitychange', onShown);
+    list.replaceChildren(...skeletonBubbles());   // the chat's shape until its yarns arrive
     refresh();
     return { element, refresh, redraw: () => render('keep'), setDisabledReason, destroy() {
         dead = true; clearInterval(timer); unsubscribe?.(); document.removeEventListener('visibilitychange', onShown);

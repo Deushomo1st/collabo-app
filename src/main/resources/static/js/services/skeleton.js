@@ -10,3 +10,9 @@ export const skeletonCards = (n = 3) => Array.from({ length: n }, () => h('div',
 /** n row-shaped placeholders (a list of people). */
 export const skeletonRows = (n = 5) => Array.from({ length: n }, () => h('div', { class: 'sk-row', 'aria-hidden': 'true' },
     h('span', { class: 'sk-dot' }), h('div', { class: 'sk-lines' }, h('div', { class: 'sk-line sk-w40' }), h('div', { class: 'sk-line sk-w70' }))));
+
+/** A chat before its yarns arrive: bubbles on alternating sides. */
+export const skeletonBubbles = () => [[60, 0], [40, 1], [70, 0], [50, 1]].map(([w, mine]) => h('div', { class: `sk-bubble${mine ? ' sk-bubble--mine' : ''}`, style: `width:${w}%`, 'aria-hidden': 'true' }));
+
+/** A profile's identity card before it arrives: the picture, the name, the handle. */
+export const skeletonProfile = () => h('div', { class: 'sk-profile', 'aria-hidden': 'true' }, h('span', { class: 'sk-dot sk-dot--big' }), h('div', { class: 'sk-line sk-w40' }), h('div', { class: 'sk-line sk-w40' }));

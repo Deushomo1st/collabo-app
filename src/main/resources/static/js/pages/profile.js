@@ -8,7 +8,7 @@ import { openDrafts } from '/js/components/drafts/drafts.js';
 import { mountMainNav } from '/js/services/main-nav.js';
 import { face } from '/js/services/face.js';
 import { GEAR, svg } from '/js/services/icons.js';
-import { skeletonCards } from '/js/services/skeleton.js';
+import { skeletonCards, skeletonProfile } from '/js/services/skeleton.js';
 import { profileBubbles } from '/js/services/profile-bubbles.js';
 import { removalRecordsSection } from '/js/components/profile/removal-records.js';
 import {
@@ -115,11 +115,11 @@ function identity() {
     return h('section', { class: 'pf-card sp-glass' },
         picture(),
         h('div', { class: 'pf-id' },
-            h('div', { class: 'pf-name' },
-                h('h2', { text: profile.fullName || profile.username }),
+            h('div', { class: 'pf-name' }, h('h2', { text: profile.fullName || profile.username })),
+            profile.fullName && h('p', { class: 'pf-handle', text: '@' + profile.username }),
+            (profile.preferredTitle || (f.followsMe && !profile.self)) && h('div', { class: 'pf-name pf-tags' },
                 profile.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: profile.preferredTitle }),
                 f.followsMe && !profile.self && h('span', { class: 'sp-tag sp-tag--muted', text: 'Follows you' })),
-            profile.fullName && h('p', { class: 'pf-handle', text: '@' + profile.username }),
             profile.bio ? h('p', { class: 'pf-bio', text: profile.bio })
                 : h('p', { class: 'pf-bio is-empty', text: profile.self ? 'Add a short bio so people know what you build.' : 'No bio yet.' }),
             h('div', { class: 'pf-counts' }, count(f.followers, 'followers', 'followers'), count(f.following, 'following', 'following')),
@@ -305,6 +305,7 @@ const remind = () => profileBubbles([
 ]);
 
 async function boot() {
+    section().replaceChildren(skeletonProfile(), ...skeletonCards(2));   // the card's shape while the profile loads
     try {
         const me = await currentUser();
         if (!me) return toLogin();

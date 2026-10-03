@@ -13,7 +13,7 @@ import { GEAR } from '/js/services/icons.js';
 import { feedTabs } from '/js/services/feed-tabs.js';
 import {
     following, yarnMe, yarnDirectory, yarnThreads, yarnStartMySpace, yarnHistory, yarnSend,
-    yarnMarkRead, yarnPrefs, yarnRespond, yarnBlock, yarnReport, avatarUrl,
+    yarnMarkRead, yarnPrefs, yarnRespond, yarnBlock, yarnReport, avatarUrl, postGet,
 } from '/js/services/api.js';
 import { openFind } from '/js/pages/yarn-find.js';
 import { SECTIONS, TIER_LABEL, inSection, unreadTotal, ago, hue } from '/js/pages/yarnspaces-data.js';
@@ -114,7 +114,7 @@ async function routeToPerson(name) {
     setHeader(draft);
     document.getElementById('thread-wrench').hidden = true;
     threadView = createYarnThread({
-        meId: me.id, showNames: false, disabledReason: '', avatar: (n) => faceOf(n, 'sp-avatar--sm'), avatarOn: 'latest',
+        meId: me.id, showNames: false, disabledReason: '', avatar: (n) => faceOf(n, 'sp-avatar--sm'), avatarOn: 'latest', postInfo: postGet,
         load: async () => [], signals: () => () => {}, isLive: () => live.connected,
         send: async (body) => {
             const t = await yarnStartMySpace(name, body);   // the server refuses across a block, or when they take no new yarns
@@ -223,7 +223,7 @@ function renderThread() {
     const reason = t.status === 'DECLINED' ? 'This yarn request was declined.' : t.incomingRequest ? 'Accept the request to reply.' : '';
     threadView = createYarnThread({
         meId: me.id, showNames: t.tier !== 'MYSPACE', disabledReason: reason, unread: t.unread,
-        avatar: (name) => faceOf(name, 'sp-avatar--sm'), avatarOn: t.tier === 'MYSPACE' ? 'latest' : 'every',   // a one-to-one chat: only their newest yarn; a group: every yarn
+        avatar: (name) => faceOf(name, 'sp-avatar--sm'), postInfo: postGet, avatarOn: t.tier === 'MYSPACE' ? 'latest' : 'every',   // a one-to-one chat: only their newest yarn; a group: every yarn
         load: (before) => yarnHistory(t.id, before),
         send: (body) => yarnSend(t.id, body),
         onRead: () => yarnMarkRead(t.id).catch(() => {}),

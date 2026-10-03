@@ -8,6 +8,7 @@ import { openMenu, toLogin } from '/js/services/review-ui.js';
 import { feedTabs } from '/js/services/feed-tabs.js';
 import { face } from '/js/services/face.js';
 import { whoIn } from '/js/services/notice-who.js';
+import { skeletonRows } from '/js/services/skeleton.js';
 
 const $list = document.getElementById('list'), $sum = document.getElementById('summary'), $filter = document.getElementById('filter');
 const TABS = [['ALL', 'All'], ['SPACES', 'Spaces'], ['ACTIVITY', 'Activity'], ['PERSONAL', 'Personal']];
@@ -47,6 +48,7 @@ feedTabs(document.getElementById('filter-nav'), { labels: TABS.map(([, label]) =
 const top = document.getElementById('nt-top'), mark = () => top.classList.toggle('is-scrolled', scrollY > 8);
 addEventListener('scroll', mark, { passive: true }); mark();
 
+$list.replaceChildren(...skeletonRows(5));   // the list's shape while it loads
 (async () => {
     try {
         const me = await currentUser();

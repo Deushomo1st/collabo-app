@@ -382,9 +382,13 @@ button.sp-card { font: inherit; }
 .sk-dot { flex: none; width: 54px; height: 54px; border-radius: 50%; background: var(--sp-panel-hi); }
 .sk-line { height: 12px; border-radius: 6px; background: var(--sp-panel-hi); }
 .sk-w40 { width: 40%; }
+.sk-profile { display: grid; justify-items: center; gap: 10px; padding: 18px 0; animation: sk-pulse 1.1s ease-in-out infinite alternate; }
+.sk-dot--big { width: 96px; height: 96px; }
+.sk-bubble { height: 46px; margin: 8px 0; border-radius: 18px; background: var(--sp-panel-hi); animation: sk-pulse 1.1s ease-in-out infinite alternate; }
+.sk-bubble--mine { margin-left: auto; }
 .sk-w70 { width: 70%; }
 @keyframes sk-pulse { from { opacity: .45; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .sk-card, .sk-row { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sk-card, .sk-row, .sk-profile, .sk-bubble { animation: none; } }
 
 /* a Workspace's tasks */
 .tk { display: grid; gap: 12px; }

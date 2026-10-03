@@ -10,6 +10,7 @@ import { mountMainNav } from '/js/services/main-nav.js';
 import { messagePrivacyRow } from '/js/services/message-privacy.js';
 import { currentUser, logoutUser } from '/js/services/api.js';
 import { h } from '/js/services/dom.js';
+import { skeletonCards } from '/js/services/skeleton.js';
 import { openNavPreference, navPreferenceName } from '/js/services/nav-preference.js';
 import { displaySizeRow } from '/js/components/settings/display-size.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
@@ -38,6 +39,7 @@ function followSegments(segments) {
 const segment = (id, name, ...rows) => h('section', { id, class: 'yn-group sp-glass yn-card sp-form', 'data-segment': name }, h('strong', { text: name }), ...rows);
 
 async function boot() {
+    document.getElementById('section').replaceChildren(...skeletonCards(4));   // the segments' shape while they load
     const me = await currentUser().catch(() => null);
     if (!me) return toLogin();
     mountMainNav(me.username);

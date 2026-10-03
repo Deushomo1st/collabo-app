@@ -1,3 +1,4 @@
+import '/js/services/warm.js';   // the app's pages load in the background, so the first move in is quick
 // First-run welcome: welcome, photo, about you, links, pick a path. Every step saves as you leave it, so skipping midway loses nothing.
 // New accounts land here once (login sends them; the Gaze sends anyone who slipped past). Network calls live in js/services/api.js.
 import { createAvatarCard, openAvatarUpload, preloadAvatar } from '/js/components/avatar/avatar.js';
