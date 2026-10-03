@@ -5,6 +5,7 @@ import { mountThemeRow, getTheme } from '/js/components/theme-switcher/theme-swi
 import { securityRows } from '/js/components/account/security.js';
 import { loadYarnLists, archivedCount, blockedCount, defaultChatName, openDefaultChat, openArchive, openBlocked } from '/js/components/settings/yarn-settings.js';
 import { audienceName, postOptionsNow, reportAnonymousNow, openPostAudience, openPostOptions, openReportOptions } from '/js/components/settings/post-settings.js';
+import { postDefault } from '/js/services/stash.js';
 import { postWork, reportWork } from '/js/services/stash.js';
 import { mountSettingsNav } from '/js/services/settings-nav.js';
 import { messagePrivacyRow } from '/js/services/message-privacy.js';
@@ -55,6 +56,9 @@ async function boot() {
             h('p', { class: 'yn-hint', text: 'Only new conversations are limited. Chats you already have carry on.' }), sub('Blocked', blockedCount, openBlocked),
             h('a', { class: 'yn-row', href: '/HTML-pages/history.html' }, h('span', { class: 'yn-body' }, h('strong', { text: 'History' }), h('span', { class: 'yn-last', text: 'Ideas you have seen on the Gaze' })), h('span', { text: '›', 'aria-hidden': 'true' }))),
         segment('yarns', 'Yarns', sub('Default chat', defaultChatName, openDefaultChat), sub('Archive', archivedCount, openArchive)),
+        // what every new post starts from; the Create post page can change it for one post (a stored copy, so it stays on this device)
+        segment('postdefaults', 'New posts', h('p', { class: 'yn-hint', text: 'Every new post starts like this. On the Create post page you can change it for just that post.' }),
+            sub('Who can see it', () => audienceName(postDefault), (done) => openPostAudience(me.username, done, postDefault)), sub('On the post', () => postOptionsNow(postDefault), (done) => openPostOptions(done, postDefault))),
         // the post and report settings belong to the one being written, so they show only while it waits in this tab (it was left for this page)
         postWork.read() && segment('post', 'Post in progress', sub('Who can see it', audienceName, (done) => openPostAudience(me.username, done)), sub('On the post', postOptionsNow, openPostOptions)),
         reportWork.read() && segment('report', 'Report in progress', sub('On the report', reportAnonymousNow, openReportOptions)),

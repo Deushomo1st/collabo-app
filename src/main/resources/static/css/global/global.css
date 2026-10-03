@@ -49,3 +49,11 @@ html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html
 @media (prefers-reduced-motion: reduce) { .speech { transition: opacity .6s; transform: none; } }
 .nm-link { position: relative; }
 .nm-badge { margin-left: auto; min-width: 18px; padding: 0 5px; border-radius: 999px; background: #e5484d; color: #fff; font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; }
+
+/* No page scrolls sideways, however narrow the window. A form's one column or a field's own minimum width used to stretch the page past the screen;
+   forms now get a column that can shrink, fields may shrink with it, and anything that still sticks out is clipped instead of scrolled to. */
+html, body { max-width: 100%; overflow-x: clip; }
+.sp-shell, .sp-section, main { min-width: 0; }
+input, textarea, select { max-width: 100%; }
+input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"] { min-width: 0; }
+.sp-form, .ps-form { grid-template-columns: minmax(0, 1fr); }

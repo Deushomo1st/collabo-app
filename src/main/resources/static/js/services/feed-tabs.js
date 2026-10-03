@@ -20,7 +20,7 @@ export function feedTabs(nav, { labels, at, go, blocked = () => false }) {
     nav.addEventListener('click', (e) => { if (swiped) { e.stopPropagation(); swiped = false; } }, true);   // a swipe that ends on a tab is not also a tap on it
     // The same swipe anywhere on the page: a clear sideways stroke (not a scroll that drifted). Typing, the tab bar and dialogs keep their own gestures.
     let t0 = null;
-    document.addEventListener('touchstart', (e) => { const t = e.touches[0]; t0 = e.touches.length === 1 && !e.target.closest('input, textarea, select, [role="dialog"]') && !nav.contains(e.target) ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
+    document.addEventListener('touchstart', (e) => { const t = e.touches[0]; t0 = e.touches.length === 1 && !e.target.closest('input, textarea, select, [role="dialog"], .hold-fan-trigger, .hold-fan, .nav-selector-fluid-hold') && !nav.contains(e.target) ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
     document.addEventListener('touchend', (e) => {
         const t = e.changedTouches[0], s = t0; t0 = null;
         if (!s || blocked()) return;

@@ -16,6 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/pages/workspace.css">
 <link rel="stylesheet" href="/css/pages/gaze.css">
+<link rel="stylesheet" href="/css/pages/post-settings.css">
 <link rel="stylesheet" href="/css/pages/create-post.css">
 </head>
 <body>
@@ -51,7 +52,7 @@
             <label for="ps-by">Applications close (optional)</label>
             <input class="sp-input" id="ps-by" type="datetime-local">
             <div class="ps-actions" id="ps-actions"></div>
-            <p class="ps-sum" id="ps-sum"></p>
+            <button class="ps-act ps-settings" id="ps-settings" type="button" aria-haspopup="dialog"><strong>Post settings</strong><small id="ps-sum"></small></button>
             <p class="gz-error" id="ps-error" role="alert" hidden></p>
         </form>
     </main>

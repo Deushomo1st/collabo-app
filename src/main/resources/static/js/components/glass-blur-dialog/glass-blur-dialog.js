@@ -26,6 +26,13 @@ const BASE = '/js/components/glass-blur-dialog/glass-blur-dialog';
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 const stack = [];
+
+// While a dialog is open the page behind it stays put: no scrolling it by wheel or by touch (a tap outside still closes the dialog).
+const lock = (on) => {
+    const de = document.documentElement;
+    if (on) { de.style.setProperty('--gbd-sbw', `${innerWidth - de.clientWidth}px`); de.classList.add('gbd-lock'); }   // the scrollbar's width is kept so the page does not jump sideways
+    else de.classList.remove('gbd-lock');
+};
 let shellPromise = null;
 let uid = 0;
 
@@ -80,6 +87,7 @@ export async function openGlassBlurDialog(opts = {}) {
         closed = true;
         const i = stack.indexOf(entry);
         if (i >= 0) stack.splice(i, 1);
+        if (!stack.length) lock(false);
         root.classList.remove('glass-blur-dialog--open');
         root.classList.add('glass-blur-dialog--closing');
         setTimeout(() => root.remove(), 180);
@@ -87,8 +95,17 @@ export async function openGlassBlurDialog(opts = {}) {
         if (typeof opts.onClose === 'function') opts.onClose();
     }
 
+    if (dismissable) {   // a round X on the panel's top edge, on every dialog that can be dismissed (Escape and a tap outside close it too)
+        const x = document.createElement('button');
+        x.type = 'button'; x.className = 'glass-blur-dialog__x'; x.tabIndex = -1; x.setAttribute('aria-label', 'Close');
+        x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+        x.addEventListener('click', close);
+        panel.parentElement.append(x);
+    }
     const entry = { panel, close, dismissable };
+    if (!stack.length) lock(true);
     stack.push(entry);
+    root.addEventListener('touchmove', (e) => { if (!panel.contains(e.target)) e.preventDefault(); }, { passive: false });   // a drag on the dim layer would scroll the page behind
 
     if (dismissable) {
         root.addEventListener('click', (e) => { if (e.target === root) close(); });

@@ -54,7 +54,8 @@
     min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
     display: grid; place-items: center; background: var(--sp-brand); color: var(--sp-brand-ink); font: 800 11px var(--sp-font);
 }
-.ps-sum { margin: 4px 0 0; color: var(--sp-muted); font: 500 12px var(--sp-mono); }
+.ps-settings { flex-direction: column; gap: 2px; }
+.ps-settings small { color: var(--sp-muted); font: 500 12px var(--sp-mono); }
 .ps-send { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; border-radius: 50%; }
 .ps-send svg { width: 20px; height: 20px; }
 #nav { --nav-link-padding: 9px 14px; --nav-font-size: 14px; }

@@ -4,7 +4,8 @@ import { h, toast } from '/js/services/dom.js';
 import { openGlassBlurDialog, preloadGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 import { mountComposeNav } from '/js/services/main-nav.js';
 import { guardReturn } from '/js/services/nav-mode.js';
-import { postSet, postWork, DEFAULT_POST_SET } from '/js/services/stash.js';
+import { postSet, postWork, postDefault, DEFAULT_POST_SET } from '/js/services/stash.js';
+import { openPostSettings } from '/js/components/settings/post-settings.js';
 import { SEND } from '/js/services/icons.js';
 import {
     currentUser, postCreate, mediaUpload, mediaDiscard, mediaUrl, draftGet, draftSave,
@@ -26,7 +27,7 @@ const ICON = {
     check: '<path d="M5 12l5 5 9-10"/>',
 };
 
-let me, draftId = null, files = [], uploading = 0, tags = [], set = { ...DEFAULT_POST_SET }, dirty = false, busy = false;
+let me, draftId = null, files = [], uploading = 0, tags = [], set = { ...DEFAULT_POST_SET, ...(postDefault.read() || {}) }, dirty = false, busy = false;
 let savedIds = new Set();   // files that belong to the saved draft: leaving without saving must not delete those
 
 const title = $('ps-title'), body = $('ps-body'), by = $('ps-by'), form = $('post-form'), err = $('ps-error');
@@ -98,6 +99,16 @@ function drawTags() {
         tagInput);
 }
 
+// ---- Post settings: a popup for this post only; it opens on the defaults from Settings ----
+$('ps-settings').addEventListener('click', () => {
+    postSet.write(set);
+    openPostSettings(me.username, () => {
+        const next = { ...DEFAULT_POST_SET, ...(postSet.read() || {}) };
+        if (JSON.stringify(next) !== JSON.stringify(set)) touch();   // opening it and closing it again is not an edit
+        set = next; drawSummary();
+    });
+});
+
 // ---- the action row: Save draft ----------------------------------------------------------------------------
 
 async function saveDraft(quiet) {
@@ -114,13 +125,6 @@ const actions = () => [
 
 // ---- leaving, saving, publishing ------------------------------------------------------------------------------------------------------
 const guard = (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } };
-
-/** The text and files wait in this tab while the settings page is open; the page takes them back when you return. */
-function toSettings() {
-    postSet.write(set);
-    postWork.write({ draftId, title: title.value, body: body.value, by: by.value, tags, files, savedIds: [...savedIds], dirty });
-    window.removeEventListener('beforeunload', guard);
-}
 
 const forget = () => { postSet.clear(); postWork.clear(); };
 
@@ -164,7 +168,7 @@ async function boot() {
     if (!me) return location.replace('/HTML-pages/index.html');
     $('publish').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SEND}</svg>`;   // fixed markup
     guardReturn(leaveThen);   // the header Return button asks about unsaved work like the bar does
-    mountComposeNav('/HTML-pages/profile-settings.html#post', { beforeLeave: leave, guard: leaveThen, beforeSettings: toSettings, restInner: '<path d="M12 5v14M5 12h14"/>' });
+    mountComposeNav(me.username, '/HTML-pages/profile-settings.html#post', { beforeLeave: leave, guard: leaveThen, restInner: '<path d="M12 5v14M5 12h14"/>' });
     const id = new URLSearchParams(location.search).get('draft');
     const work = postWork.take();
     if (work) {   // back from the settings page: the text and files are as you left them

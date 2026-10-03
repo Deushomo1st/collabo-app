@@ -37,6 +37,21 @@
 .glass-blur-dialog--frost { background: var(--_gbd-backdrop-bg); }
 .glass-blur-dialog--frost-2 { background: var(--_gbd-backdrop-bg-frost2); }
 
+/* The frame holds the panel and the close X, which sits half over the panel's top edge (outside the panel, so its scrolling cannot clip it) */
+.glass-blur-dialog__frame { position: relative; max-width: 100%; }
+.glass-blur-dialog__x {
+    position: absolute; z-index: 1; top: -14px; left: 22px; width: 28px; height: 28px; padding: 0;
+    display: grid; place-items: center; border: 0; border-radius: 50%; cursor: pointer;
+    background: var(--glass-blur-dialog-close-bg, #ffe066); color: var(--glass-blur-dialog-close-ink, #111);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+}
+.glass-blur-dialog__x svg { width: 14px; height: 14px; }
+.glass-blur-dialog__x:hover { filter: brightness(.94); }
+
+/* Scrolling stops at the dialog: the page behind is locked while one is open, and a panel at the end of its own scroll does not hand the rest to the page */
+html.gbd-lock { overflow: hidden; padding-right: var(--gbd-sbw, 0px); }
+.glass-blur-dialog, .glass-blur-dialog__panel { overscroll-behavior: contain; }
+
 /* ---- Panel ---- */
 .glass-blur-dialog__panel {
     --_gbd-width: 440px;

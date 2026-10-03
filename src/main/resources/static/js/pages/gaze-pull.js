@@ -21,7 +21,7 @@ export function pullToRefresh(refresh) {
         if (!busy) { ring.firstChild.style.setProperty('--p', String(p)); ring.firstChild.style.transform = `rotate(${p * 360}deg)`; }
     };
 
-    addEventListener('touchstart', (e) => { y0 = !busy && scrollY <= 0 && e.touches.length === 1 ? e.touches[0].clientY : null; pull = 0; }, { passive: true });
+    addEventListener('touchstart', (e) => { y0 = !busy && scrollY <= 0 && e.touches.length === 1 && !e.target.closest('.hold-fan-trigger, .hold-fan, .nav-selector-fluid-hold') ? e.touches[0].clientY : null; pull = 0; }, { passive: true });
     addEventListener('touchmove', (e) => {
         if (y0 === null) return;
         const dy = e.touches[0].clientY - y0;

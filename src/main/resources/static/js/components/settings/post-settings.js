@@ -2,7 +2,7 @@
 // They belong to the post or report you are writing, so everything is kept in this tab (stash.js) and the page sends it when you publish.
 // Text goes in through textContent only.
 import { settingsDialog } from '/js/components/settings/dialog.js';
-import { postSet, reportSet, DEFAULT_POST_SET } from '/js/services/stash.js';
+import { postSet, postDefault, reportSet, DEFAULT_POST_SET } from '/js/services/stash.js';
 import { h, toast } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { followers, yarnThreads } from '/js/services/api.js';
@@ -19,11 +19,11 @@ const SWITCHES = [
     ['shoutsOn', 'Shout-outs', 'People can shout it out to their network.'],
     ['anonymous', 'Stay anonymous', 'Others see "Anonymous" instead of your name. It stays off your profile. A space formed from it still lists you as its owner.'],
 ];
-const read = () => { const st = postSet.read() || {}; return { ...DEFAULT_POST_SET, ...st, ui: { ...DEFAULT_POST_SET.ui, ...(st.ui || {}) } }; };
+const read = (t = postSet) => { const st = t.read() || {}; return { ...DEFAULT_POST_SET, ...st, ui: { ...DEFAULT_POST_SET.ui, ...(st.ui || {}) } }; };
 
 /** The lines under the rows in Settings. */
-export const audienceName = () => KINDS.find(([k]) => k === read().ui.kind)?.[1] ?? 'Everyone';
-export const postOptionsNow = () => { const s = read(); return SWITCHES.filter(([k]) => s[k]).map(([k, t]) => (k === 'anonymous' ? 'Anonymous' : t)).join(', ') || 'All off'; };
+export const audienceName = (t) => KINDS.find(([k]) => k === read(t).ui.kind)?.[1] ?? 'Everyone';
+export const postOptionsNow = (t) => { const s = read(t); return SWITCHES.filter(([k]) => s[k]).map(([k, t]) => (k === 'anonymous' ? 'Anonymous' : t)).join(', ') || 'All off'; };
 export const reportAnonymousNow = () => (reportSet.read()?.anonymous ? 'Anonymous' : 'Shows your name');
 
 const switchRow = (label, hint, checked, onchange) => {
@@ -31,10 +31,11 @@ const switchRow = (label, hint, checked, onchange) => {
     return h('label', { class: 'pst-switch' }, box, h('span', {}, h('strong', { text: label }), h('small', { text: hint })));
 };
 
-export async function openPostOptions(onClose) {
+/** t: where the choices are kept, the post in hand (default) or the defaults every new post starts from (postDefault). */
+export async function openPostOptions(onClose, t = postSet) {
     const body = await settingsDialog('On the post', onClose);
-    let s = read();
-    body.replaceChildren(...SWITCHES.map(([k, t, d]) => switchRow(t, d, s[k], (on) => { s = { ...s, [k]: on }; postSet.write(s); })));
+    let s = read(t);
+    body.replaceChildren(...SWITCHES.map(([k, label, d]) => switchRow(label, d, s[k], (on) => { s = { ...s, [k]: on }; t.write(s); })));
 }
 
 export async function openReportOptions(onClose) {
@@ -43,9 +44,9 @@ export async function openReportOptions(onClose) {
     body.replaceChildren(switchRow('Stay anonymous', 'The admin console shows "Anonymous" instead of your name. We still keep it on our side to stop abuse.', s.anonymous, (on) => { s.anonymous = on; reportSet.write(s); }));
 }
 
-export async function openPostAudience(me, onClose) {
+export async function openPostAudience(me, onClose, t = postSet) {
     const body = await settingsDialog('Who can see it', onClose);
-    let s = read(), rooms = [], fans = [], find = '';
+    let s = read(t), rooms = [], fans = [], find = '';
     const room = () => rooms.find((r) => String(r.id) === String(s.ui.room));
     const pool = () => (s.ui.kind === 'COMMUNITY' ? (room()?.members || []).map((m) => m.username).filter((n) => n !== me) : fans);
     /** What the server is sent. A community "exclude" is the whole room minus the ticked people. */
@@ -56,7 +57,7 @@ export async function openPostAudience(me, onClose) {
         if (kind === 'PEOPLE') return [mode === 'in' ? 'ONLY' : 'EXCEPT', ticked];
         return ['EVERYONE', []];
     };
-    const set = (patch) => { s = { ...s, ...patch }; [s.audience, s.audienceWith] = resolve(); postSet.write(s); draw(); };
+    const set = (patch) => { s = { ...s, ...patch }; [s.audience, s.audienceWith] = resolve(); t.write(s); draw(); };
     const setUi = (patch) => set({ ui: { ...s.ui, ...patch } });
 
     const pickList = () => {
@@ -90,7 +91,7 @@ export async function openPostAudience(me, onClose) {
 
     function draw() {
         body.replaceChildren(...KINDS.map(([k, t, d]) => h('button', { class: `pst-opt${s.ui.kind === k ? ' is-on' : ''}`, type: 'button', 'aria-pressed': String(s.ui.kind === k),
-            onclick: () => setUi({ kind: k, ticked: [], room: k === 'COMMUNITY' ? s.ui.room : null }) }, h('strong', { text: t }), h('small', { text: d }))), chooser());
+            onclick: () => setUi({ kind: k, ticked: [], room: k === 'COMMUNITY' ? s.ui.room : null }) }, h('strong', { text: t }), h('small', { text: d }))), ...[chooser()].filter(Boolean));   // no chooser for Everyone / Followers
     }
     draw();
     try {
@@ -99,4 +100,18 @@ export async function openPostAudience(me, onClose) {
         fans = (Array.isArray(fol) ? fol : []).map((f) => f.username);
     } catch (err) { toast(err.message); }
     set({});
+}
+
+/** The Create post page's popup: this post's settings, starting from the defaults in Settings. Only this post changes. */
+export async function openPostSettings(me, onClose) {
+    const body = await settingsDialog('Post settings', onClose);
+    const row = (name, now, open) => h('button', { class: 'pst-opt', type: 'button', onclick: () => open(draw) }, h('strong', { text: name }), h('small', { text: now }));
+    function draw() {
+        body.replaceChildren(
+            h('p', { class: 'pst-note', text: 'For this post only. A new post starts from the defaults in Settings, under New posts.' }),
+            row('Who can see it', audienceName(), (done) => openPostAudience(me, done)),
+            row('On the post', postOptionsNow(), openPostOptions),
+            h('button', { class: 'pst-opt', type: 'button', onclick: () => { postSet.write(read(postDefault)); draw(); } }, h('strong', { text: 'Use my defaults' }), h('small', { text: 'Put this post back to what Settings says.' })));
+    }
+    draw();
 }

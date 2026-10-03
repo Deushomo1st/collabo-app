@@ -8,6 +8,8 @@ import { face } from '/js/services/face.js';
 import { GEAR, HOME, CHAT, PERSON, svg } from '/js/services/icons.js';
 
 const GAZE = '/HTML-pages/gaze.html';
+const HELP = '/HTML-pages/how.html';
+const QUESTION = '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>';
 
 /** Asks the browser to load the pages the bar leads to in the background (on hover or touch), so the tap opens them at once. */
 function speculate(hrefs) {
@@ -49,21 +51,18 @@ export async function mountMainNav(username, active, { onGaze, onSettings } = {}
 }
 
 /**
- * Gaze, Yarns, Settings: the bar on the post and report pages. Settings opens the page's own settings page.
- * beforeLeave(href) may take over leaving (to ask about unsaved work); guard(go) does the same for the held-icon buttons; beforeSettings() runs first on the way to the settings page.
+ * Gaze, Yarns, Profile, Settings, Help: the bar on the post and report pages (the page itself shows as the resting icon).
+ * beforeLeave(href) may take over leaving (to ask about unsaved work); guard(go) does the same for the held-icon buttons.
  */
-export async function mountComposeNav(settingsHref, { beforeLeave, beforeSettings, guard, restInner = GEAR } = {}) {
-    const to = { Gaze: GAZE, Yarns: '/HTML-pages/yarnspaces.html' };
-    speculate([GAZE, to.Yarns]);
-    const nav = await mountNavSelector('#nav', {
-        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, activeIndex: 2, holdActions: fanActions(guard), restIcon: svg(restInner),
-        links: ['Gaze', 'Yarns', 'Settings'], hrefs: [GAZE, to.Yarns, settingsHref],
-        icons: [svg(HOME), svg(CHAT), svg(GEAR)],
+export async function mountComposeNav(username, settingsHref, { beforeLeave, guard, restInner = GEAR } = {}) {
+    const to = { Gaze: GAZE, Yarns: '/HTML-pages/yarnspaces.html', Profile: profileHref(username), Settings: settingsHref, Help: HELP };   // ponytail: Help opens the how-it-works page until the guided help screens exist
+    speculate(Object.values(to));
+    return mountNavSelector('#nav', {
+        placement: 'bottom', collapseWhenIdle: true, idleMs: 0, activeIndex: -1, holdActions: fanActions(guard), restIcon: svg(restInner),
+        links: Object.keys(to), hrefs: Object.values(to),
+        icons: [svg(HOME), svg(CHAT), svg(PERSON), svg(GEAR), svg(QUESTION)],
         onChange: (label) => {
-            if (label === 'Settings') { beforeSettings?.(); location.href = settingsHref; return; }
-            nav.setActive(2);   // this page is still the one you are on until you actually leave
             if (beforeLeave) beforeLeave(to[label]); else location.href = to[label];
         },
     });
-    return nav;
 }
