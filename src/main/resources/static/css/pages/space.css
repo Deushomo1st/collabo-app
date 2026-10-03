@@ -22,3 +22,5 @@
 .sp-tt button { position: relative; flex: none; background: none; border: 0; padding: 12px 2px 14px; color: inherit; opacity: .55; font: 700 15px inherit; cursor: pointer; transition: opacity .2s; }
 .sp-tt button.is-on { opacity: 1; }
 .sp-tt button.is-on::after { content: ''; position: absolute; left: 50%; bottom: 0; width: 28px; height: 3px; margin-left: -14px; border-radius: 2px; background: currentColor; }
+/* The Tasks pill hangs under the header (workspace.css), so the page starts below it while it is there. */
+body:has(#island:not([hidden])) #space { padding-top: 54px; }

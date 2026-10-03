@@ -19,7 +19,7 @@
 <link rel="stylesheet" href="/css/pages/gaze.css">
 <link rel="stylesheet" href="/css/pages/space.css">
 </head>
-<body>
+<body class="ws-page">
 <div class="sp-aurora" aria-hidden="true">
     <div class="sp-aurora__blob sp-aurora__blob--a"></div>
     <div class="sp-aurora__blob sp-aurora__blob--b"></div>
@@ -29,12 +29,10 @@
 <div class="sp-shell">
     <div class="sp-top">
         <header class="sp-header sp-glass">
-            <div class="sp-title">
-                <div class="sp-title__row"><h1 id="space-name">Space</h1><span class="sp-tag sp-tag--brand" id="space-role" hidden></span></div>
-            </div>
-            <div class="sp-stack" id="header-stack"></div>
-            <span id="bell-slot"></span>
+            <div class="sp-title" id="header-info"><div class="sp-title__row"><h1 id="space-name">Workspace</h1></div></div>
+            <nav class="tt-tabs ws-tabs" id="ws-tabs" role="tablist" aria-label="Sections of the workspace"></nav>
         </header>
+        <div class="sp-island" id="island" hidden></div>
     </div>
 
     <main id="space" class="sp-section gz-list" aria-live="polite"><p class="gz-empty">Loading…</p></main>

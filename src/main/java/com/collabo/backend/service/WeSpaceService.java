@@ -70,6 +70,12 @@ public class WeSpaceService {
         return new WeSpaceAbout(postId, post.getTitle(), post.getBody(), post.status(), role, threads.weSpaceId(postId), spaceId, post.getResponseClockHours(), seats);
     }
 
+    /** Where a collaborators'-room notification leads: straight into the room when there is one, else the Yarns list. */
+    private String roomLink(UUID postId) {
+        UUID room = threads.weSpaceId(postId);
+        return room == null ? "/HTML-pages/yarnspaces.html" : "/HTML-pages/yarnspaces.html#t/" + room;
+    }
+
     /** Any active collaborator or the founder can remind someone; it lands in that person's MySpace and notifications. */
     public void nudge(User me, UUID postId, String username) {
         Post post = post(postId);
@@ -80,7 +86,7 @@ public class WeSpaceService {
         if (!allowed || target.getId().equals(me.getId())) throw new ResourceNotFoundException(GONE);
         String body = me.getUsername() + " nudged you: a decision in the collaborators' room of \"" + post.getTitle() + "\" is waiting on you.";
         yarns.systemNote(me, target, body);
-        notifications.notify(target.getId(), Notification.Bucket.SPACES, "A collaborator nudged you", body, "/HTML-pages/yarnspaces.html");
+        notifications.notify(target.getId(), Notification.Bucket.SPACES, "A collaborator nudged you", body, roomLink(postId));
     }
 
     public void freeze(User me, UUID postId, String username) {
@@ -96,7 +102,7 @@ public class WeSpaceService {
         collaborators.save(c);
         closeCases(post.getId(), target.getId());
         threads.announceWeSpace(post.getId(), by + " froze " + target.getUsername() + ". They can read but not write until unfrozen.");
-        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were frozen", "You are opted out of the collaborators' room of \"" + post.getTitle() + "\" until the founder unfreezes you.", "/HTML-pages/yarnspaces.html");
+        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were frozen", "You are opted out of the collaborators' room of \"" + post.getTitle() + "\" until the founder unfreezes you.", roomLink(post.getId()));
     }
 
     public void unfreeze(User me, UUID postId, String username) {
@@ -107,7 +113,7 @@ public class WeSpaceService {
         c.setState(Collaborator.State.ACTIVE, null);
         collaborators.save(c);
         threads.announceWeSpace(postId, me.getUsername() + " unfroze " + target.getUsername() + ".");
-        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were unfrozen", "You are back in the collaborators' room of \"" + post.getTitle() + "\".", "/HTML-pages/yarnspaces.html");
+        notifications.notify(target.getId(), Notification.Bucket.SPACES, "You were unfrozen", "You are back in the collaborators' room of \"" + post.getTitle() + "\".", roomLink(postId));
     }
 
     /** The seat stays on the table, marked, with the reason; asking them again (invite) is how they return. */

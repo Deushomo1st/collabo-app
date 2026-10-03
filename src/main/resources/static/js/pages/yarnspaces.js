@@ -8,7 +8,7 @@ import { face as faceOf } from '/js/services/face.js';
 import { mountIsland } from '/js/components/space/task-island.js';
 import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import { live } from '/js/services/live.js';
-import { skeletonRows } from '/js/services/skeleton.js';
+import { skeletonRows, skeletonBubbles } from '/js/services/skeleton.js';
 import { GEAR } from '/js/services/icons.js';
 import { feedTabs } from '/js/services/feed-tabs.js';
 import {
@@ -21,6 +21,7 @@ import { SECTIONS, TIER_LABEL, inSection, unreadTotal, ago, hue } from '/js/page
 let me = null;
 let inbox = [], archived = [];
 let openThread = null;      // the thread being read, if any
+let firstPage = null;      // { id, promise }: a room opened from a link has its newest yarns asked for at once, in step with the list
 let threadView = null;      // its yarn-thread instance
 let lastSection = 'myspace';
 let tabs;
@@ -77,6 +78,7 @@ function setHeader(t) {
     document.getElementById('yn-bar').hidden = !!t;   // the lists have the Gaze-style bar; a chat has its own header
     document.getElementById('yn-chat').hidden = !t;
     document.getElementById('header-title').textContent = t ? t.name : 'Yarns';
+    document.getElementById('header-tag').hidden = false;
     document.getElementById('header-tag').textContent = t ? TIER_LABEL[t.tier] : 'Yarnspaces';
     const sub = document.getElementById('header-sub');
     if (t) {   // each member links to their profile
@@ -227,7 +229,10 @@ function renderThread() {
     threadView = createYarnThread({
         meId: me.id, showNames: t.tier !== 'MYSPACE', disabledReason: reason, unread: t.unread,
         avatar: (name) => faceOf(name, 'sp-avatar--sm'), postInfo: postGet, avatarOn: t.tier === 'MYSPACE' ? 'latest' : 'every',   // a one-to-one chat: only their newest yarn; a group: every yarn
-        load: (before) => yarnHistory(t.id, before),
+        load: (before) => {
+            if (!before && firstPage?.id === t.id) { const early = firstPage.promise; firstPage = null; return early.then((page) => page || yarnHistory(t.id)); }   // already on its way
+            return yarnHistory(t.id, before);
+        },
         send: (body) => yarnSend(t.id, body),
         onRead: () => yarnMarkRead(t.id).catch(() => {}),
         // The server says when this room changes (a yarn arrived, or ticks moved); the thread refetches itself, silently.
@@ -345,20 +350,27 @@ async function openNew(prefill = '') {
 }
 
 // ---- boot ------------------------------------------------------------------
-async function start() {
+async function start(banner) {
     try {
-        me = await yarnMe();
+        [me] = await Promise.all([yarnMe(), loadAll(), banner]);   // one wait for all of them, not one after another
         if (!me) return toLogin();
         mountMainNav(me.username);
-        await loadAll();
     } catch (err) { me = null; return fatal(err); }
     route();
 }
 
 async function boot() {
     preloadGlassBlurDialog(); preloadYarnThread();
-    document.getElementById('section').replaceChildren(...skeletonRows(5));   // the list's shape while it loads
-    await preloadActionBanner();
+    const banner = preloadActionBanner();
+    const early = threadIdInHash(), toName = inDraft() ? decodeURIComponent(location.hash.slice(4)) : null;
+    if (early || toName) {   // opened from outside (a notification, a link in a yarn, the space page, Message on a profile): the room's own shape at once
+        if (early) firstPage = { id: early, promise: yarnHistory(early).catch(() => null) };   // and its yarns asked for now, in step with the list
+        document.getElementById('yn-bar').hidden = true;
+        document.getElementById('yn-chat').hidden = false;
+        document.getElementById('header-title').textContent = toName || '';
+        document.getElementById('header-tag').hidden = true;
+        document.getElementById('section').replaceChildren(...(early ? skeletonBubbles() : []));
+    } else document.getElementById('section').replaceChildren(...skeletonRows(5));   // the list's shape while it loads
     // The kinds of yarns are the header's tabs, like the Gaze's feeds: tap one, or swipe sideways anywhere, to move to the next.
     tabs = feedTabs(document.getElementById('filter-nav'), {
         labels: SECTIONS.map((s) => s.label), at: () => SECTIONS.indexOf(currentSection()), blocked: () => !!openThread || inDraft(),
@@ -388,6 +400,6 @@ async function boot() {
         const every = live.connected ? 60_000 : 15_000;
         if (me && !openThread && !inDraft() && document.visibilityState === 'visible' && Date.now() - lastTick >= every) { lastTick = Date.now(); refreshLists(); }
     }, 5000);
-    start();
+    start(banner);
 }
 boot();
