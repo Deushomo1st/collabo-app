@@ -7,17 +7,17 @@
 <meta name="theme-color" content="#10162a">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <script>if('serviceWorker'in navigator)addEventListener('load',function(){navigator.serviceWorker.register('/sw.js')})</script>
-<title>COLLABO — The Gaze</title>
+<title>COLLABO — History</title>
 <link rel="stylesheet" href="/css/global/global.css">
-<!-- Apply the saved theme before first paint (see theme-switcher README) -->
 <script>try{var t=localStorage.getItem('collaboTheme');if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/pages/workspace.css">
 <link rel="stylesheet" href="/css/pages/gaze.css">
+<link rel="stylesheet" href="/css/pages/yarnspaces.css">
 </head>
-<body data-home>
+<body>
 <div class="sp-aurora" aria-hidden="true">
     <div class="sp-aurora__blob sp-aurora__blob--a"></div>
     <div class="sp-aurora__blob sp-aurora__blob--b"></div>
@@ -25,30 +25,20 @@
 </div>
 
 <div class="sp-shell">
-    <div class="sp-top sp-top--feed">
+    <div class="sp-top sp-top--blur">
         <header class="tt-bar">
-            <nav class="tt-tabs" id="filter-nav" role="tablist" aria-label="Feeds"></nav>
-            <form class="tt-search" id="tt-search" role="search" hidden>
-                <input id="tt-q" type="search" placeholder="Search ideas" aria-label="Search ideas" autocomplete="off" maxlength="60">
-                <button class="tt-cancel" id="tt-cancel" type="button">Cancel</button>
-            </form>
-            <div class="tt-end" id="tt-end">
-                <button class="tt-icon" id="tt-find" type="button" aria-label="Search ideas">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-                </button>
-                <span id="bell-slot"></span>
-            </div>
+            <div class="tt-tabs"><h1 class="tt-title">History</h1></div>
         </header>
-        <nav class="tt-tabs tt-filters" id="tt-filters" role="tablist" aria-label="Search filters" hidden></nav>
+        <form class="tt-search" id="hs-search" role="search">
+            <input id="hs-q" type="search" placeholder="Search words or usernames" aria-label="Search your history" autocomplete="off" maxlength="60">
+        </form>
     </div>
 
     <main id="list" class="sp-section gz-list" aria-live="polite"></main>
 </div>
-<div id="bottom-nav"></div>
 
+<div id="nav"></div>
 <div class="sp-toast" id="toast" role="status"></div>
-
-<script type="module" src="/js/pages/gaze.js"></script>
-<script type="module" src="/js/services/bell.js"></script>
+<script type="module" src="/js/pages/history.js"></script>
 </body>
 </html>

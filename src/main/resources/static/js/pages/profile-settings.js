@@ -52,7 +52,8 @@ async function boot() {
     const segments = [
         segment('appearance', 'Appearance and themes', sub('Theme', () => (getTheme() === 'light' ? 'Light' : 'Dusk'), openTheme), sub('Navigation preference', navPreferenceName, openNavPreference)),
         segment('privacy', 'Privacy', await messagePrivacyRow(me.username, toast),
-            h('p', { class: 'yn-hint', text: 'Only new conversations are limited. Chats you already have carry on.' }), sub('Blocked', blockedCount, openBlocked)),
+            h('p', { class: 'yn-hint', text: 'Only new conversations are limited. Chats you already have carry on.' }), sub('Blocked', blockedCount, openBlocked),
+            h('a', { class: 'yn-row', href: '/HTML-pages/history.html' }, h('span', { class: 'yn-body' }, h('strong', { text: 'History' }), h('span', { class: 'yn-last', text: 'Ideas you have seen on the Gaze' })), h('span', { text: '›', 'aria-hidden': 'true' }))),
         segment('yarns', 'Yarns', sub('Default chat', defaultChatName, openDefaultChat), sub('Archive', archivedCount, openArchive)),
         // the post and report settings belong to the one being written, so they show only while it waits in this tab (it was left for this page)
         postWork.read() && segment('post', 'Post in progress', sub('Who can see it', audienceName, (done) => openPostAudience(me.username, done)), sub('On the post', postOptionsNow, openPostOptions)),

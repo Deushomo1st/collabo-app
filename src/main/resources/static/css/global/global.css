@@ -25,3 +25,6 @@ html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html
 /* No scrollbars anywhere in the project: the page and every scrolling box still scroll, they just don't draw a bar. */
 * { scrollbar-width: none !important; }
 *::-webkit-scrollbar { display: none !important; }
+
+/* The bell is retired from every header while a new style of notification is built. bell.js still runs (the four-square menu mirrors its unread badge as a dot). */
+#bell-slot { display: none; }

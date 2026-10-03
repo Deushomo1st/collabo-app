@@ -8,6 +8,7 @@ import { currentUser, gazeFeed, gazeNewer, gazeSearch, gazePeople, postGet, prof
 import { h, toast, profileHref } from '/js/services/dom.js';
 import { face } from '/js/services/face.js';
 import { skeletonCards } from '/js/services/skeleton.js';
+import { historyAdd, historyDrop } from '/js/services/history.js';
 
 const EMPTY = {
     gaze: 'Nothing here yet. Be the first to post an idea.',
@@ -18,35 +19,36 @@ let feed = 'gaze';
 let pendingOnly = false;
 
 // ---- the scroll: newest first, endless, and never refreshed behind your back ------------------------------------------------
-// fresh = what you are reading (newest at the top); old = what you had already seen before you restarted, kept above the viewport,
-// hidden, until "See old" unlocks it. Everything is remembered per feed and filter for this tab (sessionStorage), so coming back
-// to the page, or flipping between tabs, shows exactly what you left; only a refresh or the "N new" pill restarts from the newest.
-const MAX_OLD = 100, MAX_SAVED = 200;
-let fresh = [], old = [], next = null, unlocked = false, loading = false, newCount = 0, gen = 0;
+// fresh = what you are reading (newest at the top). Everything is remembered per feed and filter for this tab (sessionStorage), so coming back
+// to the page, or flipping between tabs, shows exactly what you left; only a refresh, posting, or the Latest button restarts from the newest,
+// and what you had been reading then moves to History (Settings > Privacy).
+const MAX_SAVED = 200;
+let fresh = [], next = null, loading = false, newCount = 0, gen = 0;
 let firstBoot = true;
 const reloaded = performance.getEntriesByType?.('navigation')?.[0]?.type === 'reload';
+// Posting leaves a note (create-post.js): the next time the Gaze shows, it restarts from the newest, so your own post is the first card.
+const refreshAsked = () => { try { const v = sessionStorage.getItem('collaboFeedRefresh'); sessionStorage.removeItem('collaboFeedRefresh'); return !!v; } catch { return false; } };
 
 const list = () => document.getElementById('list');
 const toLogin = () => location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname));
 let who = '';   // whose feed this is, so signing in as someone else in the same tab never shows the last person's
 const key = () => `gaze:${who}:${feed}:${pendingOnly}`;
 const ids = (xs) => new Set(xs.map((p) => p.id));
-const dedupe = (xs) => { const seen = new Set(); return xs.filter((p) => !seen.has(p.id) && seen.add(p.id)); };
 
 function save() {
     try {
-        if (fresh.length <= MAX_SAVED) sessionStorage.setItem(key(), JSON.stringify({ fresh, old, next, unlocked, y: Math.round(window.scrollY) }));
+        if (fresh.length <= MAX_SAVED) sessionStorage.setItem(key(), JSON.stringify({ fresh, next, y: Math.round(window.scrollY) }));
     } catch { /* storage full or blocked: the feed still works, it just will not be remembered */ }
 }
 function recall() {
-    try { const s = JSON.parse(sessionStorage.getItem(key())); return s && Array.isArray(s.fresh) && Array.isArray(s.old) ? s : null; } catch { return null; }
+    try { const s = JSON.parse(sessionStorage.getItem(key())); return s && Array.isArray(s.fresh) ? s : null; } catch { return null; }
 }
 let saveTimer;
 window.addEventListener('scroll', () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); }, { passive: true });
 window.addEventListener('pagehide', () => { clearTimeout(saveTimer); save(); });   // leaving mid-scroll (a quick tap on a post) still remembers the exact spot
 
 const card = (p) => { const c = postCard(p, { onGone: () => drop(p.id) }); c.dataset.id = p.id; return c; };
-const emptyNote = () => h('p', { class: 'gz-empty', text: old.length ? 'Nothing newer than what you have seen.' : EMPTY[feed] });
+const emptyNote = () => h('p', { class: 'gz-empty', text: EMPTY[feed] });
 
 // The feed choices are tabs in the header: The Gaze, Shared Gaze, or the Gaze narrowed to ideas still open to applications.
 const FEEDS = [
@@ -129,18 +131,16 @@ document.getElementById('tt-search').addEventListener('submit', (e) => { e.preve
 document.getElementById('tt-q').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 300); });
 document.getElementById('tt-q').addEventListener('keydown', (e) => { if (e.key === 'Escape') setSearching(false); });
 
-/** Builds the page from the state: the old block (hidden until unlocked), the fresh cards, and the sentinel that loads more. */
+/** Builds the page from the state: the cards and the sentinel that loads more. */
 function render() {
-    const oldEl = h('div', { class: 'gz-old', hidden: !(unlocked && old.length) }, ...old.map(card));
     const freshEl = h('div', { class: 'gz-fresh' }, ...fresh.map(card));
     if (!fresh.length && !next && !loading) freshEl.append(emptyNote());
-    list().replaceChildren(oldEl, freshEl, h('div', { class: 'gz-sentinel' }));
+    list().replaceChildren(freshEl, h('div', { class: 'gz-sentinel' }));
     watchEnd();
-    drawBar();
+    markLatest();
 }
 
 // The header (tabs, search, bell) stays pinned; its blurred backing fades in once the feed has moved under it.
-const placeBar = () => { document.getElementById('gz-bar').style.top = `${(document.querySelector('.sp-top').offsetHeight || 52) + 8}px`; };
 {
     const top = document.querySelector('.sp-top');
     const mark = () => top.classList.toggle('is-scrolled', window.scrollY > 8);
@@ -148,51 +148,62 @@ const placeBar = () => { document.getElementById('gz-bar').style.top = `${(docum
     mark();   // a restored scroll position starts with the backing already on
 }
 
-// "N new" and "See old" share one slot at the top of the screen.
-function drawBar() {
-    const bar = document.getElementById('gz-bar');
-    placeBar();   // just under the pinned top, however tall it is right now
-    bar.replaceChildren(...[
-        newCount > 0 && h('button', { class: 'gz-pill', type: 'button', text: `${newCount >= 50 ? '50+' : newCount} new`, onclick: restart }),
-        old.length > 0 && !unlocked && h('button', { class: 'gz-pill gz-pill--quiet', type: 'button', text: `See old (${old.length})`, onclick: unlock }),
-    ].filter(Boolean));   // replaceChildren would print a false
+// "Latest": a button at the bottom that jumps to the newest post, loading the new ones first when there are some. It shows once the newest is more than a screen away.
+const headerH = () => document.querySelector('.sp-top').offsetHeight || 52;
+// While new posts wait, the faces of up to three of their authors sit in it, people you follow first.
+const faces = h('span', { class: 'gz-faces' });
+const latest = h('button', { class: 'gz-latest', type: 'button', hidden: true, onclick: () => {
+    if (newCount > 0) return restart();
+    const f = list().querySelector('.gz-fresh');
+    window.scrollTo({ top: f ? f.getBoundingClientRect().top + window.scrollY - headerH() - 8 : 0, behavior: 'smooth' });
+} }, faces, h('span', { text: 'Latest' }));
+document.body.append(latest);
+let newAuthors = [], facesShown = '';
+function markLatest() {
+    const f = list().querySelector('.gz-fresh'), top = f ? f.getBoundingClientRect().top - headerH() : 0;
+    latest.hidden = !(newCount > 0 || Math.abs(top) > window.innerHeight);
+    latest.title = newCount > 0 ? `${newCount >= 50 ? '50+' : newCount} new` : '';
+    const names = newCount > 0 ? newAuthors : [];
+    if (names.join() !== facesShown) { facesShown = names.join(); faces.replaceChildren(...names.map((n) => face(n))); }
 }
+let followed = null;   // who you follow, asked once
+async function authorsOfNew(mine) {
+    followed ??= following(who).then((us) => new Set(us.map((u) => u.username))).catch(() => new Set());
+    const [page, set] = await Promise.all([gazeFeed(feed, { pending: pendingOnly }), followed]);
+    if (mine !== gen) return [];
+    const have = ids(fresh), names = [];
+    for (const p of page.items) if (!have.has(p.id) && !p.anonymous && !p.mine && p.author?.username && !names.includes(p.author.username)) names.push(p.author.username);
+    return [...names.filter((n) => set.has(n)), ...names.filter((n) => !set.has(n))].slice(0, 3);
+}
+window.addEventListener('scroll', markLatest, { passive: true });
+window.addEventListener('pageshow', (e) => { if (e.persisted && refreshAsked()) restart(); });   // back to a kept page after posting
 
 /** Entry: the first load, and flipping tabs or filters. Shows what this tab already has; fetches only when there is nothing, or after a refresh. */
 async function show() {
-    gen++; loading = false; newCount = 0;
-    const mine = recall(), wasReload = firstBoot && reloaded;
+    gen++; loading = false; newCount = 0; newAuthors = [];
+    const mine = recall(), wasReload = firstBoot && (reloaded || refreshAsked());
     firstBoot = false;
     if (mine && !wasReload) {
-        ({ fresh, old, next, unlocked } = mine);
+        ({ fresh, next } = mine);
         render();
         window.scrollTo({ top: mine.y || 0, behavior: 'instant' });
         return checkNewer();
     }
-    // a refresh (or nothing remembered): start from the newest, and keep whatever was seen as the old block
-    old = mine ? dedupe([...mine.fresh, ...mine.old]).slice(0, MAX_OLD) : [];
-    fresh = []; next = null; unlocked = false;
+    // a refresh (or nothing remembered): start from the newest; what was being read goes to History
+    if (mine) historyAdd(who, mine.fresh);
+    fresh = []; next = null;
     render();
     await more(true);
 }
 
-/** The "N new" pill: restart from the newest; everything seen so far becomes the old block. */
+/** The Latest button with new posts waiting: restart from the newest; everything seen so far goes to History. */
 async function restart() {
-    gen++; loading = false; newCount = 0;
-    old = dedupe([...fresh, ...old]).slice(0, MAX_OLD);
-    fresh = []; next = null; unlocked = false;
+    gen++; loading = false; newCount = 0; newAuthors = [];
+    historyAdd(who, fresh);
+    fresh = []; next = null;
     render();
     window.scrollTo({ top: 0, behavior: 'instant' });
     await more(true);
-}
-
-/** Shows the old block without moving what you are reading: the page grows above you, and you scroll up into it. */
-function unlock() {
-    const before = document.documentElement.scrollHeight, y = window.scrollY;
-    unlocked = true;
-    document.querySelector('.gz-old').hidden = false;
-    window.scrollTo({ top: y + document.documentElement.scrollHeight - before, behavior: 'instant' });   // not smooth: the view must not move at all
-    drawBar(); save();
 }
 
 async function more(first) {
@@ -210,16 +221,11 @@ async function more(first) {
         const have = ids(fresh);
         const items = page.items.filter((p) => !have.has(p.id));
         fresh = [...fresh, ...items];
-        // a post that turns up among the fresh ones is no longer "old": take it out of the old block
-        const now = ids(items);
-        old = old.filter((p) => !now.has(p.id));
-        list().querySelectorAll('.gz-old > [data-id]').forEach((el) => now.has(el.dataset.id) && el.remove());
         const freshEl = list().querySelector('.gz-fresh');
         freshEl.append(...items.map(card));
         freshEl.querySelector('.gz-empty')?.remove();
         if (!fresh.length) freshEl.append(emptyNote());
-        if (!old.length) unlocked = false;
-        drawBar(); save();
+        markLatest(); save();
     } catch (err) {
         if (mine !== gen) return;
         if (err.status === 401) return toLogin();
@@ -243,10 +249,9 @@ function watchEnd() {
 
 /** A deleted idea disappears from wherever it is showing, and from what is remembered. */
 function drop(id) {
-    fresh = fresh.filter((p) => p.id !== id); old = old.filter((p) => p.id !== id);
+    fresh = fresh.filter((p) => p.id !== id); historyDrop(who, id);
     document.querySelectorAll(`#list [data-id="${CSS.escape(id)}"]`).forEach((el) => el.remove());
-    if (!old.length) unlocked = false;
-    drawBar(); save();
+    markLatest(); save();
 }
 
 async function checkNewer() {
@@ -255,7 +260,8 @@ async function checkNewer() {
     try {
         const { count } = await gazeNewer(feed, { pending: pendingOnly, top });
         if (mine !== gen) return;
-        newCount = count; drawBar();
+        newCount = count; markLatest();
+        if (count > 0) { const names = await authorsOfNew(mine).catch(() => []); if (mine === gen) { newAuthors = names; markLatest(); } }   // the count shows at once, the faces join when they arrive
     } catch { /* offline or signed out: the pill just stays as it was */ }
 }
 let newerTimer;

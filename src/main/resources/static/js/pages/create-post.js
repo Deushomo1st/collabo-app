@@ -149,7 +149,7 @@ form.addEventListener('submit', async (e) => {
     try {
         const p = await postCreate({ ...fields(), draftId });
         dirty = false; forget();
-        try { sessionStorage.setItem('collaboToast', 'Posted.'); } catch { /* the post is up either way */ }
+        try { sessionStorage.setItem('collaboToast', 'Posted.'); sessionStorage.setItem('collaboFeedRefresh', '1'); } catch { /* the post is up either way */ }
         location.replace(`/HTML-pages/view-post.html?id=${p.id}`);
     } catch (ex) {
         showError(ex.message); busy = false; $('publish').disabled = false;
