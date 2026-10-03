@@ -35,6 +35,8 @@
 .pc-who:hover { text-decoration: underline; }
 .pc-who { gap: 10px; font-size: 1.02rem; }
 .pc-who .pc-pic { --_size: 46px; font-size: 18px; }
+.pc-who > .pc-names { display: grid; line-height: 1.2; }
+.pc-who > .pc-names > .pc-at { font-weight: 600; font-size: .68rem; color: var(--sp-muted); }
 .pc-time { margin-left: auto; color: var(--sp-muted); font: 500 11px var(--sp-mono); }
 .pc-title { margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere; }
 .pc-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }

@@ -15,7 +15,7 @@ const MAX_COMMENT = 500;
 const when = (iso) => new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 // <input type="datetime-local"> wants local time without a zone.
 const localInput = (iso) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
-const person = (u) => h('a', { class: 'pc-who', href: profileHref(u.username) }, face(u.username, 'pc-pic'), u.username);
+const person = (u) => h('a', { class: 'pc-who', href: profileHref(u.username) }, face(u.username, 'pc-pic'), u.fullName ? h('span', { class: 'pc-names' }, u.fullName, h('span', { class: 'pc-at', text: `@${u.username}` })) : u.username);   // the name, with the @username small beneath
 // the post's own page: the full name above, @username beneath
 const byline = (u) => h('a', { class: 'pc-who pc-who--named', href: profileHref(u.username) }, face(u.username, 'pc-pic'),
     h('span', { class: 'pc-names' }, u.fullName && h('strong', { class: 'pc-full', text: u.fullName }), h('span', { class: u.fullName ? 'pc-at' : 'pc-full', text: `@${u.username}` })));

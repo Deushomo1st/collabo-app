@@ -113,9 +113,10 @@ function identity() {
         picture(),
         h('div', { class: 'pf-id' },
             h('div', { class: 'pf-name' },
-                h('h2', { text: profile.username }),
+                h('h2', { text: profile.fullName || profile.username }),
                 profile.preferredTitle && h('span', { class: 'sp-tag sp-tag--brand', text: profile.preferredTitle }),
                 f.followsMe && !profile.self && h('span', { class: 'sp-tag sp-tag--muted', text: 'Follows you' })),
+            profile.fullName && h('p', { class: 'pf-handle', text: '@' + profile.username }),
             profile.bio ? h('p', { class: 'pf-bio', text: profile.bio })
                 : h('p', { class: 'pf-bio is-empty', text: profile.self ? 'Add a short bio so people know what you build.' : 'No bio yet.' }),
             h('div', { class: 'pf-counts' }, count(f.followers, 'followers', 'followers'), count(f.following, 'following', 'following')),

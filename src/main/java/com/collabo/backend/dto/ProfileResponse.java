@@ -12,6 +12,7 @@ import java.util.List;
  */
 public record ProfileResponse(
         String username,
+        String fullName,        // null for accounts made before names were asked
         String preferredTitle,
         String bio,
         boolean self,
@@ -23,7 +24,7 @@ public record ProfileResponse(
         FollowState follow) {
 
     public static ProfileResponse of(User user, boolean self, List<LinkDto> links, Long avatarVersion, FollowState follow) {
-        return new ProfileResponse(user.getUsername(), user.getPreferredTitle(), user.getBio(), self,
+        return new ProfileResponse(user.getUsername(), user.fullName(), user.getPreferredTitle(), user.getBio(), self,
                 self ? user.getCredentialsPrivacy() : null, self ? user.getMessagePrivacy() : null, user.getCreatedAt(), links, avatarVersion, follow);
     }
 }

@@ -7,6 +7,7 @@
 .pf-id { display: grid; gap: 8px; min-width: 0; }
 .pf-name { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .pf-name h2 { margin: 0; font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.pf-handle { margin: -4px 0 0; color: var(--sp-muted); font-size: 14px; overflow-wrap: anywhere; }
 .pf-bio { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .pf-bio.is-empty, .pf-joined { color: var(--sp-muted); font-size: 13px; }
 .pf-counts { display: flex; gap: 16px; flex-wrap: wrap; }
