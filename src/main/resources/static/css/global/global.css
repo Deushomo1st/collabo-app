@@ -10,6 +10,8 @@
 html:not([data-nav="omni-wheel"]) .nav-selector-fluid-hold-wrap--bottom { display: none; }
 html[data-nav="omni-wheel"] #back, html[data-nav="omni-wheel"] .nav-return, html[data-nav="omni-wheel"] .nav-gear { display: none; }
 .nav-return, .nav-gear { flex: none; display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--sp-panel, rgba(255, 255, 255, .08)); color: var(--sp-text, currentColor); cursor: pointer; }
+.nav-menu { position: relative; }
+.nav-menu.has-unread::after { content: ''; position: absolute; top: 6px; right: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--sp-brand, #ff9500); box-shadow: 0 0 0 2px var(--sp-bg, #0b0f14); }
 .nav-return:hover, .nav-gear:hover { background: var(--sp-panel-hi, rgba(255, 255, 255, .14)); }
 .nav-return svg, .nav-gear svg { width: 22px; height: 22px; }
 

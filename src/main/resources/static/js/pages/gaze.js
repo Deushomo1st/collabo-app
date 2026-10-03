@@ -73,6 +73,15 @@ const mountFeeds = () => {
     nav.addEventListener('pointerdown', (e) => { x0 = e.clientX; swiped = false; });
     nav.addEventListener('pointerup', (e) => { if (Math.abs(e.clientX - x0) < 30) return; swiped = true; const d = e.clientX < x0 ? 1 : -1; pick(of(d), d > 0 ? 'next' : 'prev'); });
     nav.addEventListener('click', (e) => { if (swiped) { e.stopPropagation(); swiped = false; } }, true);   // a swipe that ends on a tab is not also a tap on it
+    // The same swipe anywhere on the feed: a clear sideways stroke (not a scroll that drifted) moves to the neighbouring feed. Typing and the tab bar keep their own gestures.
+    let t0 = null;
+    document.addEventListener('touchstart', (e) => { const t = e.touches[0]; t0 = e.touches.length === 1 && !e.target.closest('input, textarea, select, #filter-nav, [role="dialog"]') ? { x: t.clientX, y: t.clientY } : null; }, { passive: true });
+    document.addEventListener('touchend', (e) => {
+        const t = e.changedTouches[0], s = t0; t0 = null;
+        if (!s || searching) return;
+        const dx = t.clientX - s.x, dy = t.clientY - s.y;
+        if (Math.abs(dx) > 70 && Math.abs(dx) > 2 * Math.abs(dy)) { const d = dx < 0 ? 1 : -1; pick(of(d), d > 0 ? 'next' : 'prev'); }
+    }, { passive: true });
     draw();
 };
 
@@ -81,6 +90,7 @@ function setSearching(on) {
     searching = on;
     document.getElementById('filter-nav').hidden = on;
     document.getElementById('tt-end').hidden = on;
+    document.querySelector('.nav-menu')?.toggleAttribute('hidden', on);
     document.getElementById('tt-search').hidden = !on;
     document.getElementById('tt-filters').hidden = !on;
     if (on) { drawFilters(); const q = document.getElementById('tt-q'); q.value = ''; q.focus(); idle(); }

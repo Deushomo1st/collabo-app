@@ -77,7 +77,13 @@ function bellSlot() {
 
 async function addMenu() {
     if (document.querySelector('.nav-menu') || !(await currentUser().catch(() => null))) return;
-    bellSlot()?.before(menuButton());
+    const slot = bellSlot(), bar = document.querySelector('.tt-bar');
+    if (!document.body.hasAttribute('data-home') || !bar) return slot?.before(menuButton());
+    // The Gaze: the menu takes the left corner and the bell lives in it (css hides the bell here under Return; the wheel keeps it). A dot on the menu stands in for the bell's badge.
+    const b = menuButton(); bar.prepend(b);
+    const unread = () => b.classList.toggle('has-unread', !!slot?.querySelector('.notification-bell__badge:not([hidden])'));
+    if (slot) new MutationObserver(unread).observe(slot, { subtree: true, childList: true, attributes: true });
+    unread();
 }
 
 apply();

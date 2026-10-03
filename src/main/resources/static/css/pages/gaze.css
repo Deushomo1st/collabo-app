@@ -189,8 +189,12 @@ a.pc-btn { text-decoration: none; justify-self: start; }
    with the underline; the two at the edges are lighter and smaller. A new middle tab slides in from the side it was swiped from. */
 .sp-top--feed .tt-bar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(max-content, 1fr); }
 .sp-top--feed #filter-nav { grid-column: 2; justify-content: center; overflow: hidden; touch-action: pan-y; user-select: none; }
-.sp-top--feed .tt-end { grid-column: 3; justify-self: end; }
+.sp-top--feed .tt-end { grid-column: 1; justify-self: start; }
 .sp-top--feed .tt-search { grid-column: 1 / -1; }
+.sp-top--feed > .tt-bar > .nav-menu { grid-column: 3; justify-self: end; }   /* search at the far left, the four-square menu at the far right */
+.sp-top--feed #filter-nav, .sp-top--feed .tt-end, .sp-top--feed > .tt-bar > .nav-menu { grid-row: 1; }   /* the order in the page no longer follows the columns, so pin the row */
+.sp-top--feed .nav-menu[hidden] { display: none; }
+html:not([data-nav="omni-wheel"]) .sp-top--feed #bell-slot { display: none; }   /* under Return the bell is a tile in the menu */
 #filter-nav .tt-tab { padding-inline: 8px; font-size: 14px; font-weight: 500; }
 #filter-nav .tt-tab[aria-selected="true"] { font-size: 16px; font-weight: 800; }
 #filter-nav[data-dir="next"] .tt-tab { animation: tt-from-right .25s cubic-bezier(.16, 1, .3, 1); }
