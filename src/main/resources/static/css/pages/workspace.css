@@ -418,7 +418,7 @@ a.sp-btn { text-decoration: none; text-align: center; }
 .ws-page .sp-title__row { flex-wrap: nowrap; min-width: 0; gap: 6px; }
 .ws-page .sp-title h1 { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ws-page .sp-title__row .sp-tag, .ws-page .sp-title__row .sp-stack { flex: none; }
-.ws-tabs { order: 5; flex: 1 1 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; overflow: hidden; touch-action: pan-y; user-select: none; }
+.tt-tabs.ws-tabs { order: 5; flex: 1 1 100%; display: grid; gap: 0; grid-template-columns: 1fr auto 1fr; align-items: center; overflow: hidden; touch-action: pan-y; user-select: none; }
 .ws-tabs .tt-tab { position: relative; padding: 10px 8px; border: 0; background: none; color: var(--sp-muted); font: 500 14px var(--sp-font); white-space: nowrap; cursor: pointer; transition: color .2s; }
 .ws-tabs .tt-tab:hover, .ws-tabs .tt-tab[aria-selected="true"] { color: var(--sp-text); }
 .ws-tabs .tt-tab[aria-selected="true"] { grid-column: 2; font-size: 16px; font-weight: 800; }
