@@ -36,8 +36,7 @@ export async function mountIsland(el, postId, me) {
         const pill = h('button', { class: 'sp-island__pill', type: 'button', 'aria-expanded': String(open), onclick: () => setOpen(!open) },
             h('span', { class: 'sp-island__dot' }),
             h('span', { class: 'sp-island__text' }, 'Tasks', h('small', { text: `${todo.length} open` })),
-            h('span', { class: 'sp-island__latest', text: latest ? latest.title : rows.length ? 'All done' : 'None yet' }),
-            h('span', { class: 'sp-island__chev', text: '⌄' }));
+            h('span', { class: 'sp-island__latest', text: latest ? latest.title : rows.length ? 'All done' : 'None yet' }));
         el.replaceChildren(pill, h('div', { class: 'sp-island__body' }, h('div', { class: 'sp-island__inner' }, pinned || null, list, add)));
     }
 
