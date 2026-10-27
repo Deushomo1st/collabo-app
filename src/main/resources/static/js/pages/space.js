@@ -149,7 +149,7 @@ async function boot() {
     mountMainNav(me.username);
     window.addEventListener('hashchange', () => { if (space) draw(); window.scrollTo({ top: 0, behavior: 'instant' }); });
     const shell = document.querySelector('.sp-shell');   // the header shrinks once you scroll (with some give, so its height change cannot flicker it)
-    window.addEventListener('scroll', () => { const y = window.scrollY; if (y > 70) shell.classList.add('is-compact'); else if (y < 10) shell.classList.remove('is-compact'); }, { passive: true });
+    window.addEventListener('scroll', () => { const y = window.scrollY; shell.classList.toggle('is-scrolled', y > 4); if (y > 70) shell.classList.add('is-compact'); else if (y < 10) shell.classList.remove('is-compact'); }, { passive: true });   // is-scrolled: the fade behind the header shows as soon as anything slides under it
     document.querySelector('.sp-header').addEventListener('click', (e) => {   // the faces open Members, the rest of the header Settings
         if (e.target.closest('.nav-return, .nav-gear, #bell-slot, .ws-tabs')) return;
         show(e.target.closest('#header-stack') ? 'members' : 'settings');

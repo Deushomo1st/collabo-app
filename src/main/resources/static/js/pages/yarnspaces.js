@@ -141,6 +141,8 @@ async function route() {
     } catch (err) { return fatal(err); }
     const t = [...inbox, ...archived].find((x) => x.id === id);
     if (!t) { setHeader(null); return message('That thread is gone, or it is not yours.'); }
+    // A Workspace's room is read on the Workspace page (the same chat, with its sections beside it). Replace, so Return there comes back to this list.
+    if (t.tier === 'WORKSPACE' && t.postId) return location.replace(`/HTML-pages/space.html?post=${t.postId}#room`);
     openThread = t;
     setHeader(t);
     renderThread();

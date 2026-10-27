@@ -40,7 +40,8 @@ async function sync() {
     if (me.displaySize != null) adoptUiScale(me.displaySize);   // the account's display size (Settings > Display size)
 }
 
-const goBack = () => leaveGuard(() => { if (history.length > 1) history.back(); else location.href = GAZE; });
+// A page can name where Return goes (<body data-return="...">), e.g. a Workspace returns to the chat list, not to whatever came before it.
+const goBack = () => leaveGuard(() => { const to = document.body.dataset.return; if (to) location.href = to; else if (history.length > 1) history.back(); else location.href = GAZE; });
 
 function returnButton() {
     const b = document.createElement('button');
