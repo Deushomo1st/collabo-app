@@ -7,9 +7,10 @@ const none = new Set();
 const hue = (name) => [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 360, 7);
 
 // Tapping anyone's picture opens their profile (pictures inside a link already do; pickers keep their own tap, and so does the page you are already on).
+// The round nav button resting on your picture (.ns-face) keeps its own tap too: it opens the bar, and a hold fans out.
 document.addEventListener('click', (e) => {
     const f = e.target.closest?.('.sp-face[title]');
-    if (!f || f.closest('a, label, .gz-circle, .dangle, .speech, .ps-person, .pst-person')) return;
+    if (!f || f.closest('a, label, .gz-circle, .dangle, .speech, .ps-person, .pst-person, .ns-face')) return;
     const to = profileHref(f.title);
     if (new URL(to, location.href).href === location.href) return;
     e.preventDefault(); e.stopPropagation();
