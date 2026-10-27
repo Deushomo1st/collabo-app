@@ -26,6 +26,7 @@ let space, members, me, island = null, tabs = null, tabsRole = null, thread = nu
 const INFO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
 const SECTION_IDS = ['room', 'about', 'members', 'milestones', 'payments', 'settings'];
 const hereId = () => SECTION_IDS.find((id) => location.hash === '#' + id) || 'about';
+const show = (id) => location.replace('#' + id);   // sections replace each other in history, so Return leaves the Workspace instead of stepping back through them
 /** The sections this person sees, in order: [id, label]. Room and Payments are the team's; an accepted applicant reads the rest. */
 function sectionsFor() {
     const inRoom = space.role !== 'APPLICANT';
@@ -73,9 +74,9 @@ function draw() {
         tabsRole = space.role;
         tabs = feedTabs(document.getElementById('ws-tabs'), {
             labels: list.map(([, label]) => label), at: () => list.findIndex(([id]) => id === hereId()),
-            go: (i) => { location.hash = '#' + list[i][0]; },
+            go: (i) => show(list[i][0]),
         });
-        const info = h('button', { class: 'nav-gear ws-gear', type: 'button', title: 'Members', 'aria-label': 'Workspace info: the members', onclick: () => { location.hash = '#members'; } });
+        const info = h('button', { class: 'nav-gear ws-gear', type: 'button', title: 'Members', 'aria-label': 'Workspace info: the members', onclick: () => show('members') });
         info.innerHTML = INFO;   // fixed markup, no user text
         document.querySelector('.sp-header').append(info);   // beside the menu; the Return and the menu come from nav-mode.js
     }
@@ -105,7 +106,7 @@ function draw() {
                 row('Formed', `Born from the post “${space.postTitle}”.`, h('span', { class: 'sp-tag', text: day(space.createdAt) })),
                 row('Response clock', 'How long a quiet member has to answer a nudge.', h('span', { class: 'sp-tag', text: `${space.responseClockHours} hours` })),
                 row('Pleas', 'A plea buys a quiet member 12 hours.', h('span', { class: `sp-tag ${space.pleasEnabled ? 'sp-tag--ok' : ''}`, text: space.pleasEnabled ? 'On' : 'Off' }))),
-            space.threadId && inRoom && h('a', { class: 'sp-btn sp-btn--brand', href: '#room', text: 'Open the room' }),
+            space.threadId && inRoom && h('button', { class: 'sp-btn sp-btn--brand', type: 'button', text: 'Open the room', onclick: () => show('room') }),
             space.role === 'MEMBER' && !space.canManage && h('div', { class: 'pc-actions' }, h('button', { class: 'sp-btn sp-btn--danger', type: 'button', text: 'Leave space',
                 onclick: () => act(() => spaceLeave(space.id), 'You left the space.') }))],
         members: () => [membersSection(space, { members, me, refresh }), inRoom && removalsSection(space, { me })],
@@ -151,7 +152,7 @@ async function boot() {
     window.addEventListener('scroll', () => { const y = window.scrollY; if (y > 70) shell.classList.add('is-compact'); else if (y < 10) shell.classList.remove('is-compact'); }, { passive: true });
     document.querySelector('.sp-header').addEventListener('click', (e) => {   // the faces open Members, the rest of the header Settings
         if (e.target.closest('.nav-return, .nav-gear, #bell-slot, .ws-tabs')) return;
-        location.hash = e.target.closest('#header-stack') ? '#members' : '#settings';
+        show(e.target.closest('#header-stack') ? 'members' : 'settings');
     });
     try { await refresh(); }
     catch (err) {
