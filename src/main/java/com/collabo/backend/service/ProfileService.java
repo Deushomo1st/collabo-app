@@ -60,6 +60,7 @@ public class ProfileService {
         if (req.navPreference() != null) user.setNavPreference(cleanNav(req.navPreference()));
         if (req.displaySize() != null) user.setDisplaySize(cleanSize(req.displaySize()));
         if (req.theme() != null) user.setTheme(cleanTheme(req.theme()));
+        if (req.fanTightness() != null) user.setFanTightness(cleanTightness(req.fanTightness()));
         return ProfileResponse.of(users.save(user), true, linksOf(user), avatars.versionOf(user), follows.stateFor(user, user));
     }
 
@@ -142,6 +143,11 @@ public class ProfileService {
     }
 
     /** The Display size in percent: 80 to 130. */
+    static int cleanTightness(int pct) {
+        if (pct < 70 || pct > 130) throw new InvalidProfileException("That fan spread isn't allowed.");
+        return pct;
+    }
+
     static int cleanSize(int pct) {
         if (pct < 80 || pct > 130) throw new InvalidProfileException("That display size isn't allowed.");
         return pct;

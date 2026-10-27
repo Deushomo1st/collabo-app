@@ -13,6 +13,7 @@ import { h } from '/js/services/dom.js';
 import { skeletonCards } from '/js/services/skeleton.js';
 import { openNavPreference, navPreferenceName } from '/js/services/nav-preference.js';
 import { displaySizeRow } from '/js/components/settings/display-size.js';
+import { fanSpreadRow } from '/js/components/settings/fan-spread.js';
 import { openGlassBlurDialog } from '/js/components/glass-blur-dialog/glass-blur-dialog.js';
 
 const PROFILE = '/HTML-pages/profile.html';
@@ -53,7 +54,7 @@ async function boot() {
         await mountThemeRow(panel.lastElementChild);
     };
     const segments = [
-        segment('appearance', 'Appearance and themes', sub('Theme', () => (getTheme() === 'light' ? 'Light' : 'Dusk'), openTheme), sub('Navigation preference', navPreferenceName, openNavPreference), displaySizeRow()),
+        segment('appearance', 'Appearance and themes', sub('Theme', () => (getTheme() === 'light' ? 'Light' : 'Dusk'), openTheme), sub('Navigation preference', navPreferenceName, openNavPreference), fanSpreadRow(), displaySizeRow()),
         segment('yarns', 'Yarns', sub('Default chat', defaultChatName, openDefaultChat), sub('Archive', archivedCount, openArchive)),
         // what every new post starts from; the Create post page can change it for one post (a stored copy, so it stays on this device)
         segment('postdefaults', 'New posts', h('p', { class: 'yn-hint', text: 'Every new post starts like this. On the Create post page you can change it for just that post.' }),

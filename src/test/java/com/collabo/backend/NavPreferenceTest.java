@@ -73,6 +73,16 @@ class NavPreferenceTest {
     }
 
     @Test
+    void fanTightnessIsSavedOnTheAccountAndRangeChecked() throws Exception {
+        Cookie ann = signIn("eve" + UUID.randomUUID().toString().substring(0, 6));
+        mvc.perform(get("/api/auth/me").cookie(ann)).andExpect(jsonPath("$.fanTightness").doesNotExist());   // a new account: the fan as designed
+        mvc.perform(patch("/api/users/me").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"fanTightness\":120}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/auth/me").cookie(ann)).andExpect(jsonPath("$.fanTightness").value(120));
+        mvc.perform(patch("/api/users/me").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"fanTightness\":20}")).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void anOutOfRangeSizeOrOddThemeIsRefused() throws Exception {
         Cookie ann = signIn("dan" + UUID.randomUUID().toString().substring(0, 6));
         mvc.perform(patch("/api/users/me").cookie(XSRF, ann).header("X-XSRF-TOKEN", "t").contentType("application/json").content("{\"displaySize\":400}")).andExpect(status().isBadRequest());

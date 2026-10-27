@@ -61,7 +61,7 @@ export const HELP = {
             ] },
     'profile-settings': { title: 'Settings', steps: [
         ['Settings, in segments', 'Each card is a segment, and the title at the top names the one you are in. Appearance, Yarns, New posts and Security are saved in turn as you change them.'],
-        ['Appearance and themes', 'Theme: Dusk or Light. Navigation preference: the round button at the bottom, or a ‹ and a menu in every header. Display size: a slider that makes text and icons bigger or smaller, with a sample under it; let go to keep it. These three are saved on your account, so every device you sign in on looks the same.'],
+        ['Appearance and themes', 'Theme: Dusk or Light. Navigation preference: the round button at the bottom, or a ‹ and a menu in every header. Fan spread (only with the round button): how tightly the buttons fan out when you hold it, from 70% (looser) to 130% (tighter). Display size: a slider that makes text and icons bigger or smaller, with a sample under it; let go to keep it. These are saved on your account, so every device you sign in on looks the same.'],
         ['Yarns', 'Your default chat, and the Archive of chats you put away.'],
         ['New posts', 'What every new post starts from: who can see it, and what is allowed on it. On the Create post page you can change it for just that post. These stay on this device.'],
         ['Security and privacy', 'Who can start a chat with you, the Blocklist, your History of ideas seen, and your password and sign-in.'],

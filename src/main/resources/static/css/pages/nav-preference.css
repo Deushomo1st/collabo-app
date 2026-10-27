@@ -38,3 +38,10 @@
 .ds-pill { display: flex; justify-content: space-around; padding: 8px 12px; border-radius: 99px; background: var(--sp-panel-hi); }
 
 .ds-row .yn-last { white-space: normal; }
+
+/* Settings > Fan spread: shown only while the round button is the navigation; a small fan follows the slider */
+html:not([data-nav="omni-wheel"]) .fs-row { display: none; }
+.fs-preview { position: relative; height: 112px; overflow: hidden; border: 1px solid var(--sp-line); border-radius: 18px; background: var(--sp-bg); }
+.fs-dot { position: absolute; left: 50%; bottom: 12px; width: 21px; height: 21px; margin-left: -10.5px; border-radius: 50%; background: var(--sp-brand); transition: transform .15s; }
+.fs-dot--home { background: var(--sp-text); }
+@media (prefers-reduced-motion: reduce) { .fs-dot { transition: none; } }

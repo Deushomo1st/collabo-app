@@ -2,6 +2,7 @@
 // It sets <html data-nav="..."> at once from the copy kept on this device, then asks the server (the pick follows the account across devices),
 // and puts a Return button in the page header. css/global/global.css shows the wheel and the Return button according to data-nav.
 import { adoptUiScale } from '/js/services/ui-scale.js';
+import { saveFanTightness } from '/js/components/hold-fan/hold-fan.js';
 import '/js/services/lite.js';
 import '/js/services/warm.js';
 import '/js/services/page-loader.js';
@@ -38,6 +39,7 @@ async function sync() {
     keep(known(me.navPreference) ? me.navPreference : null); apply();
     if (me.theme) import('/js/components/theme-switcher/theme-switcher.js').then((m) => { if (m.getTheme() !== me.theme) m.setTheme(me.theme, { remote: false }); });   // the account's theme
     if (me.displaySize != null) adoptUiScale(me.displaySize);   // the account's display size (Settings > Display size)
+    if (me.fanTightness != null) saveFanTightness(me.fanTightness);   // and how tightly the round button's fan sits (Settings > Fan spread)
 }
 
 // A page can name where Return goes (<body data-return="...">), e.g. a Workspace returns to the chat list, not to whatever came before it.

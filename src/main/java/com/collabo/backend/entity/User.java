@@ -76,6 +76,10 @@ public class User {
     @Column(name = "display_size")
     private Integer displaySize;
 
+    // How tightly the omni button's fan sits around it, in percent (Settings > Fan spread, 70 to 130); null = as designed. Follows the account across devices.
+    @Column(name = "fan_tightness")
+    private Integer fanTightness;
+
     // Dusk or light (Settings > Theme); null = the default (dusk). Follows the account across devices.
     @Column(name = "theme", length = 10)
     private String theme;
@@ -155,6 +159,8 @@ public class User {
     public void setNavPreference(String navPreference) { this.navPreference = navPreference; }
     public Integer getDisplaySize() { return displaySize; }
     public void setDisplaySize(Integer displaySize) { this.displaySize = displaySize; }
+    public Integer getFanTightness() { return fanTightness; }
+    public void setFanTightness(Integer fanTightness) { this.fanTightness = fanTightness; }
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
     public CredentialsPrivacy getCredentialsPrivacy() { return credentialsPrivacy == null ? CredentialsPrivacy.EVERYONE : credentialsPrivacy; }

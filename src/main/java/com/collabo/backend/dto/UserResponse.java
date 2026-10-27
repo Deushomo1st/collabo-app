@@ -21,7 +21,8 @@ public record UserResponse(
         LocalDateTime createdAt,
         String navPreference,
         Integer displaySize,
-        String theme
+        String theme,
+        Integer fanTightness
 ) {
     public static UserResponse from(User user) {
         return new UserResponse(
@@ -35,7 +36,8 @@ public record UserResponse(
                 user.getCreatedAt(),
                 user.getNavPreference(),
                 user.getDisplaySize(),
-                user.getTheme()
+                user.getTheme(),
+                user.getFanTightness()
         );
     }
 }

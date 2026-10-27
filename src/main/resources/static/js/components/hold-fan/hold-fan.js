@@ -19,13 +19,30 @@ const SIZE = 46;                 // px, each round button
 const RADIUS = 84;               // px, trigger centre to button centre
 const ANGLES = { 1: [-90], 2: [-125, -55], 3: [-155, -90, -25], 4: [-160, -120, -60, -20], 5: [-160, -125, -90, -55, -20] };   // degrees from the x axis; negative = up. Left to right (5 has one dead centre).
 
+// How tightly the fan sits around the trigger, in percent (Settings > Fan spread): 100 = as designed, higher = closer in. Kept on this device; the account's copy is adopted at load (nav-mode.js).
+const KEY = 'collaboFanTightness';
+export const TIGHTNESS = { min: 70, max: 130, step: 5 };
+export function fanTightness() {
+    try { const v = parseInt(localStorage.getItem(KEY), 10); return v >= TIGHTNESS.min && v <= TIGHTNESS.max ? v : 100; } catch { return 100; }
+}
+export function saveFanTightness(v) {
+    try { if (v === 100) localStorage.removeItem(KEY); else localStorage.setItem(KEY, String(v)); } catch { /* the fan just stays as designed */ }
+}
+/** Where n buttons sit around the trigger's centre at a tightness: [{ x, y }]. Tighter pulls them in, but never so close that they touch each other or the trigger. */
+export function fanPoints(n, tightness = fanTightness()) {
+    const angles = ANGLES[n] || [];
+    const gap = Math.min(180, ...angles.slice(1).map((a, i) => a - angles[i])) * Math.PI / 180;   // the smallest step between neighbours
+    const floor = Math.max(SIZE + 20, (SIZE + 6) / (2 * Math.sin(gap / 2)));
+    const radius = Math.max((n > 3 ? 124 : RADIUS + 22) * (2 - tightness / 100), floor);   // out from the centre and well apart
+    return angles.map((deg) => ({ x: Math.cos(deg * Math.PI / 180) * radius, y: Math.sin(deg * Math.PI / 180) * radius }));
+}
+
 // opts: { actions: [{ label, icon (svg markup, static), onSelect() }], holdMs = 350, stagger = 0 }. A hold opens it and letting go closes it (picking the button you aimed at); from the keyboard it stays open until you pick one, Escape or tap elsewhere. No idle timer.
 // Returns { open(), close(), destroy() }.
 export function mountHoldFan(trigger, opts = {}) {
     loadStylesOnce();
     const actions = (opts.actions || []).slice(0, 5);
     const holdMs = opts.holdMs ?? 350, stagger = opts.stagger ?? 0;
-    const radius = actions.length > 3 ? 124 : RADIUS + 22;   // out from the centre and well apart
     let timer = null, layer = null, startX = 0, startY = 0, justHeld = false, eatTap = false, hot = null;
 
     function close() {
@@ -53,17 +70,17 @@ export function mountHoldFan(trigger, opts = {}) {
         layer.className = 'hold-fan';
         layer.setAttribute('role', 'menu');
         layer.style.left = `${cx}px`; layer.style.top = `${cy}px`;
+        const pts = fanPoints(actions.length);   // read at every opening, so a new Fan spread applies at once
         actions.forEach((a, i) => {
-            const rad = ANGLES[actions.length][i] * Math.PI / 180;
             // keep every button on screen when the trigger sits near an edge
-            const x = Math.min(Math.max(Math.cos(rad) * radius, SIZE / 2 + 8 - cx), W - SIZE / 2 - 8 - cx);
+            const x = Math.min(Math.max(pts[i].x, SIZE / 2 + 8 - cx), W - SIZE / 2 - 8 - cx);
             const b = document.createElement('button');
             b.type = 'button'; b.className = 'hold-fan__btn'; b.setAttribute('role', 'menuitem');
             b.setAttribute('aria-label', a.label); b.title = a.label;
             b.innerHTML = a.icon;   // static markup supplied by the caller, never user text
             b.style.setProperty('--x', `${x}px`);
-            b.style.setProperty('--y', `${Math.sin(rad) * radius}px`);
-            b._angle = Math.atan2(Math.sin(rad) * radius, x);   // where it really sits (an edge can push it sideways)
+            b.style.setProperty('--y', `${pts[i].y}px`);
+            b._angle = Math.atan2(pts[i].y, x);   // where it really sits (an edge can push it sideways)
             b.style.setProperty('--d', `${i * stagger}ms`);
             b.addEventListener('click', (e) => { e.stopPropagation(); close(); a.onSelect?.(); });
             layer.append(b);
