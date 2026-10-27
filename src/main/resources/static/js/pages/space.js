@@ -1,7 +1,8 @@
 // A Workspace's screen: the Workspace design on real data. The header names it (with the Workspace tag and the team's faces) and carries the sections as a slider
-// (Room, About, Members, Milestones, Payments, Settings); the black Tasks pill hangs under it. Room is the team's chat in Yarns. Accepted applicants read it all and join from About.
+// (Room, About, Members, Milestones, Payments, Settings); the black Tasks pill hangs under it. Room is the team's chat (the same thread as in Yarns), drawn here so the sections swipe as one. Accepted applicants read it all and join from About.
 // All network calls live in js/services/api.js; text goes in through textContent only.
-import '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
+import { live } from '/js/services/live.js';   // keeps the live socket open, so yarns sent to you are acknowledged as delivered from any page
+import { createYarnThread, preloadYarnThread } from '/js/components/yarn-thread/yarn-thread.js';
 import { membersSection } from '/js/components/space/members.js';
 import { face } from '/js/services/face.js';
 import { mountIsland } from '/js/components/space/task-island.js';
@@ -11,7 +12,7 @@ import { paymentsSection } from '/js/components/space/payments.js';
 import { removalsSection } from '/js/components/space/removals.js';
 import { openSettings } from '/js/components/space/settings.js';
 import { mountMainNav } from '/js/services/main-nav.js';
-import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers } from '/js/services/api.js';
+import { currentUser, spaceById, spaceOfPost, spaceJoin, spaceLeave, spaceMembers, yarnHistory, yarnSend, yarnMarkRead, postGet } from '/js/services/api.js';
 import { skeletonCards } from '/js/services/skeleton.js';
 import { h, toast, profileHref } from '/js/services/dom.js';
 
@@ -21,11 +22,10 @@ const main = () => document.getElementById('space');
 const toLogin = () => location.replace('/HTML-pages/login.html?next=' + encodeURIComponent(location.pathname + location.search));
 const say = (text) => main().replaceChildren(h('p', { class: 'gz-empty', text }));
 
-let space, members, me, island = null, tabs = null, tabsRole = null;
+let space, members, me, island = null, tabs = null, tabsRole = null, thread = null;
 const INFO = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>';
-const SECTION_IDS = ['about', 'members', 'milestones', 'payments', 'settings'];
+const SECTION_IDS = ['room', 'about', 'members', 'milestones', 'payments', 'settings'];
 const hereId = () => SECTION_IDS.find((id) => location.hash === '#' + id) || 'about';
-const roomHref = () => `/HTML-pages/yarnspaces.html#t/${space.threadId}`;
 /** The sections this person sees, in order: [id, label]. Room and Payments are the team's; an accepted applicant reads the rest. */
 function sectionsFor() {
     const inRoom = space.role !== 'APPLICANT';
@@ -73,7 +73,7 @@ function draw() {
         tabsRole = space.role;
         tabs = feedTabs(document.getElementById('ws-tabs'), {
             labels: list.map(([, label]) => label), at: () => list.findIndex(([id]) => id === hereId()),
-            go: (i) => { const [id] = list[i]; if (id === 'room') location.href = roomHref(); else location.hash = '#' + id; },
+            go: (i) => { location.hash = '#' + list[i][0]; },
         });
         const info = h('button', { class: 'nav-gear ws-gear', type: 'button', title: 'Members', 'aria-label': 'Workspace info: the members', onclick: () => { location.hash = '#members'; } });
         info.innerHTML = INFO;   // fixed markup, no user text
@@ -105,22 +105,43 @@ function draw() {
                 row('Formed', `Born from the post “${space.postTitle}”.`, h('span', { class: 'sp-tag', text: day(space.createdAt) })),
                 row('Response clock', 'How long a quiet member has to answer a nudge.', h('span', { class: 'sp-tag', text: `${space.responseClockHours} hours` })),
                 row('Pleas', 'A plea buys a quiet member 12 hours.', h('span', { class: `sp-tag ${space.pleasEnabled ? 'sp-tag--ok' : ''}`, text: space.pleasEnabled ? 'On' : 'Off' }))),
-            space.threadId && inRoom && h('a', { class: 'sp-btn sp-btn--brand', href: roomHref(), text: 'Open the room' }),
+            space.threadId && inRoom && h('a', { class: 'sp-btn sp-btn--brand', href: '#room', text: 'Open the room' }),
             space.role === 'MEMBER' && !space.canManage && h('div', { class: 'pc-actions' }, h('button', { class: 'sp-btn sp-btn--danger', type: 'button', text: 'Leave space',
                 onclick: () => act(() => spaceLeave(space.id), 'You left the space.') }))],
         members: () => [membersSection(space, { members, me, refresh }), inRoom && removalsSection(space, { me })],
         milestones: () => [milestonesSection(space, { canLog: can('LOG_MILESTONES'), me })],
         payments: () => [inRoom ? paymentsSection(space, { canLog: can('LOG_PAYMENTS'), me, members }) : h('p', { class: 'gz-empty', text: 'Payments are the team\u2019s business.' })],
         settings: () => [settingsSection(can('EDIT_SETTINGS') || space.role === 'OWNER')],
+        room: () => [inRoom && space.threadId ? roomThread().element : h('p', { class: 'gz-empty', text: 'The room is the team’s. Join from About to read it.' })],
     };
+    if (hereId() !== 'room' && thread) { thread.destroy(); thread = null; }   // leaving the room stops its polling and gives the page its scroll back
     main().replaceChildren(...body[hereId()]().filter(Boolean));
     if (inRoom && !island) {   // the Tasks pill: the same one the room carries, asked for once
         island = {};
-        mountIsland(document.getElementById('island'), space.postId, me).then((i) => { island = i; });
+        mountIsland(document.getElementById('island'), space.postId, me).then((i) => { island = i; window.dispatchEvent(new Event('resize')); });   // the pill pushes the page down: the room's chat measures itself again
     } else island?.reload?.();
 }
 
+/** The room's chat, made once and kept while you stay on Room (a refresh of the space must not reload the whole conversation). */
+function roomThread() {
+    if (thread) return thread;
+    const id = space.threadId;
+    thread = createYarnThread({
+        meId: me.id, showNames: true, avatar: (name) => face(name, 'sp-avatar--sm'), postInfo: postGet,
+        load: (before) => yarnHistory(id, before), send: (body) => yarnSend(id, body), onRead: () => yarnMarkRead(id).catch(() => {}),
+        signals: (refresh) => {   // as in Yarns: the server says when the room changes and the thread refetches itself
+            const same = (s) => { if (s.thread === id) refresh(); };
+            const offs = [live.on('yarn', same), live.on('receipt', same), live.onResync(refresh)];
+            return () => offs.forEach((off) => off());
+        },
+        isLive: () => live.connected,
+        onPin: (y) => island?.pin?.(y), canPin: () => !!island?.canPin,
+    });
+    return thread;
+}
+
 async function boot() {
+    preloadYarnThread();
     main().replaceChildren(...skeletonCards(2));   // the cards' shape while the space loads
     me = await currentUser().catch(() => null);
     if (!me) return toLogin();

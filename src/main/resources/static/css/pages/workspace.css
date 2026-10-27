@@ -458,3 +458,31 @@ html:not([data-nav="omni-wheel"]) .ws-page .sp-toast { bottom: calc(24px + env(s
 html:not([data-nav="omni-wheel"]) .ws-page .sp-shell::after { content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: 110px; z-index: 4; pointer-events: none;
     background: linear-gradient(to top, color-mix(in srgb, color-mix(in srgb, var(--sp-bg) 92%, #000) 80%, transparent), color-mix(in srgb, var(--sp-bg) 50%, transparent) 70%, transparent);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); -webkit-mask-image: linear-gradient(to top, #000 45%, transparent); mask-image: linear-gradient(to top, #000 45%, transparent); }
+
+/* The Room section has the message box at the bottom: no fade over it, as in Yarns */
+html .ws-page .sp-shell:has(.yarn-thread__composer:not([hidden]))::after { display: none; }
+
+/* The Tasks pill as a black drop hanging off the header: no gap, curved shoulders, and its top fades from the header's glass into the black.
+   Open, it fuses with the header: the header's bottom corners square off and its side lines run on down the drop. */
+.ws-page .sp-island {
+    --drop: linear-gradient(to bottom, rgba(12, 13, 17, .25), #0c0d11 14px);
+    top: calc(100% - 1px); width: min(100% - 80px, 250px); overflow: visible; border: 0; border-radius: 0 0 22px 22px;
+    background: var(--drop); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .35);
+}
+.ws-page .sp-island.is-open { width: 100%; border: 1px solid var(--sp-line); border-top: 0; border-radius: 0 0 24px 24px; }   /* tapped: grows to the header's width */
+.ws-page .sp-island__pill { padding-block: 6px; }
+.ws-page .sp-island::before, .ws-page .sp-island::after {
+    content: ''; position: absolute; top: 0; width: 16px; height: 16px; pointer-events: none; transition: opacity .3s;
+    background: var(--drop); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.ws-page .sp-island::before { left: -16px; -webkit-mask-image: radial-gradient(circle at 0 100%, transparent 15.5px, #000 16px); mask-image: radial-gradient(circle at 0 100%, transparent 15.5px, #000 16px); }
+.ws-page .sp-island::after { right: -16px; -webkit-mask-image: radial-gradient(circle at 100% 100%, transparent 15.5px, #000 16px); mask-image: radial-gradient(circle at 100% 100%, transparent 15.5px, #000 16px); }
+.ws-page .sp-island.is-open::before, .ws-page .sp-island.is-open::after { opacity: 0; }
+.ws-page .sp-header { transition: padding .3s, border-radius .35s, border-color .35s; }
+.ws-page .sp-top:has(.sp-island.is-open) .sp-header { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom-color: transparent; }
+/* Narrow screens: the closed drop keeps just "Tasks · n open" and shrinks to fit it; the latest task shows once it opens */
+@media (max-width: 380px) {
+    .ws-page .sp-island:not(.is-open) { width: 160px; }
+    .ws-page .sp-island:not(.is-open) .sp-island__latest { visibility: hidden; }
+}
